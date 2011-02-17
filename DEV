@@ -1,0 +1,20 @@
+= Development =
+
+This file contains information about the development of this software package. This
+contains no information for end-users.
+
+== TODO ==
+
+The following things are still to do:
+  Write ./INSTALL file
+  Write ./USAGE file
+
+== Git ==
+
+This software is developed in a git-repository hosted by github:
+  https://github.com/dvdhrm/xwiimote
+
+== Changelog ==
+
+There is no classic changelog file. See the git history for a comprehensive
+changelog.

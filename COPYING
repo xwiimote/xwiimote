@@ -1,0 +1,17 @@
+= Licensing Information ==
+
+This software package is dedicated to the Public Domain. This includes
+all files (code, documentation, ...) shipped with this distribution.
+
+== Developers ==
+
+This software is written by:
+  David Herrmann - dh.herrmann@gmail.com
+
+== Contributors ==
+
+This project could not have been realized without several other software
+projects. We are very grateful to the following people and projects for
+their contributions:
+  Linux Kernel - http://www.kernel.org
+  BlueZ - http://www.bluez.org
