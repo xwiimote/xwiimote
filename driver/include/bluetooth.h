@@ -35,5 +35,6 @@
 #define WII_BT_NAMES 0x08 /* resolve names */
 
 extern const char *wii_bt_inquiry(unsigned int flags);
+extern bool wii_bt_connect(const char *addr, unsigned int detach, unsigned int sync);
 
 #endif /* WII_BT_H */

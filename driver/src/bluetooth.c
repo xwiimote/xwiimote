@@ -12,6 +12,8 @@
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
+#include <bluetooth/l2cap.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 #include "bluetooth.h"
 #include "log.h"
@@ -94,4 +96,130 @@ failure:
 	if (sock >= 0)
 		close(sock);
 	return addr;
+}
+
+bool wii_bt_connect(const char *addr, unsigned int detach, unsigned int sync)
+{
+	struct sockaddr_l2 l2addr;
+	signed int sock, hci, devid, c1, c2;
+	struct hci_conn_info_req *req_ci;
+	auth_requested_cp req_auth;
+	bdaddr_t req_neg, local_addr;
+	pin_code_reply_cp req_pin;
+	unsigned int ret = false;
+
+	hci = -1;
+	sock = -1;
+	c1 = -1;
+	c2 = -1;
+
+	printf("Connecting to %s...\n", addr);
+
+	if (-1 == (devid = hci_get_route(NULL))) {
+		printf("Error: Cannot access local bluetooth socket\n");
+		goto failure;
+	}
+	if (0 != hci_devba(devid, &local_addr)) {
+		printf("Error: Cannot get local bluetooth address\n");
+		goto failure;
+	}
+	if(0 > (hci = hci_open_dev(devid))) {
+		printf("Error: Cannot open HCI socket\n");
+		goto failure;
+	}
+
+	sock = socket(PF_BLUETOOTH, SOCK_RAW, BTPROTO_L2CAP);
+	if (sock < 0) {
+		printf("Error: Cannot create bluetooth socket\n");
+		goto failure;
+	}
+
+	memset(&l2addr, 0, sizeof(l2addr));
+	l2addr.l2_family = AF_BLUETOOTH;
+	l2addr.l2_psm = 0;
+	bacpy(&l2addr.l2_bdaddr, &local_addr);
+	if (0 != bind(sock, (struct sockaddr*)&l2addr, sizeof(l2addr))) {
+		printf("Error: Cannot bind bluetooth socket\n");
+		goto failure;
+	}
+
+	memset(&l2addr, 0, sizeof(l2addr));
+	l2addr.l2_family = AF_BLUETOOTH;
+	l2addr.l2_psm = 0;
+	str2ba(addr, &l2addr.l2_bdaddr);
+	if (0 != connect(sock, (struct sockaddr*)&l2addr, sizeof(l2addr))) {
+		printf("Error: Couldn't connect to target device\n");
+		goto failure;
+	}
+
+	req_ci = malloc(sizeof(*req_ci) + sizeof(struct hci_conn_info));
+	str2ba(addr, &req_ci->bdaddr);
+	req_ci->type = ACL_LINK;
+	if (0 != ioctl(hci, HCIGETCONNINFO, (unsigned long)req_ci)) {
+		printf("Error: Couldn't get connection info\n");
+		goto failure;
+	}
+
+	memset(&req_auth, 0, sizeof(req_auth));
+	req_auth.handle = req_ci->conn_info->handle;
+	if (0 != hci_send_cmd(hci, OGF_LINK_CTL, OCF_AUTH_REQUESTED, AUTH_REQUESTED_CP_SIZE, &req_auth)) {
+		printf("Error: Auth request failed\n");
+		goto failure;
+	}
+
+	memset(&req_neg, 0, sizeof(req_neg));
+	str2ba(addr, &req_neg);
+	if (0 != hci_send_cmd(hci, OGF_LINK_CTL, OCF_LINK_KEY_NEG_REPLY, sizeof(req_neg), &req_neg)) {
+		printf("Error: Link key negation failed\n");
+		goto failure;
+	}
+
+	memset(&req_pin, 0, sizeof(req_pin));
+	str2ba(addr, &req_pin.bdaddr);
+	req_pin.pin_len = 6;
+	if (sync)
+		memcpy(req_pin.pin_code, &local_addr, 6);
+	else
+		memcpy(req_pin.pin_code, &req_pin.bdaddr, 6);
+	if (0 != hci_send_cmd(hci, OGF_LINK_CTL, OCF_PIN_CODE_REPLY, PIN_CODE_REPLY_CP_SIZE, &req_pin)) {
+		printf("Error: Pin code transmission failed\n");
+		goto failure;
+	}
+
+	c1 = socket(PF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+	c2 = socket(PF_BLUETOOTH, SOCK_SEQPACKET, BTPROTO_L2CAP);
+	if(c1 < 0 || c2 < 0) {
+		printf("Error: Cannot create l2cap sockets\n");
+		goto failure;
+	}
+	memset(&l2addr, 0, sizeof(l2addr));
+	l2addr.l2_family = AF_BLUETOOTH;
+	str2ba(addr, &l2addr.l2_bdaddr);
+
+	l2addr.l2_psm = 0x11;
+	if (0 != connect(c1, (struct sockaddr*)&l2addr, sizeof(l2addr))) {
+		printf("Error: Cannot open l2cap channel on psm 0x11\n");
+		goto failure;
+	}
+	l2addr.l2_psm = 0x13;
+	if (0 != connect(c2, (struct sockaddr*)&l2addr, sizeof(l2addr))) {
+		printf("Error: Cannot open l2cap channel on psm 0x13\n");
+		goto failure;
+	}
+
+	printf("Connection established\n");
+
+	wii_start_driver(c2, c1);
+	ret = true;
+
+failure:
+	if (c2 >= 0)
+		close(c2);
+	if (c1 >= 0)
+		close(c1);
+	if (sock >= 0)
+		close(sock);
+	if (hci >= 0)
+		close(hci);
+	return ret;
 }
