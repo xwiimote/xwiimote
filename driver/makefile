@@ -11,12 +11,13 @@ LFLAGS=-Wall -pedantic -lbluetooth
 
 BINARY=xwiimote
 OBJECTS=src/proto.o src/log.o src/main.o src/bluetooth.o
-.PHONY=all info clean
+
+.PHONY: all info clean
 
 all: info $(BINARY)
 
 info:
-	@echo 'Building XWiimote...'
+	@echo 'Building XWiimote Driver...'
 
 src/%.o: src/%.c include/*.h
 	$(CC) $(CFLAGS) -o $@ $<
