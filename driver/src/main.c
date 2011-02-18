@@ -186,7 +186,8 @@ static signed int ui_connect()
 	if (dev) {
 		i = 0;
 		while (1) {
-			/* TODO: connect to remote device */
+			if (wii_bt_connect(dev, ui_params.arg_sync))
+				break;
 			if (wii_terminating(true))
 				break;
 			if (i++ == 3)

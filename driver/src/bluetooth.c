@@ -100,7 +100,7 @@ failure:
 	return addr;
 }
 
-bool wii_bt_connect(const char *addr, unsigned int detach, unsigned int sync)
+bool wii_bt_connect(const char *addr, unsigned int sync)
 {
 	struct sockaddr_l2 l2addr;
 	signed int sock, hci, devid, c1, c2;
