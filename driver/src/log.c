@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -64,8 +65,11 @@ bool wii_log_do(struct wii_log *logger, const char *format, ...)
 
 bool wii_log_vdo(struct wii_log *logger, const char *format, va_list list)
 {
+	if (dprintf(logger->fd, "%ld: ", time(NULL)) < 1)
+		return false;
 	if (vdprintf(logger->fd, format, list) < 1)
 		return false;
-	else
-		return true;
+	if (dprintf(logger->fd, "\n") < 1)
+		return false;
+	return true;
 }
