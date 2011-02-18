@@ -23,6 +23,7 @@ static struct {
 	unsigned int arg_detach : 1;
 	unsigned int arg_sync : 1;
 	unsigned int arg_addr : 1;
+	unsigned int arg_kill : 1;
 	const char *addr;
 } ui_params;
 
@@ -65,7 +66,7 @@ static signed int ui_help()
 {
 	printf("Open Source Nintendo Wii Remote Linux Device Driver\n");
 	printf("Usage:\n");
-	printf("  %s -hcl -lsda [ADDR]\n", "xwiimote");
+	printf("  %s -hcl -lsak [ADDR]\n", "xwiimote");
 	printf("\n");
 	printf("Commands:\n");
 	printf("  h: Show this help\n");
@@ -74,11 +75,10 @@ static signed int ui_help()
 	printf("\n");
 	printf("Connect Arguments:\n");
 	printf("  l: Perform long inquiry (30 instead of 10 seconds)\n");
-	printf("  d: Detach driver into background\n");
 	printf("  s: Perform sync with remote\n");
 	printf("  a: Use given address instead of performing an inquiry\n");
 	printf("Listen Arguments:\n");
-	printf("  d: Detach driver into background\n");
+	printf("  k: Kill running listener\n");
 	printf("\n");
 	return EXIT_FAILURE;
 }
@@ -101,11 +101,11 @@ static bool ui_parse(signed int argc, char **argv)
 			case 's':
 				ui_params.arg_sync = 1;
 				break;
-			case 'd':
-				ui_params.arg_detach = 1;
-				break;
 			case 'a':
 				ui_params.arg_addr = 1;
+				break;
+			case 'k':
+				ui_params.arg_kill = 1;
 				break;
 			case '-':
 				break;
@@ -156,7 +156,16 @@ static bool ui_parse(signed int argc, char **argv)
 
 static signed int ui_listen()
 {
-	return EXIT_SUCCESS;
+	if (ui_params.arg_kill) {
+		system("kill `ps aux | grep xwiimote | grep -v grep | awk '{print $2}'` 2>/dev/null");
+		return EXIT_SUCCESS;
+	}
+	else {
+		if (wii_bt_listen())
+			return EXIT_SUCCESS;
+		else
+			return EXIT_FAILURE;
+	}
 }
 
 static signed int ui_connect()
