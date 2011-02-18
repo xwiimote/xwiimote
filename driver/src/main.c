@@ -19,7 +19,6 @@ static struct {
 	unsigned int cmd_listen : 1;
 
 	unsigned int arg_longi : 1;
-	unsigned int arg_start : 1;
 	unsigned int arg_detach : 1;
 	unsigned int arg_sync : 1;
 	unsigned int arg_addr : 1;
@@ -44,7 +43,7 @@ static signed int ui_help()
 {
 	printf("Open Source Nintendo Wii Remote Linux Device Driver\n");
 	printf("Usage:\n");
-	printf("  %s -hcl -lsdha [ADDR]\n", "xwiimote");
+	printf("  %s -hcl -lsda [ADDR]\n", "xwiimote");
 	printf("\n");
 	printf("Commands:\n");
 	printf("  h: Show this help\n");
@@ -53,9 +52,8 @@ static signed int ui_help()
 	printf("\n");
 	printf("Connect Arguments:\n");
 	printf("  l: Perform long inquiry (30 instead of 10 seconds)\n");
-	printf("  s: Start driver after connection succeeded\n");
 	printf("  d: Detach driver into background\n");
-	printf("  h: Perform hard sync with remote\n");
+	printf("  s: Perform sync with remote\n");
 	printf("  a: Use given address instead of performing an inquiry\n");
 	printf("Listen Arguments:\n");
 	printf("  d: Detach driver into background\n");
@@ -79,13 +77,10 @@ static bool ui_parse(signed int argc, char **argv)
 				ui_params.arg_longi = 1;
 				break;
 			case 's':
-				ui_params.arg_start = 1;
+				ui_params.arg_sync = 1;
 				break;
 			case 'd':
 				ui_params.arg_detach = 1;
-				break;
-			case 'h':
-				ui_params.arg_sync = 1;
 				break;
 			case 'a':
 				ui_params.arg_addr = 1;
