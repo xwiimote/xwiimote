@@ -10,7 +10,7 @@ LD=gcc
 LFLAGS=-Wall -pedantic -lbluetooth
 
 BINARY=xwiimote
-OBJECTS=src/proto.o src/log.o src/main.o src/bluetooth.o
+OBJECTS=src/proto.o src/log.o src/main.o src/bluetooth.o src/driver.o
 
 .PHONY: all info clean
 

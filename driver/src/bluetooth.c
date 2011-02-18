@@ -106,6 +106,7 @@ bool wii_bt_connect(const char *addr, unsigned int detach, unsigned int sync)
 	auth_requested_cp req_auth;
 	bdaddr_t req_neg, local_addr;
 	pin_code_reply_cp req_pin;
+	struct wii_drv_io drv;
 	unsigned int ret = false;
 
 	hci = -1;
@@ -209,8 +210,11 @@ bool wii_bt_connect(const char *addr, unsigned int detach, unsigned int sync)
 
 	printf("Connection established\n");
 
-	wii_start_driver(c2, c1);
-	ret = true;
+	drv.in = c2;
+	drv.out = c1;
+	ret = wii_fork(wii_start_driver, &drv);
+	if (!ret)
+		printf("Error: Cannot fork driver process\n");
 
 failure:
 	if (c2 >= 0)

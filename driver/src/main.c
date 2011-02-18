@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include "bluetooth.h"
 #include "log.h"
@@ -37,6 +38,27 @@ bool wii_terminating(bool print)
 static void ui_signal(signed int sig)
 {
 	wii_terminate = true;
+}
+
+bool wii_fork(void (*func)(void *arg), void *arg)
+{
+	signed int ret;
+
+	ret = fork();
+	if (ret < 0) {
+		return false;
+	}
+	else if (ret == 0) {
+		ret = fork();
+		if (ret == 0)
+			func(arg);
+		exit(0);
+	}
+	else {
+		if (-1 == waitpid(ret, NULL, 0))
+			return false;
+	}
+	return true;
 }
 
 static signed int ui_help()

@@ -25,16 +25,26 @@
 extern bool wii_terminating(bool print);
 
 /*
- * This forks the application twice with the first child
- * immediately exiting so the second child becomes an orphan.
- * The new process starts the driver infrastructure for the
+ * Helper function which forks the application twice to
+ * make the new process an orphan.
+ */
+extern bool wii_fork(void (*func)(void *arg), void *arg);
+
+/*
+ * This starts the driver infrastructure for the
  * given IO ports.
  *
  * \in is a channel to the wiimote where we can read data.
  * \out is a channel to the wiimote where we can send data.
  * They must not be the same.
- * This function returns immediately and never fails.
+ * This function blocks until the driver terminates. Call this
+ * with wii_fork().
  */
-extern void wii_start_driver(signed int in, signed int out);
+struct wii_drv_io {
+	signed int in;
+	signed int out;
+};
+
+extern void wii_start_driver(void *drv);
 
 #endif /* WII_MAIN_H */
