@@ -259,7 +259,7 @@ static void wii__status_handler(struct wii_proto_dev *dev, const void *buf, stru
 {
 	const struct wii_proto_sr_status *pl = buf;
 
-	wii__keys(dev, &pl->key, res);
+	wii__key(dev, &pl->key, res);
 
 	res->modified |= WII_PROTO_CR_BATTERY;
 	res->battery.low = pl->flags & WII_PROTO_SR_STATUS_EMPTY;
@@ -272,14 +272,14 @@ static void wii__K_handler(struct wii_proto_dev *dev, const void *buf, struct wi
 {
 	const struct wii_proto_sr_K *pl = buf;
 
-	wii__keys(dev, &pl->key, res);
+	wii__key(dev, &pl->key, res);
 }
 
 static void wii__KA_handler(struct wii_proto_dev *dev, const void *buf, struct wii_proto_res *res)
 {
 	const struct wii_proto_sr_KA *pl = buf;
 
-	wii__keys(dev, &pl->key, res);
+	wii__key(dev, &pl->key, res);
 	wii__accel(dev, &pl->key, pl->accel, res);
 }
 
@@ -323,7 +323,7 @@ void wii_proto_decode(struct wii_proto_dev *dev, const void *buf, size_t size, s
 				return;
 			}
 			if (wii__handlers[i].func)
-				wii__handlers[i].func(dev, buf + 2, res);
+				wii__handlers[i].func(dev, raw + 2, res);
 			return;
 		}
 	}
