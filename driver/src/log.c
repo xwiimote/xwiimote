@@ -35,14 +35,12 @@ static signed int open_log(char *path, size_t len, const char *name, bool tmp)
 	}
 }
 
-bool wii_log_open(struct wii_log *logger, const char *name, bool tmp)
+void wii_log_open(struct wii_log *logger, const char *name, bool tmp)
 {
 	logger->fd = open_log(logger->path, sizeof(logger->path), name, tmp);
 	if (logger->fd < 0)
-		return false;
-
+		logger->fd = 2;
 	logger->tmp = tmp;
-	return logger;
 }
 
 void wii_log_close(struct wii_log *logger)

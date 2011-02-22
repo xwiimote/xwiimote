@@ -34,7 +34,7 @@ struct wii_log {
 	bool tmp;
 };
 
-extern bool wii_log_open(struct wii_log *logger, const char *name, bool tmp);
+extern void wii_log_open(struct wii_log *logger, const char *name, bool tmp);
 extern void wii_log_close(struct wii_log *logger);
 extern bool wii_log_do(struct wii_log *logger, const char *format, ...);
 extern bool wii_log_vdo(struct wii_log *logger, const char *format, va_list list);
