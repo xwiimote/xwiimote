@@ -123,6 +123,9 @@ void wii_proto_do_led(struct wii_proto_dev *dev, const struct wii_proto_cc_led *
 	struct wii_proto_buf *cmd;
 	struct wii_proto_sr_led raw;
 
+	if (0 == memcmp(&dev->cache.led, pl))
+		return;
+
 	cmd = wii__push(dev);
 	raw.common.flags = 0;
 	if (pl->one)
@@ -139,6 +142,9 @@ void wii_proto_do_led(struct wii_proto_dev *dev, const struct wii_proto_cc_led *
 
 void wii_proto_do_rumble(struct wii_proto_dev *dev, const struct wii_proto_cc_rumble *pl)
 {
+	if (0 == memcmp(&dev->cache.rumble, pl))
+		return;
+
 	/*
 	 * Rumble is automatically set on every request, however, if
 	 * there is no request in the list, we need to create one.
