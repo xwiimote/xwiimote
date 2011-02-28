@@ -13,6 +13,7 @@ void wii_proto_init(struct wii_proto_dev *dev)
 {
 	memset(dev, 0, sizeof(*dev));
 	dev->units |= WII_PROTO_CU_STATUS;
+	dev->cache.drm = WII_PROTO_SR_K;
 }
 
 void wii_proto_deinit(struct wii_proto_dev *dev)
@@ -123,7 +124,7 @@ void wii_proto_do_led(struct wii_proto_dev *dev, const struct wii_proto_cc_led *
 	struct wii_proto_buf *cmd;
 	struct wii_proto_sr_led raw;
 
-	if (0 == memcmp(&dev->cache.led, pl))
+	if (0 == memcmp(&dev->cache.led, pl, sizeof(*pl)))
 		return;
 
 	cmd = wii__push(dev);
@@ -142,7 +143,7 @@ void wii_proto_do_led(struct wii_proto_dev *dev, const struct wii_proto_cc_led *
 
 void wii_proto_do_rumble(struct wii_proto_dev *dev, const struct wii_proto_cc_rumble *pl)
 {
-	if (0 == memcmp(&dev->cache.rumble, pl))
+	if (0 == memcmp(&dev->cache.rumble, pl, sizeof(*pl)))
 		return;
 
 	/*
@@ -170,12 +171,18 @@ void wii_proto_do_format(struct wii_proto_dev *dev)
 	struct wii_proto_buf *cmd;
 	struct wii_proto_sr_format raw;
 
-	cmd = wii__push(dev);
 	raw.common.flags = 0;
-	if (wii_proto_enabled(dev, (WII_PROTO_CU_INPUT | WII_PROTO_CU_ACCEL)))
+	if (wii_proto_enabled(dev, WII_PROTO_CU_INPUT | WII_PROTO_CU_ACCEL))
 		raw.mode = WII_PROTO_SR_KA;
 	else
 		raw.mode = WII_PROTO_SR_K;
+
+	if (raw.mode == dev->cache.drm)
+		return;
+	else
+		dev->cache.drm = raw.mode;
+
+	cmd = wii__push(dev);
 	wii__mkcmd(cmd, WII_PROTO_SR_FORMAT, &raw, sizeof(raw));
 }
 

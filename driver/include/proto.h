@@ -447,6 +447,7 @@ struct wii_proto_dev {
 		struct wii_proto_cc_rumble rumble;
 		struct wii_proto_cc_led led;
 		struct wii_proto_cc_acalib acalib;
+		unsigned int drm;
 	} cache;
 };
 
