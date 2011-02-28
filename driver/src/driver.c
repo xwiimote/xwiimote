@@ -99,7 +99,7 @@ static signed int uinput_open()
 	}
 
 	memset(&udev, 0, sizeof(udev));
-	snprintf(udev.name, sizeof(udev.name), "%s", "Nintendo Wii Remote");
+	strncpy(udev.name, XWII_EV_NAME, sizeof(udev.name));
 	udev.id.bustype = BUS_BLUETOOTH;
 	udev.id.vendor = 0x057e;
 	udev.id.product = 0x0306;

@@ -25,6 +25,13 @@ extern "C" {
 #include <linux/input.h>
 
 /*
+ * This wiimote driver uses the kernel uinput interface which allows
+ * to provide input drivers via user-space. That is, all connected
+ * devices are listed as input devices in /etc/input/eventX where X
+ * is an arbitrary number.
+ * Device name is defined as XWII_EV_NAME ("Nintendo Wii Remote") and
+ * can be used to identify the device.
+ *
  * Linux input events are reported via:
  *   struct input_event {
  *           struct timeval time;
@@ -98,21 +105,9 @@ extern "C" {
  *     is generated. Each axis shows the current acceleration on this
  *     axis, it does not show the position or any relative movement so
  *     don't use this as pointer/mouse input.
- *
- * No predefined type-code-value combination is suitable
- * for the data the wiimote reports so we misuse the
- * MSC_RAW code and report all other data via this flag.
- * That is, all reports not described
- *   type = EV_MSC
- *   code = MSC_RAW
- *   value = <payload>
- *
- * Our payload is signed 32 bit integer, we split it into
- * lower 8 bits containing the report/command and upper 24 bits
- * containing the real payload. Commands are sent from the
- * application to the input driver, reports are sent from the
- * input driver to the application.
  */
+
+#define XWII_EV_NAME "Nintendo Wii Remote"
 
 /* Report and Command IDs */
 
