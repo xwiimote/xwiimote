@@ -5,7 +5,7 @@
 #
 
 CC=gcc
-CFLAGS=-c -fPIC -Wall -pedantic -Iinclude --std=c99 -D_POSIX_C_SOURCE=200809L
+CFLAGS=-c -fPIC -Wall -pedantic -Iinclude -I../lib/include --std=c99 -D_POSIX_C_SOURCE=200809L
 LD=gcc
 LFLAGS=-Wall -pedantic -lbluetooth
 
