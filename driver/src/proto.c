@@ -34,19 +34,27 @@ void wii_proto_deinit(struct wii_proto_dev *dev)
 
 bool wii_proto_encode(struct wii_proto_dev *dev, struct wii_proto_buf *buf)
 {
-	struct wii_proto_buf *ele;
+	struct wii_proto_buf *iter, *ele;
 
-	if (dev->buf_list) {
+	if (!dev->buf_list)
+		return false;
+
+	if (!dev->buf_list->next) {
 		ele = dev->buf_list;
-		dev->buf_list = ele->next;
-		memcpy(buf, ele, sizeof(*buf));
-		ele->next = dev->buf_free;
-		dev->buf_free = ele;
-		return true;
+		dev->buf_list = NULL;
 	}
 	else {
-		return false;
+		iter = dev->buf_list;
+		while (iter->next->next)
+			iter = iter->next;
+		ele = iter->next;
+		iter->next = NULL;
 	}
+
+	memcpy(buf, ele, sizeof(*buf));
+	ele->next = dev->buf_free;
+	dev->buf_free = ele;
+	return true;
 }
 
 static struct wii_proto_buf *wii__push(struct wii_proto_dev *dev)
@@ -72,16 +80,8 @@ static struct wii_proto_buf *wii__push(struct wii_proto_dev *dev)
 	}
 
 	memset(req, 0, sizeof(*req));
-	if (dev->buf_list) {
-		iter = dev->buf_list;
-		while (iter->next)
-			iter = iter->next;
-		iter->next = req;
-	}
-	else {
-		dev->buf_list = req;
-	}
-
+	req->next = dev->buf_list;
+	dev->buf_list = req;
 	return req;
 }
 
