@@ -59,7 +59,7 @@ bool wii_proto_encode(struct wii_proto_dev *dev, struct wii_proto_buf *buf)
 
 static struct wii_proto_buf *wii__push(struct wii_proto_dev *dev)
 {
-	struct wii_proto_buf *req, *iter;
+	struct wii_proto_buf *req;
 	static struct wii_proto_buf null;
 
 	if (dev->buf_free) {
@@ -85,7 +85,7 @@ static struct wii_proto_buf *wii__push(struct wii_proto_dev *dev)
 	return req;
 }
 
-static inline void wii__rumble(struct wii_proto_dev *dev, struct wii_proto_buf *out)
+static inline bool wii__rumble(struct wii_proto_dev *dev, struct wii_proto_buf *out)
 {
 	struct wii_proto_sr_common *pl;
 
@@ -93,7 +93,9 @@ static inline void wii__rumble(struct wii_proto_dev *dev, struct wii_proto_buf *
 		pl = (void*)&out->buf[2];
 		if (dev->cache.rumble.on)
 			pl->flags |= WII_PROTO_SR_COMMON_RUMBLE;
+		return true;
 	}
+	return false;
 }
 
 static inline void wii__mkcmd(struct wii_proto_dev *dev, struct wii_proto_buf *out, unsigned int rep, void *payload, size_t size)
@@ -159,9 +161,24 @@ void wii_proto_do_rumble(struct wii_proto_dev *dev, const struct wii_proto_cc_ru
 	/* copy into cache so wii__mkcmd will set correct rumble state */
 	memcpy(&dev->cache.rumble, pl, sizeof(dev->cache.rumble));
 
-	cmd = wii__push(dev);
-	raw.common.flags = 0;
-	wii__mkcmd(dev, cmd, WII_PROTO_SR_RUMBLE, &raw, sizeof(raw));
+	/*
+	 * Use the last command in the queue to enable rumble. If the command
+	 * has no payload, then use the previous one. If no command in the
+	 * queue is suitable, then create a dummy rumble command.
+	 * Take into account that dev->buf_list is sorted backwards so the
+	 * first command in the list is the last one that will be sent out.
+	 */
+	cmd = dev->buf_list;
+	while (cmd) {
+		if (wii__rumble(dev, cmd))
+			break;
+		cmd = cmd->next;
+	}
+	if (!cmd) {
+		cmd = wii__push(dev);
+		raw.common.flags = 0;
+		wii__mkcmd(dev, cmd, WII_PROTO_SR_RUMBLE, &raw, sizeof(raw));
+	}
 }
 
 void wii_proto_do_query(struct wii_proto_dev *dev)
