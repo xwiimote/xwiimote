@@ -26,7 +26,6 @@
  *    - add extensions
  *  - specification:
  *    - check whether WII_SRK1_POWER is right
- *    - investigate whether report 0x10 is a rumble only output report
  */
 
 #ifndef WII_PROTO_H
@@ -94,6 +93,18 @@ struct wii_proto_sr_common {
 #define WII_PROTO_SR_COMMON_X6 0x20
 #define WII_PROTO_SR_COMMON_X7 0x40
 #define WII_PROTO_SR_COMMON_X8 0x80
+
+/*
+ * Rumble Report (output)
+ * The rumble report includes only the common data without any
+ * special behaviour of the unused flags. It can be used to enable
+ * or disable rumble without affecting the other components.
+ */
+#define WII_PROTO_SR_RUMBLE 0x10
+
+struct wii_proto_sr_rumble {
+	struct wii_proto_sr_common common;
+} __attribute__((__packed__));
 
 /*
  * LED Report (output)

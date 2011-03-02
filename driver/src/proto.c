@@ -40,11 +40,6 @@ bool wii_proto_encode(struct wii_proto_dev *dev, struct wii_proto_buf *buf)
 		ele = dev->buf_list;
 		dev->buf_list = ele->next;
 		memcpy(buf, ele, sizeof(*buf));
-
-		/* set rumble flag on all outputs if enabled */
-		if (buf->size >= 3 && dev->cache.rumble.on)
-			buf->buf[2] |= 0x1;
-
 		ele->next = dev->buf_free;
 		dev->buf_free = ele;
 		return true;
@@ -90,13 +85,25 @@ static struct wii_proto_buf *wii__push(struct wii_proto_dev *dev)
 	return req;
 }
 
-static inline void wii__mkcmd(struct wii_proto_buf *out, unsigned int rep, void *payload, size_t size)
+static inline void wii__rumble(struct wii_proto_dev *dev, struct wii_proto_buf *out)
+{
+	struct wii_proto_sr_common *pl;
+
+	if (out->size >= 3) {
+		pl = (void*)&out->buf[2];
+		if (dev->cache.rumble.on)
+			pl->flags |= WII_PROTO_SR_COMMON_RUMBLE;
+	}
+}
+
+static inline void wii__mkcmd(struct wii_proto_dev *dev, struct wii_proto_buf *out, unsigned int rep, void *payload, size_t size)
 {
 	out->size = 2 + size;
 	out->buf[0] = WII_PROTO_SH_CMD_OUT;
 	out->buf[1] = rep;
 	if (size)
 		memcpy(&out->buf[2], payload, size);
+	wii__rumble(dev, out);
 }
 
 void wii_proto_enable(struct wii_proto_dev *dev, wii_proto_mask_t units)
@@ -137,23 +144,24 @@ void wii_proto_do_led(struct wii_proto_dev *dev, const struct wii_proto_cc_led *
 		raw.common.flags |= WII_PROTO_SR_COMMON_LED3;
 	if (pl->four)
 		raw.common.flags |= WII_PROTO_SR_COMMON_LED4;
-	wii__mkcmd(cmd, WII_PROTO_SR_LED, &raw, sizeof(raw));
+	wii__mkcmd(dev, cmd, WII_PROTO_SR_LED, &raw, sizeof(raw));
 	memcpy(&dev->cache.led, pl, sizeof(dev->cache.led));
 }
 
 void wii_proto_do_rumble(struct wii_proto_dev *dev, const struct wii_proto_cc_rumble *pl)
 {
+	struct wii_proto_buf *cmd;
+	struct wii_proto_sr_rumble raw;
+
 	if (0 == memcmp(&dev->cache.rumble, pl, sizeof(*pl)))
 		return;
 
-	/*
-	 * Rumble is automatically set on every request, however, if
-	 * there is no request in the list, we need to create one.
-	 * We simply resend the led-state here.
-	 */
-	if (!dev->buf_list)
-		wii_proto_do_led(dev, &dev->cache.led);
+	/* copy into cache so wii__mkcmd will set correct rumble state */
 	memcpy(&dev->cache.rumble, pl, sizeof(dev->cache.rumble));
+
+	cmd = wii__push(dev);
+	raw.common.flags = 0;
+	wii__mkcmd(dev, cmd, WII_PROTO_SR_RUMBLE, &raw, sizeof(raw));
 }
 
 void wii_proto_do_query(struct wii_proto_dev *dev)
@@ -163,7 +171,7 @@ void wii_proto_do_query(struct wii_proto_dev *dev)
 
 	cmd = wii__push(dev);
 	raw.common.flags = 0;
-	wii__mkcmd(cmd, WII_PROTO_SR_QUERY, &raw, sizeof(raw));
+	wii__mkcmd(dev, cmd, WII_PROTO_SR_QUERY, &raw, sizeof(raw));
 }
 
 void wii_proto_do_format(struct wii_proto_dev *dev)
@@ -183,7 +191,7 @@ void wii_proto_do_format(struct wii_proto_dev *dev)
 		dev->cache.drm = raw.mode;
 
 	cmd = wii__push(dev);
-	wii__mkcmd(cmd, WII_PROTO_SR_FORMAT, &raw, sizeof(raw));
+	wii__mkcmd(dev, cmd, WII_PROTO_SR_FORMAT, &raw, sizeof(raw));
 }
 
 void wii_proto_do_acalib(struct wii_proto_dev *dev, const struct wii_proto_cc_acalib *pl)
