@@ -206,6 +206,7 @@ static bool io_send(struct pollfd *pfd, signed int *timeout)
 	static bool pending;
 	static struct wii_proto_buf buf;
 	signed int ret;
+	int64_t rt;
 
 	*timeout = -1;
 
@@ -227,13 +228,9 @@ static bool io_send(struct pollfd *pfd, signed int *timeout)
 			return true;
 		pfd->events &= ~POLLOUT;
 		pending = 0;
-		if (buf.wait) {
-			*timeout = buf.wait;
-			return true;
-		}
 	}
 
-	while (wii_proto_encode(&dev, &buf)) {
+	while (0 == (rt = wii_proto_encode(&dev, &buf, time_now()))) {
 		ret = io_send_do(pfd->fd, buf.buf, buf.size);
 		if (ret < 0)
 			return false;
@@ -242,11 +239,8 @@ static bool io_send(struct pollfd *pfd, signed int *timeout)
 			pfd->events |= POLLOUT;
 			return true;
 		}
-		if (buf.wait) {
-			*timeout = buf.wait;
-			return true;
-		}
 	}
+	*timeout = clamp_int(rt);
 	return true;
 }
 
@@ -262,7 +256,7 @@ void wii_start_driver(void *drv_arg)
 	struct input_event ev;
 
 	wii_log_open(&logger, "driver", true);
-	wii_proto_init(&dev);
+	wii_proto_init(&dev, time_now());
 	memset(&res, 0, sizeof(res));
 	uinput = uinput_open();
 	if (uinput < 0)

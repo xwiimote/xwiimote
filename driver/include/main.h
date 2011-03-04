@@ -13,8 +13,11 @@
 #ifndef WII_MAIN_H
 #define WII_MAIN_H
 
+#include <limits.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <time.h>
 
 /*
  * If the application catched a signal, this will
@@ -46,5 +49,29 @@ struct wii_drv_io {
 };
 
 extern void wii_start_driver(void *drv);
+
+/* clamping */
+static inline signed int clamp_int(int64_t val)
+{
+	if (val > INT_MAX)
+		return INT_MAX;
+	if (val < INT_MIN)
+		return INT_MIN;
+	return val;
+}
+
+/* get current time of unsettable monotonic clock */
+static inline int64_t time_now()
+{
+	int64_t ret;
+	struct timespec val;
+
+	if (clock_gettime(CLOCK_MONOTONIC_RAW, &val) != 0)
+		clock_gettime(CLOCK_MONOTONIC, &val);
+
+	ret = val.tv_sec * 1000;
+	ret += val.tv_nsec / 1000000;
+	return ret;
+}
 
 #endif /* WII_MAIN_H */

@@ -9,11 +9,12 @@
 #include <string.h>
 #include "proto.h"
 
-void wii_proto_init(struct wii_proto_dev *dev)
+void wii_proto_init(struct wii_proto_dev *dev, int64_t now)
 {
 	memset(dev, 0, sizeof(*dev));
 	dev->units |= WII_PROTO_CU_STATUS;
 	dev->cache.drm = WII_PROTO_SR_K;
+	dev->lasttime = now;
 }
 
 void wii_proto_deinit(struct wii_proto_dev *dev)
@@ -32,12 +33,14 @@ void wii_proto_deinit(struct wii_proto_dev *dev)
 	}
 }
 
-bool wii_proto_encode(struct wii_proto_dev *dev, struct wii_proto_buf *buf)
+int64_t wii_proto_encode(struct wii_proto_dev *dev, struct wii_proto_buf *buf, int64_t now)
 {
 	struct wii_proto_buf *iter, *ele;
 
+	dev->lasttime = now;
+
 	if (!dev->buf_list)
-		return false;
+		return -1;
 
 	if (!dev->buf_list->next) {
 		ele = dev->buf_list;
@@ -54,7 +57,7 @@ bool wii_proto_encode(struct wii_proto_dev *dev, struct wii_proto_buf *buf)
 	memcpy(buf, ele, sizeof(*buf));
 	ele->next = dev->buf_free;
 	dev->buf_free = ele;
-	return true;
+	return 0;
 }
 
 static struct wii_proto_buf *wii__push(struct wii_proto_dev *dev)

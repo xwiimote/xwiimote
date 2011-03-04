@@ -7,7 +7,7 @@
 CC=gcc
 CFLAGS=-c -fPIC -Wall -pedantic -Iinclude -I../lib/include --std=c99 -D_POSIX_C_SOURCE=200809L
 LD=gcc
-LFLAGS=-Wall -pedantic -lbluetooth
+LFLAGS=-Wall -pedantic -lbluetooth -lrt
 
 BINARY=xwiimote
 OBJECTS=src/proto.o src/log.o src/main.o src/bluetooth.o src/driver.o

@@ -395,30 +395,31 @@ struct wii_proto_cc_acalib {
  * commands and then send them to the device. If you skip checking for
  * pending commands, your commands may be received with a delay from the
  * device.
- * To check for pending command your need to call
- * wii_proto_encode() to see whether there are pending outgoing messages.
- * If it returns true, the passed struct wii_proto_buf variable is filled with
+ * To check for pending commands you need to call wii_proto_encode().
+ * The passed struct wii_proto_buf variable is filled with
  * a outgoing message. "buf" contains the message and "size" is the length
- * of the message that you need to send over the l2cap channel.
+ * of the message that you need to send over the l2cap channel. The function
+ * returns 0 if there is a pending message, otherwise "buf" is not touched.
  * After that you need to call wii_proto_encode() again to see whether there
- * are more messages until it returns false which means there are no more
+ * are more messages until it returns non-zero which means there are no more
  * outgoing messages.
  * If your l2cap-out-queue is full you may postpone your next wii_proto_encode()
  * call until the out-queue is free again and you may also invoke
  * any other wii_proto_*() function even if the queue is full, however,
  * be sure the wii_proto_encode() queue does not become too full to avoid
  * long delays.
- * The struct wii_proto_buf variable has one more member named "wait" which is
- * an unsigned 8bit integer which tells you how many milliseconds you
- * need to wait until you should send the next message in the
- * wii_proto_encode() queue. To avoid sleep()'ing this amount of msecs
- * you should of course pass control to your event-engine or other
- * functions and make sure that control is passed to your bluetooth
- * handlers again after this amount of msecs. This is totally up to you.
- * However, this allows to integrate this handler into any event
- * engine.
- * The maximum sleep value is 255 milliseconds so if you use it in a cmd-application
- * you may even use usleep() for this.
+ * The return value of wii_proto_encode() is a timeout in milliseconds. If it is
+ * 0, a new message is copied into "buf" which must be sent to the device, if
+ * it is non-zero, "buf" is not touched and there will be no new message until
+ * that timeout is elapsed. If you perform any action on this device, especially
+ * any wii_proto_do*() functions, then this timeout is obsolete and you need to
+ * call wii_proto_encode() again. If there is no pending timeout and no pending
+ * message, then -1 is returned. It is save to
+ * call wii_proto_encode() although the timeout is not elapsed. This will just
+ * return the adjusted new timeout value or probably a new message. This allows
+ * the application to limit the timeout to an appropriate maximum.
+ * The last parameter of wii_proto_encode() is the current time in milliseconds
+ * since the UNIX EPOCH.
  */
 
 typedef uint32_t wii_proto_mask_t;
@@ -447,11 +448,11 @@ struct wii_proto_buf {
 	struct wii_proto_buf *next;
 	uint8_t buf[WII_PROTO_SH_MAX];
 	size_t size;
-	uint8_t wait;
 };
 
 struct wii_proto_dev {
 	wii_proto_mask_t units;
+	int64_t lasttime;
 	struct wii_proto_buf *buf_list;
 	struct wii_proto_buf *buf_free;
 	struct {
@@ -462,11 +463,11 @@ struct wii_proto_dev {
 	} cache;
 };
 
-extern void wii_proto_init(struct wii_proto_dev *dev);
+extern void wii_proto_init(struct wii_proto_dev *dev, int64_t now);
 extern void wii_proto_deinit(struct wii_proto_dev *dev);
 
 extern void wii_proto_decode(struct wii_proto_dev *dev, const void *buf, size_t size, struct wii_proto_res *res);
-extern bool wii_proto_encode(struct wii_proto_dev *dev, struct wii_proto_buf *buf);
+extern int64_t wii_proto_encode(struct wii_proto_dev *dev, struct wii_proto_buf *buf, int64_t now);
 
 extern void wii_proto_enable(struct wii_proto_dev *dev, wii_proto_mask_t units);
 extern void wii_proto_disable(struct wii_proto_dev *dev, wii_proto_mask_t units);
