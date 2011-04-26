@@ -1,0 +1,136 @@
+= Nintendo Wii Remote Protocol =
+The wiimote communicates via standard bluetooth technology
+with the host. This document is divided into two parts. The
+first part described the low-level bluetooth connection that
+is established between the host and the wiimote with
+pairing support. The second part is about the protocol that
+is used to communicate with the wiimote.
+
+  == Bluetooth Connection ==
+  The wiimote can be in the following states:
+    off: The wiimote power is turned off and no interactions
+         are possible.
+    discoverable: The wiimote is not connected to any host but
+         put into bluetooth discoverable mode. Furthermore, it
+         is possible to establish a new bluetooth baseband
+         connection to the wiimote.
+    connecting: The wiimote is currently establishing a connection
+         with a host or vice versa.
+    connected: The wiimote is currently connected to a host.
+
+    === Discoverable State ===
+    The wiimote is built around a Broadcom bluetooth chip that
+    can be placed into discoverable mode in two ways:
+     1: Pressing the red sync-button behind the battery-cover
+        on the back of the wiimote. This will place the wiimote
+        directly into discoverable mode for exactly 20 seconds
+        and then turn the wiimote off again.
+     2: Holding down the 1 and 2 buttons on the front of the
+        wiimote will put the wiimote into discoverable mode.
+        First, the wiimote performs auto-reconnect and if that
+        fails it goes into discoverable mode. If the buttons
+        are held down continuously, the wiimote will stay in
+        discoverable mode, otherwise it turns off after 20
+        seconds.
+    When in discoverable mode, the wiimote is seen as:
+      "Nintendo RVL-CNT-01"
+    For all later references in this document, we assume the
+    wiimote has the following bluetooth address:
+      "00:1E:35:3B:7E:6D"
+    The binary representation of BD-addresses is in reversed order
+    so this would be the six byte array:
+      0x6d 0x7e 0x3b 0x35 0x1e 0x00
+    When in discoverable mode, a host may establish a new bluetooth
+    baseband connection to the wiimote. Every host is allowed to do
+    that. No encryption nor pairing is required.
+
+    === Connecting State ===
+    There are two ways to establish a connection with a wiimote:
+     1: Initiate a baseband connection to the wiimote while the
+        wiimote is in discoverable state.
+     2: Let the wiimote auto-reconnect to your host.
+
+      ==== Initiating a Connection ====
+      When the wiimote is in discoverable state, any bluetooth host
+      can create a new baseband BR/EDR bluetooth connection to the
+      wiimote. There are no special considerations or non-standard
+      procedures.
+      However, optionally, you may initiate pairing with the wiimote.
+      This is not required and may be skipped, though,
+      auto-reconnection can only be used when the host is paired
+      with the wiimote.
+
+      Pairing can be initiated by sending an HCI authentication request.
+      The bluetooth stack will require a PIN for legacy pairing. This
+      PIN depends on the method used to put the wiimote into
+      discoverable mode. If method (1) was used (that means, the red
+      sync button was pressed) then the PIN is the bluetooth address
+      of the host in binary form (that is reversed order). If the buttons
+      1+2 were used (that is method (2)), then the PIN is the address
+      of the wiimote in binary form. In our case this would be the 6-byte
+      array:
+        0x6d 0x7e 0x3b 0x35 0x1e 0x00
+      When pairing is done, all further connections may use the new
+      link-key instead of PIN-requests, but this should be handled by
+      the bluetooth stack automatically.
+
+      When the wiimote is paired with a host with method (1) (And only
+      with this method! That is, red sync button!) then the wiimote
+      will save the bluetooth address of the host for further reference
+      so it can automatically reconnect to the host on disconnection.
+
+      ==== Auto-Reconnection ====
+      The wiimote maintains a list of bluetooth addresses of hosts that
+      it was connected to and paired with. If any single button on the
+      wiimote is pressed while it is turned off, the wiimote turns on
+      and tries to connect to one of the hosts in this list. It tries
+      only once so you may need to press a single button multiple times
+      to get connected to a host.
+      It is currently impossible to control which host is tried first.
+      Moreover, it is unknown how many addresses the wiimote can save
+      so it may take many times (5 times, 10 times or even more) until
+      the wiimote connects to an available host. If more than one host
+      is available, it is not possible to predict what host the wiimote
+      connects to.
+      However, it seems that the wiimote maintains an internal sorted
+      list of hosts and if it successfully connects to a host, this host
+      is put on top of this list and hence tried first next time.
+
+      When using auto-reconnection, no pairing is required and pairing
+      does not provide any more functionality here.
+
+    When the low-level baseband connection is established, the l2cap
+    channels can be opened. On auto-reconnection, the wiimote will connect
+    to the host (that is, the host must listen on the l2cap channels).
+    If the connection is initiated by the host, then the wiimote listens
+    for incoming connections on the l2cap channels.
+    Two l2cap channels are used for communication:
+     * Channel PSM 0x11 for sending data to the Wiimote
+     * Channel PXM 0x13 for receiving data from the Wiimote
+    Both must be opened for communication with the wiimote.
+    No further steps are required to setup the connection with the wiimote.
+    The wiimote is considered to be in "connected" state now.
+
+    === Connected State ===
+
+== Fake-HID Protocol ==
+
+== Authors ==
+This document is written by:
+ * David Herrmann - dh.herrmann@googlemail.com
+The following people contributed to this document:
+ * WiiBrew Project: http://www.wiibrew.org/
+                    http://www.wiibrew.org/wiki/Wiimote
+ * BlueZ Mailing List: http://www.bluez.org/
+
+== Unknown ==
+The following list contains protocol details which where not
+investigated and are still unknown:
+  * What happens if two hosts try to connect to the wiimote?
+  * Does the Wiimote implement the BT HID profile or just use
+    HID commands via an l2cap channel?
+  * How many host can be saved for auto-reconnection on the
+    wiimote?
+  * How to manage the list of auto-reconnection hosts?
+  * How to reset the wiimote?
+  * Is pairing possible when using auto-reconnection? Which key to use?
