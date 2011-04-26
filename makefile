@@ -4,10 +4,12 @@
 # Dedicated to the Public Domain
 #
 
-.PHONY: all driver lib clean
+.PHONY: menu all driver lib clean
 
-all:
-	@echo "Available Targets: driver lib"
+menu:
+	@echo "Available Targets: all driver lib"
+
+all: driver lib
 
 driver:
 	@cd driver; make
