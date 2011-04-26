@@ -18,6 +18,6 @@ default:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
 clean:
-	@rm -vf src/*.o src/*.ko src/*.mod.? modules.order Module.symvers
+	@rm -rvf .tmp_versions/ src/.*.cmd src/*.o src/*.ko src/*.mod.? modules.order Module.symvers
 
 endif
