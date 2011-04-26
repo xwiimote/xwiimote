@@ -12,11 +12,11 @@ menu:
 all: driver lib
 
 driver:
-	@cd driver; make
+	@cd driver && make
 
 lib:
-	@cd lib; make
+	@cd lib && make
 
 clean:
-	@cd driver; make clean
-	@cd lib; make clean
+	@cd driver && make clean
+	@cd lib && make clean
