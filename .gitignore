@@ -1,3 +1,8 @@
 # Ignore generated files
 */src/*.o
-driver/xwiimote
+driver/.tmp_versions
+driver/Module.symvers
+driver/modules.order
+driver/src/.*.cmd
+driver/src/*.ko
+driver/src/*.mod.c
