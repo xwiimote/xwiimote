@@ -44,6 +44,11 @@ is used to communicate with the wiimote.
     baseband connection to the wiimote. Every host is allowed to do
     that. No encryption nor pairing is required.
 
+    When in discoverable mode, all four LEDs on the wiimote will
+    blink when the battery is full. With lower battery status, less
+    LEDs will blink. If the battery is nearly empty, only the left
+    most LED blinks.
+
     === Connecting State ===
     There are two ways to establish a connection with a wiimote:
      1: Initiate a baseband connection to the wiimote while the
@@ -98,6 +103,13 @@ is used to communicate with the wiimote.
 
       When using auto-reconnection, no pairing is required and pairing
       does not provide any more functionality here.
+
+      ==== SDP Information ====
+      When a low-level connection is established, you may query the SDP
+      server of the xwiimote which returns a great deal of information:
+       * Name: "Nintendo RVL-CNT-01"
+       * PnP: VendorID: 0x057e ProductID: 0x0306
+      And a lot more PnP, SDP and HID related information.
 
     When the low-level baseband connection is established, the l2cap
     channels can be opened. On auto-reconnection, the wiimote will connect
