@@ -8,6 +8,7 @@ contains no information for end-users.
 The following things are still to do:
   Write ./INSTALL file
   Write ./USAGE file
+  Add wiimote VID/PID to hid_have_special_driver[] in hid-core.c
 
 == Git ==
 
