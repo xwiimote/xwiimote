@@ -124,6 +124,11 @@ is used to communicate with the wiimote.
     The wiimote is considered to be in "connected" state now.
 
     === Connected State ===
+    When in connected state, the host can communicate with the wiimote. The
+    protocol used for communication is described below in "Fake-HID Protocol".
+    To shutdown the connection, simply shut down the l2cap connections to the
+    wiimote. The wiimote will shut down the connection when the "power"-button
+    is pressed for 3 seconds.
 
 == Fake-HID Protocol ==
 
