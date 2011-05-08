@@ -14,11 +14,11 @@
 #include <linux/hid.h>
 #include <linux/module.h>
 
-static int nintendo_probe(struct hid_device *hdev, const struct hid_device_id *id)
+static int wiimote_probe(struct hid_device *hdev, const struct hid_device_id *id)
 {
 	int ret;
 
-	printk("Probing Nintendo HID driver\n");
+	printk("Probing Wiimote HID driver\n");
 	ret = hid_parse(hdev);
 	if (ret) {
 		hid_err(hdev, "parse failed\n");
@@ -34,35 +34,35 @@ static int nintendo_probe(struct hid_device *hdev, const struct hid_device_id *i
 	return 0;
 }
 
-static void nintendo_remove(struct hid_device *hdev)
+static void wiimote_remove(struct hid_device *hdev)
 {
+	printk("Removing Wiimote HID driver\n");
 	hid_hw_stop(hdev);
 }
 
-static const struct hid_device_id nintendo_devices[] = {
+static const struct hid_device_id wiimote_devices[] = {
 	{ HID_BLUETOOTH_DEVICE(0x057e, 0x0306) },
 	{ }
 };
-MODULE_DEVICE_TABLE(hid, nintendo_devices);
+MODULE_DEVICE_TABLE(hid, wiimote_devices);
 
-static struct hid_driver nintendo_driver = {
-	.name = "nintendo",
-	.id_table = nintendo_devices,
-	.probe = nintendo_probe,
-	.remove = nintendo_remove,
+static struct hid_driver wiimote_driver = {
+	.name = "wiimote",
+	.id_table = wiimote_devices,
+	.probe = wiimote_probe,
+	.remove = wiimote_remove,
 };
 
-static int __init nintendo_init(void)
+static int __init wiimote_init(void)
 {
-	printk("Registering Nintendo HID Driver\n");
-	return hid_register_driver(&nintendo_driver);
+	return hid_register_driver(&wiimote_driver);
 }
 
-static void __exit nintendo_exit(void)
+static void __exit wiimote_exit(void)
 {
-	hid_unregister_driver(&nintendo_driver);
+	hid_unregister_driver(&wiimote_driver);
 }
 
-module_init(nintendo_init);
-module_exit(nintendo_exit);
+module_init(wiimote_init);
+module_exit(wiimote_exit);
 MODULE_LICENSE("GPL");

@@ -6,7 +6,7 @@
 
 ifneq ($(KERNELRELEASE),)
 
-obj-m := src/hid-nintendo.o
+obj-m := src/hid-wiimote.o
 
 else
 
