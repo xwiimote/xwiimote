@@ -15,6 +15,9 @@ The following things are still to do:
 This software is developed in a git-repository hosted by github:
   https://github.com/dvdhrm/xwiimote
 
+The related linux device driver development is hosted at:
+  https://github.com/dvdhrm/xwiimote_kernel
+
 == Changelog ==
 
 There is no classic changelog file. See the git history for a comprehensive
