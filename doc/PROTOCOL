@@ -154,4 +154,3 @@ investigated and are still unknown:
   * How to manage the list of auto-reconnection hosts?
   * How to reset the wiimote?
   * Is pairing possible when using auto-reconnection? Which key to use?
-  * Is the power button part of input-report? (poweroff, poweron)
