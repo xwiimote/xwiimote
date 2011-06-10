@@ -304,6 +304,13 @@ is used to communicate with the wiimote.
       and the Enable Flag (0x04) specifies whether to mute (if enabled) or to
       unmute (if disabled) the speaker.
 
+      ==== IR Set2 Report (Output) ====
+      Report: 0x1a
+      Length: 1
+      Data: a1 1a CC
+      This has the same syntax as "IR Set1 Report" and is also used to
+      initialize the IR camera.
+
       ==== Common (Input) ====
       Length: 2
       Data: BB BB
