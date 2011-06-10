@@ -130,7 +130,80 @@ is used to communicate with the wiimote.
     wiimote. The wiimote will shut down the connection when the "power"-button
     is pressed for 3 seconds.
 
-== Fake-HID Protocol ==
+  == Fake-HID Protocol ==
+  Communication is done via HID input/output reports. The wiimote's HID
+  descriptor table does not contain any information about the reports except
+  the data length. Many bits in the commands are still unknown and shall be
+  initialized to 0 to avoid unwanted behaviour.
+
+    === Reports ===
+    Following a list of all input and output reports. Many reports include the
+    same information. These common structures are listed separately and each
+    report that uses them just refers to them. Every report is built as a byte
+    array of a fixed length. The array shall be initialized to 0 if not noted
+    otherwise. If a report has a variable length parameter with a fixed
+    maximum, then always the trailing bytes shall be padded with 0 if not used.
+    Multibyte integers are always in big-endian format.
+
+    A single report is constructred the following way:
+      report[0] = 0xa1 (for input reports)
+      report[0] = 0x52 (for output reports)
+      report[1] = <report>
+      report[2-X] = <payload>
+    The first byte is the HID command which is the same for all input and output
+    reports. They are often omitted or automatically set by your HID layer. See
+    your kernel/library documentation.
+    The second byte is the report identifier. Byte 3 up to X is the report
+    payload. Each report has a fixed length that specifies how long this payload
+    is (without the report byte).
+    A report with length 8 would need 10 bytes to be constructed:
+      8 payload bytes + 1 HID byte + 1 report byte = 10 bytes
+
+      ==== Common (Output) ====
+      Length: 1
+      This is no real output report but rather a common structure that is used
+      in almost all other output reports.
+      Byte 1 contains the following flags:
+        0x01: This enables the rumble motor. This flag must be set on every
+              output to keep the rumble motor running. If this flag is not set
+              then the rumble is disabled.
+        0x02: This requests a report acknowledgement. The wiimote will send a
+              0x22 input report in response to this report.
+        0x04: Enable flag. This has different meanings depending on the output
+              report but is generally used to enable/disable the requested
+              feature.
+        0x08: unknown
+        0xf0: The upper bits are used by different output reports for special
+              features.
+
+      ==== Rumble Report (Output) ====
+      Report: 0x10
+      Length: 1
+      Payload information contains only the common output report. This report is
+      no special rumble report, because rumble is enabled and disabled with
+      every output report that includes the common output report.
+      However, this report has no side effects so it may be used to affect the
+      rumble motor without changing any other peripheral.
+
+      ==== LED Report (Output) ====
+      Report: 0x11
+      Length: 1
+      Payload includes only the common output report. The upper 4 bits of the
+      common output report set the different leds:
+        0x10: LED 1
+        0x20: LED 2
+        0x40: LED 3
+        0x80: LED 4
+      Turning all four LEDs off for too long is discouraged since it may lead
+      the user to believe the wiimote is turned off while it is still turned on.
+      Brightness modulation can be achieved by turning the leds off and on very
+      fast.
+
+      ==== Common (Input) ====
+      Length: 2
+      This is no real input report but rather a common structure that is used in
+      almost all other input reports.
+
 
 == Authors ==
 This document is written by:
