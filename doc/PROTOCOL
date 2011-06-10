@@ -285,6 +285,25 @@ is used to communicate with the wiimote.
       the memory read. The last two bytes SS SS specify the amount of data that
       is read starting at the offset.
 
+      ==== Speaker Data Report (Output) ====
+      Report: 0x18
+      Length: 21
+      Data: a1 18 CC DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD
+      This sends speaker data to the wiimote. The exact format of the data is
+      described below in the speaker peripheral details.
+      The first byte is the common output report. The upper 5 bits of the common
+      output report specify the size of the data payload (they shall be shifted
+      right for 3 bits). All following bytes (DD) contain the sound data that
+      is sent to the speaker.
+
+      ==== Speaker Mute Report (Output) ====
+      Report: 0x19
+      Length: 1
+      Data: a1 19 CC
+      This mutes or unmutes the speaker. The payload is the common output report
+      and the Enable Flag (0x04) specifies whether to mute (if enabled) or to
+      unmute (if disabled) the speaker.
+
       ==== Common (Input) ====
       Length: 2
       Data: BB BB
