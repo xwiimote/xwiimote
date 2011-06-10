@@ -158,12 +158,16 @@ is used to communicate with the wiimote.
     is (without the report byte).
     A report with length 8 would need 10 bytes to be constructed:
       8 payload bytes + 1 HID byte + 1 report byte = 10 bytes
+    The "Data" decription of each report below gives a short overview of how the
+    report is assembled. Each integer is given as hexadecimal number without the
+    0x prefix. Two characters form a single byte.
 
       ==== Common (Output) ====
       Length: 1
+      Data: CC
       This is no real output report but rather a common structure that is used
       in almost all other output reports.
-      Byte 1 contains the following flags:
+      Byte 1 (CC) contains the following flags:
         0x01: This enables the rumble motor. This flag must be set on every
               output to keep the rumble motor running. If this flag is not set
               then the rumble is disabled.
@@ -179,6 +183,7 @@ is used to communicate with the wiimote.
       ==== Rumble Report (Output) ====
       Report: 0x10
       Length: 1
+      Data: a1 10 CC
       Payload information contains only the common output report. This report is
       no special rumble report, because rumble is enabled and disabled with
       every output report that includes the common output report.
@@ -188,6 +193,7 @@ is used to communicate with the wiimote.
       ==== LED Report (Output) ====
       Report: 0x11
       Length: 1
+      Data: a1 11 CC
       Payload includes only the common output report. The upper 4 bits of the
       common output report set the different leds:
         0x10: LED 1
@@ -202,6 +208,7 @@ is used to communicate with the wiimote.
       ==== DRM Set Report (Output) ====
       Report: 0x12
       Length: 2
+      Data: a1 12 CC MM
       The first byte is the common output report. The Enable Flag in the common
       output report (0x04) is used to enabled or disable continuous input
       reporting. If enabled, the wiimote continously sends input reports to the
@@ -227,6 +234,7 @@ is used to communicate with the wiimote.
       ==== IR Set1 Report (Output) ====
       Report: 0x13
       Length: 1
+      Data: a1 13 CC
       This request is used to enable the IR camera. The payload is the common
       output report. The Enable Flag (0x04) of the common output report is used
       to enable or disable the IR camera.
@@ -236,6 +244,7 @@ is used to communicate with the wiimote.
       ==== Speaker Set Report (Output) ====
       Report: 0x14
       Length: 1
+      Data: a1 14 CC
       This request is used to enable the speaker. The payload is the common
       output report. The Enable Flag (0x04) of the common output report is used
       to enable or disable the speaker.
@@ -245,12 +254,14 @@ is used to communicate with the wiimote.
       ==== Status Request Report (Output) ====
       Report: 0x15
       Length: 1
+      Data: a1 15 CC
       The payload is the common output report with no special flags. This report
       requests a status report from the wiimote. The wiimote will answer with
       input report 0x20.
 
       ==== Common (Input) ====
       Length: 2
+      Data: BB BB
       This is no real input report but rather a common structure that is used in
       almost all other input reports.
 
