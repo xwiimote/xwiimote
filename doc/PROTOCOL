@@ -224,6 +224,31 @@ is used to communicate with the wiimote.
       12 bytes, not 10 and not 36!
       However, each peripheral will give hints what DRM to use below.
 
+      ==== IR Set1 Report (Output) ====
+      Report: 0x13
+      Length: 1
+      This request is used to enable the IR camera. The payload is the common
+      output report. The Enable Flag (0x04) of the common output report is used
+      to enable or disable the IR camera.
+      This is only one part of the initialization procedure of the IR camera.
+      See below for full instructions how to initialize IR.
+
+      ==== Speaker Set Report (Output) ====
+      Report: 0x14
+      Length: 1
+      This request is used to enable the speaker. The payload is the common
+      output report. The Enable Flag (0x04) of the common output report is used
+      to enable or disable the speaker.
+      This is only one part of the initialization procedure of the speaker.
+      See below for full instructions how to initialize the speaker.
+
+      ==== Status Request Report (Output) ====
+      Report: 0x15
+      Length: 1
+      The payload is the common output report with no special flags. This report
+      requests a status report from the wiimote. The wiimote will answer with
+      input report 0x20.
+
       ==== Common (Input) ====
       Length: 2
       This is no real input report but rather a common structure that is used in
