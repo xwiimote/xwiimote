@@ -315,8 +315,27 @@ is used to communicate with the wiimote.
       Length: 2
       Data: BB BB
       This is no real input report but rather a common structure that is used in
-      almost all other input reports.
-
+      almost all other input reports. The two BB BB bytes include the current
+      state of the buttons on the wiimote.
+      If the following flags are set, then the related button is currently
+      pressed:
+              Byte 1:   Byte 2:
+        0x01: Left      Two
+        0x02: Right     One
+        0x04: Down      B
+        0x08: Up        A
+        0x10: Plus      Minus
+        0x20: -         -
+        0x40: -         -
+        0x80: <undef>   Home
+      The power-button is never included in input reports. The 0x80 flag of byte
+      one is never used.
+      The bits 0x20 and 0x40 of both bytes are not used for button information
+      but often include important LSB/MSBs or other flags of the surrounding
+      input report. They are referred to as "Special Flags" of the common input
+      report.
+      The sync button on the back of the wiimote is also never included in the
+      button input report.
 
 == Authors ==
 This document is written by:
