@@ -183,7 +183,7 @@ is used to communicate with the wiimote.
       ==== Rumble Report (Output) ====
       Report: 0x10
       Length: 1
-      Data: a1 10 CC
+      Data: 52 10 CC
       Payload information contains only the common output report. This report is
       no special rumble report, because rumble is enabled and disabled with
       every output report that includes the common output report.
@@ -193,7 +193,7 @@ is used to communicate with the wiimote.
       ==== LED Report (Output) ====
       Report: 0x11
       Length: 1
-      Data: a1 11 CC
+      Data: 52 11 CC
       Payload includes only the common output report. The upper 4 bits of the
       common output report set the different leds:
         0x10: LED 1
@@ -208,7 +208,7 @@ is used to communicate with the wiimote.
       ==== DRM Set Report (Output) ====
       Report: 0x12
       Length: 2
-      Data: a1 12 CC MM
+      Data: 52 12 CC MM
       The first byte is the common output report. The Enable Flag in the common
       output report (0x04) is used to enabled or disable continuous input
       reporting. If enabled, the wiimote continously sends input reports to the
@@ -234,7 +234,7 @@ is used to communicate with the wiimote.
       ==== IR Set1 Report (Output) ====
       Report: 0x13
       Length: 1
-      Data: a1 13 CC
+      Data: 52 13 CC
       This request is used to enable the IR camera. The payload is the common
       output report. The Enable Flag (0x04) of the common output report is used
       to enable or disable the IR camera.
@@ -244,7 +244,7 @@ is used to communicate with the wiimote.
       ==== Speaker Set Report (Output) ====
       Report: 0x14
       Length: 1
-      Data: a1 14 CC
+      Data: 52 14 CC
       This request is used to enable the speaker. The payload is the common
       output report. The Enable Flag (0x04) of the common output report is used
       to enable or disable the speaker.
@@ -254,7 +254,7 @@ is used to communicate with the wiimote.
       ==== Status Request Report (Output) ====
       Report: 0x15
       Length: 1
-      Data: a1 15 CC
+      Data: 52 15 CC
       The payload is the common output report with no special flags. This report
       requests a status report from the wiimote. The wiimote will answer with
       input report 0x20.
@@ -262,7 +262,7 @@ is used to communicate with the wiimote.
       ==== Write Memory Report (Output) ====
       Report: 0x16
       Length: 6
-      Data: a1 16 CC OO OO OO SS DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD
+      Data: 52 16 CC OO OO OO SS DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD
       This writes data into the wiimote's EEPROM of registers. The first byte is
       the common output report. Its Enable Flag (0x04) specifies the namespace.
       If set, then the wiimote's registers are written, otherwise the EEPROM is
@@ -276,7 +276,7 @@ is used to communicate with the wiimote.
       ==== Read Memory Report (Output) ====
       Report: 0x17
       Length: 21
-      Data: a1 17 CC OO OO OO SS SS
+      Data: 52 17 CC OO OO OO SS SS
       This request a memory read of the wiimote's EEPROM or registers. The first
       byte (CC) is the common output report. Its Enable Flag (0x04) specifies
       whether EEPROM or registers shall be read. If set, the registers are read,
@@ -288,7 +288,7 @@ is used to communicate with the wiimote.
       ==== Speaker Data Report (Output) ====
       Report: 0x18
       Length: 21
-      Data: a1 18 CC DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD
+      Data: 52 18 CC DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD
       This sends speaker data to the wiimote. The exact format of the data is
       described below in the speaker peripheral details.
       The first byte is the common output report. The upper 5 bits of the common
@@ -299,7 +299,7 @@ is used to communicate with the wiimote.
       ==== Speaker Mute Report (Output) ====
       Report: 0x19
       Length: 1
-      Data: a1 19 CC
+      Data: 52 19 CC
       This mutes or unmutes the speaker. The payload is the common output report
       and the Enable Flag (0x04) specifies whether to mute (if enabled) or to
       unmute (if disabled) the speaker.
@@ -307,7 +307,7 @@ is used to communicate with the wiimote.
       ==== IR Set2 Report (Output) ====
       Report: 0x1a
       Length: 1
-      Data: a1 1a CC
+      Data: 52 1a CC
       This has the same syntax as "IR Set1 Report" and is also used to
       initialize the IR camera.
 
