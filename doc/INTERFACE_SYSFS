@@ -1,0 +1,48 @@
+What:		/sys/bus/hid/drivers/wiimote/<dev>/led1
+Date:		July 2011
+Contact:	David Herrmann <dh.herrmann@googlemail.com>
+Description:	Make it possible to set/get current led state. Reading from it
+		returns 0 if led is off and 1 if it is on. Writing 0 to it
+		disables the led, writing 1 enables it.
+
+What:		/sys/bus/hid/drivers/wiimote/<dev>/led2
+What:		/sys/bus/hid/drivers/wiimote/<dev>/led3
+What:		/sys/bus/hid/drivers/wiimote/<dev>/led4
+Description:	Same as led1 but for the other 3 leds.
+
+What:		/sys/bus/hid/drivers/wiimote/<dev>/rumble
+Date:		July 2011
+Contact:	David Herrmann <dh.herrmann@googlemail.com>
+Description:	If read this returns 0 if the rumble motor is currently off and
+		1 if it is on.
+		Writing 0 to it disables the rumble motor, writing 1 enables it.
+
+What:		/sys/bus/hid/drivers/wiimote/<dev>/accelerometer
+Date:		July 2011
+Contact:	David Herrmann <dh.herrmann@googlemail.com>
+Description:	Reading this returns 0 if the accelerometer is currently turned
+		off and 1 if it is turned on. Writing 1 to it enables the
+		accelerometer and 0 disables it.
+
+What:		/sys/bus/hid/drivers/wiimote/<dev>/ir
+Date:		July 2011
+Contact:	David Herrmann <dh.herrmann@googlemail.com>
+Description:	Make it possible to set the IR camera into different states.
+		Writing "off" to it turns off the IR camera. Writing "basic"
+		turns the IR cam into basic report mode. Writing "extended"
+		puts the cam into extended report mode and "full" puts it into
+		full report mode.
+		When reading also one of these values is returned.
+		The modes differ in the amount of information they return. All
+		of them return 10 bits of precision per object. The extended
+		and full mode also return object sizes.
+		Only the full mode returns intensity values and bounding boxes.
+
+What:		/sys/bus/hid/drivers/wiimote/<dev>/input/<inputX>/
+Date:		July 2011
+Contact:	David Herrmann <dh.herrmann@googlemail.com>
+Description:	This is the evdev interface of the wiimote. It can be used to
+		get access to the /dev/input/eventY interface. See evdev API
+		for further access information.
+		See INTERFACE_INPUT for information on the data that is reported
+		via this input interface.
