@@ -199,6 +199,31 @@ is used to communicate with the wiimote.
       Brightness modulation can be achieved by turning the leds off and on very
       fast.
 
+      ==== DRM Set Report (Output) ====
+      Report: 0x12
+      Length: 2
+      The first byte is the common output report. The Enable Flag in the common
+      output report (0x04) is used to enabled or disable continuous input
+      reporting. If enabled, the wiimote continously sends input reports to the
+      host. If disabled, the wiimote sends input reports only when data has
+      changed.
+      The second byte is used to request a specific data reporting mode (DRM).
+      You should set it to the report identifier of the request input report.
+      The wiimote will send data input reports always with the requested DRM.
+      Upon powerup, the DRM defaults to 0x30. After an extension is (un)plugged,
+      data reporting is disabled and needs to be reset with this report.
+      A specific DRM does not explicitely enable or disable the peripherals of
+      the wiimote. The wiimote simply pulls the data from its peripherals, puts
+      it into the output report and sends it to the host. If the requested DRM
+      needs data from a disabled peripheral, then the data is set to 0 in the
+      input report. You have to enabled/disable the specific peripherals of the
+      wiimote independently.
+      Also the requested DRM should match the current data mode of each
+      peripheral. For example if the IR is in extended state, then it reports
+      IR data only if the requested DRM has 12 IR bytes. It must have exactly
+      12 bytes, not 10 and not 36!
+      However, each peripheral will give hints what DRM to use below.
+
       ==== Common (Input) ====
       Length: 2
       This is no real input report but rather a common structure that is used in
