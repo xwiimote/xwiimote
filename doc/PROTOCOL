@@ -337,6 +337,30 @@ is used to communicate with the wiimote.
       The sync button on the back of the wiimote is also never included in the
       button input report.
 
+      ==== Status Report (Input) ====
+      Report: 0x20
+      Length: 6
+      Data: a1 20 BB BB LF UU UU VV
+      This is sent in request to Status Request Report (0x15) and also when an
+      extension is plugged or unplugged. In the latter case you need to reset
+      the DRM mode (see DRM Set Report), otherwise not further input reports
+      will be sent.
+      The first two bytes of this report include the common input report. The
+      last byte VV is the current battery level from 0-255 where 0 is empty and
+      255 is full. The four upper bits of LF (L) are the leds:
+        0x10: LED 1
+        0x20: LED 2
+        0x40: LED 3
+        0x80: LED 4
+      These flags are set if the related LED is enabled.
+      The lower 4 bits of LF (F) specfiy different things:
+        0x01: Set if battery is nearly empty
+        0x02: Set if an extension is plugged
+        0x04: Set if speaker is enabled
+        0x08: Set if IR is enabled
+      The two bytes in between (UU UU) are always zero and its unknown why they
+      exist.
+
 == Authors ==
 This document is written by:
  * David Herrmann - dh.herrmann@googlemail.com
