@@ -259,6 +259,32 @@ is used to communicate with the wiimote.
       requests a status report from the wiimote. The wiimote will answer with
       input report 0x20.
 
+      ==== Write Memory Report (Output) ====
+      Report: 0x16
+      Length: 6
+      Data: a1 16 CC OO OO OO SS DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD
+      This writes data into the wiimote's EEPROM of registers. The first byte is
+      the common output report. Its Enable Flag (0x04) specifies the namespace.
+      If set, then the wiimote's registers are written, otherwise the EEPROM is
+      written.
+      The following 3 bytes OO OO OO specify the offset where to start the write
+      followed by one byte SS specifying the size of the data that is written.
+      SS can be a maximum of 16.
+      The rest of the report is the data (DD). Trailing bytes are padded with 0.
+      Acknowledgement is always received via input report 0x22.
+
+      ==== Read Memory Report (Output) ====
+      Report: 0x17
+      Length: 21
+      Data: a1 17 CC OO OO OO SS SS
+      This request a memory read of the wiimote's EEPROM or registers. The first
+      byte (CC) is the common output report. Its Enable Flag (0x04) specifies
+      whether EEPROM or registers shall be read. If set, the registers are read,
+      otherwise internal EEPROM is read.
+      The following three bytes OO OO OO specify the data offset where to start
+      the memory read. The last two bytes SS SS specify the amount of data that
+      is read starting at the offset.
+
       ==== Common (Input) ====
       Length: 2
       Data: BB BB
