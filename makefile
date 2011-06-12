@@ -12,11 +12,15 @@ menu:
 all: lib tools
 
 lib:
-	@cd lib && make
+	@echo Making library
+	@cd lib && make --no-print-directory
+	@echo Library done
 
 tools:
-	@cd tools && make
+	@echo Making tools
+	@cd tools && make --no-print-directory
+	@echo Tools done
 
 clean:
-	@cd lib && make clean
-	@cd tools && make clean
+	@cd lib && make clean --no-print-directory
+	@cd tools && make clean --no-print-directory
