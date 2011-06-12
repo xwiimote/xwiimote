@@ -4,6 +4,10 @@
 # Dedicated to the Public Domain
 #
 
-.PHONY: clean
+.PHONY: clean all
+
+all:
+	gcc -shared -o libxwiimote.so *.c -fPIC -Wall -O2 -ludev
 
 clean:
+	@rm -fv libxwiimote.so
