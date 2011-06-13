@@ -6,16 +6,19 @@
 
 .PHONY: all clean
 
-all: xwiiconn xwii
+all: xwiiconn xwii xwiishow
 
 clean:
-	@rm -fv xwiiconn xwii
+	@rm -fv xwiiconn xwii xwiishow
 
 xwiiconn: xwiiconn.c
 	gcc -o xwiiconn xwiiconn.c -Wall -O0 -g -lbluetooth `pkg-config --libs --cflags dbus-glib-1 glib-2.0`
 
 xwii: xwii.c ../lib/libxwiimote.so
 	gcc -o xwii xwii.c -Wall -O0 -g ../lib/libxwiimote.so -I../lib
+
+xwiishow: xwiishow.c ../lib/libxwiimote.so
+	gcc -o xwiishow xwiishow.c -Wall -O0 -g ../lib/libxwiimote.so -I../lib
 
 ../lib/libxwiimote.so:
 	@echo Making library
