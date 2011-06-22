@@ -28,6 +28,9 @@
 
 struct xwii_device {
 	struct udev_device *udev;
+	struct xwii_state state;
+	struct xwii_state cache;
+	uint16_t cache_bits;
 };
 
 struct xwii_device *xwii_device_new(void *dev)
@@ -38,6 +41,7 @@ struct xwii_device *xwii_device_new(void *dev)
 	if (!ret)
 		return NULL;
 
+	memset(ret, 0, sizeof(*ret));
 	ret->udev = udev_device_ref(dev);
 	return ret;
 }
@@ -190,4 +194,142 @@ int xwii_device_open_input(struct xwii_device *dev, bool wr)
 	free(input);
 
 	return fd;
+}
+
+const struct xwii_state *xwii_device_state(struct xwii_device *dev)
+{
+	return &dev->state;
+}
+
+static uint16_t keymap[] = {
+	[KEY_LEFT] = XWII_KEY_LEFT,
+	[KEY_RIGHT] = XWII_KEY_RIGHT,
+	[KEY_UP] = XWII_KEY_UP,
+	[KEY_DOWN] = XWII_KEY_DOWN,
+	[KEY_NEXT] = XWII_KEY_PLUS,
+	[KEY_PREVIOUS] = XWII_KEY_MINUS,
+	[BTN_1] = XWII_KEY_ONE,
+	[BTN_2] = XWII_KEY_TWO,
+	[BTN_A] = XWII_KEY_A,
+	[BTN_B] = XWII_KEY_B,
+	[BTN_MODE] = XWII_KEY_HOME,
+};
+
+static void cache_key(struct xwii_device *dev, struct input_event *ev)
+{
+	uint16_t key;
+
+	key = keymap[ev->code];
+	if (!key)
+		return;
+
+	if (ev->value == 0) {
+		dev->cache.keys &= ~key;
+	} else {
+		dev->cache.keys |= key;
+	}
+}
+
+static void cache_abs(struct xwii_device *dev, struct input_event *ev)
+{
+	switch (ev->code) {
+		case ABS_X:
+			dev->cache_bits |= XWII_ACCEL;
+			dev->cache.accelx = ev->value;
+			break;
+		case ABS_Y:
+			dev->cache_bits |= XWII_ACCEL;
+			dev->cache.accely = ev->value;
+			break;
+		case ABS_Z:
+			dev->cache_bits |= XWII_ACCEL;
+			dev->cache.accelz = ev->value;
+			break;
+		case ABS_HAT0X:
+			dev->cache_bits |= XWII_IR;
+			dev->cache.irx[0] = ev->value;
+			break;
+		case ABS_HAT0Y:
+			dev->cache_bits |= XWII_IR;
+			dev->cache.iry[0] = ev->value;
+			break;
+		case ABS_HAT1X:
+			dev->cache_bits |= XWII_IR;
+			dev->cache.irx[1] = ev->value;
+			break;
+		case ABS_HAT1Y:
+			dev->cache_bits |= XWII_IR;
+			dev->cache.iry[1] = ev->value;
+			break;
+		case ABS_HAT2X:
+			dev->cache_bits |= XWII_IR;
+			dev->cache.irx[2] = ev->value;
+			break;
+		case ABS_HAT2Y:
+			dev->cache_bits |= XWII_IR;
+			dev->cache.iry[2] = ev->value;
+			break;
+		case ABS_HAT3X:
+			dev->cache_bits |= XWII_IR;
+			dev->cache.irx[3] = ev->value;
+			break;
+		case ABS_HAT3Y:
+			dev->cache_bits |= XWII_IR;
+			dev->cache.iry[3] = ev->value;
+			break;
+	}
+}
+
+uint16_t xwii_device_poll(struct xwii_device *dev, int fd)
+{
+	struct input_event ev;
+	int ret;
+	uint16_t result;
+
+try_again:
+
+	ret = read(fd, &ev, sizeof(ev));
+	if (ret != sizeof(ev)) {
+		if (ret < 0 && errno == EAGAIN)
+			return XWII_BLOCKING;
+		else
+			return XWII_CLOSED;
+	}
+
+	switch (ev.type) {
+		case EV_KEY:
+			cache_key(dev, &ev);
+			break;
+		case EV_ABS:
+			cache_abs(dev, &ev);
+			break;
+		case EV_SYN:
+			result = dev->state.keys ^ dev->cache.keys;
+			result |= dev->cache_bits;
+			dev->cache_bits = 0;
+			memcpy(&dev->state, &dev->cache, sizeof(dev->state));
+			return result;
+	}
+
+	goto try_again;
+}
+
+bool xwii_device_read_led(struct xwii_device *dev, int led)
+{
+	return false;
+}
+
+bool xwii_device_read_rumble(struct xwii_device *dev)
+{
+	return false;
+}
+
+bool xwii_device_read_accel(struct xwii_device *dev)
+{
+	return false;
+}
+
+enum xwii_ir xwii_device_read_ir(struct xwii_device *dev)
+{
+	return XWII_IR_OFF;
 }
