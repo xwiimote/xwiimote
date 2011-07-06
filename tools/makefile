@@ -6,7 +6,7 @@
 
 .PHONY: all clean
 
-all: xwiiconn xwii xwiishow
+all: xwiiconn xwii xwiishow xwiidump
 
 clean:
 	@rm -fv xwiiconn xwii xwiishow
@@ -19,6 +19,9 @@ xwii: xwii.c ../lib/libxwiimote.so
 
 xwiishow: xwiishow.c ../lib/libxwiimote.so
 	gcc -o xwiishow xwiishow.c -Wall -O0 -g ../lib/libxwiimote.so -I../lib
+
+xwiidump: xwiidump.c
+	gcc -o xwiidump xwiidump.c -Wall -O0 -g
 
 ../lib/libxwiimote.so:
 	@echo Making library
