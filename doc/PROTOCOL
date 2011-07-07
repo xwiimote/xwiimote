@@ -263,7 +263,7 @@ is used to communicate with the wiimote.
       Report: 0x16
       Length: 21
       Data: 52 16 CC OO OO OO SS DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD
-      This writes data into the wiimote's EEPROM of registers. The first byte is
+      This writes data into the wiimote's EEPROM or registers. The first byte is
       the common output report. Its Enable Flag (0x04) specifies the namespace.
       If set, then the wiimote's registers are written, otherwise the EEPROM is
       written.
