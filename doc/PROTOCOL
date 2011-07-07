@@ -395,6 +395,61 @@ is used to communicate with the wiimote.
       The DRM-set output report is used to select the DRM report that is used
       for input reports.
 
+      ==== DRM B ====
+      Report: 0x30
+      Length: 2
+      Data: a1 30 BB BB
+
+      ==== DRM BA ====
+      Report: 0x31
+      Length: 5
+      Data: a1 31 BB BB AA AA AA
+
+      ==== DRM BE ====
+      Report: 0x32
+      Length: 10
+      Data: a1 32 BB BB EE EE EE EE EE EE EE EE
+
+      ==== DRM BAI ====
+      Report: 0x33
+      Length: 17
+      Data: a1 33 BB BB AA AA AA II II II II II II II II II II II II
+
+      ==== DRM BEE ====
+      Report: 0x34
+      Length: 21
+      Data: a1 34 BB BB EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE
+
+      ==== DRM BAE ====
+      Report: 0x35
+      Length: 21
+      Data: a1 35 BB BB AA AA AA EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE
+
+      ==== DRM BIE ====
+      Report: 0x36
+      Length: 21
+      Data: a1 36 BB BB II II II II II II II II II II EE EE EE EE EE EE EE EE EE
+
+      ==== DRM BAIE ====
+      Report: 0x37
+      Length: 21
+      Data: a1 37 BB BB AA AA AA II II II II II II II II II II EE EE EE EE EE EE
+
+      ==== DRM E ====
+      Report: 0x3d
+      Length: 21
+      Data: a1 3d EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE EE
+
+      ==== DRM SBAI1 ====
+      Report: 0x3e
+      Length: 21
+      Data: a1 3e BB BB AA II II II II II II II II II II II II II II II II II II
+
+      ==== DRM SBAI2 ====
+      Report: 0x3f
+      Length: 21
+      Data: a1 3f BB BB AA II II II II II II II II II II II II II II II II II II
+
 == Authors ==
 This document is written by:
  * David Herrmann - dh.herrmann@googlemail.com
