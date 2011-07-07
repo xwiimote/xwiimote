@@ -361,6 +361,40 @@ is used to communicate with the wiimote.
       The two bytes in between (UU UU) are always zero and its unknown why they
       exist.
 
+      ==== Memory Report (Input) ====
+      Report: 0x21
+      Length: 21
+      Data: a1 21 BB BB SE OO OO DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD DD
+      This is sent when data is read via read-memory request. The first two
+      bytes include the common input information. The upper bits in SE are the
+      size of the data that is read minus one (0xff => 16 byte, 0x00 => 1 byte)
+      and the lower bits of SE are the error flag which is 0 when everything is
+      ok, 7 when reading write-only memory and 8 when reading from unexisting
+      memory. Other error flags are unknown.
+      The two OO bytes are the lower 2 bytes of the offset. The upper two bytes
+      are not reported back and must be known by the caller. The 16 DD bytes are
+      the actual data and padded with zeros at the end if less data than 16
+      bytes were read.
+      If the read-memory request has read more than 16 bytes, multiple responses
+      are sent with the offset increased by 16 each time. Input reporting is
+      disabled during those reads and continues after the read is done.
+
+      ==== Result Report (Input) ====
+      Report: 0x22
+      Length: 4
+      Data: a1 22 BB BB RR EE
+      This report is sent when a output report failed or explicit
+      acknowledgement was requested by the caller via 0x02 bit in the common
+      output request. The two BB bytes include the common input information, the
+      RR byte is the number of the related report that this report is the result
+      of. The EE byte is the error identifier: 0 if everything was ok, and >0
+      on error. The meaning of each error number is unknown.
+
+      ==== DRM reports (Input) ====
+      All following reports are used to report input information to the host.
+      The DRM-set output report is used to select the DRM report that is used
+      for input reports.
+
 == Authors ==
 This document is written by:
  * David Herrmann - dh.herrmann@googlemail.com
