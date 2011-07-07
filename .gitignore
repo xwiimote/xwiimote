@@ -6,3 +6,8 @@ driver/modules.order
 driver/src/.*.cmd
 driver/src/*.ko
 driver/src/*.mod.c
+tools/xwii
+tools/xwiiconn
+tools/xwiidump
+tools/xwiishow
+lib/*.so
