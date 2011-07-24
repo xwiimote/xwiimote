@@ -1,13 +1,13 @@
 # Ignore generated files
-*/src/*.o
 driver/.tmp_versions
 driver/Module.symvers
 driver/modules.order
-driver/src/.*.cmd
-driver/src/*.ko
-driver/src/*.mod.c
+driver/.*.cmd
+driver/*.ko
+driver/*.mod.c
+driver/*.o
 tools/xwii
 tools/xwiiconn
 tools/xwiidump
 tools/xwiishow
-lib/*.so
+*.so

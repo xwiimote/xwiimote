@@ -39,6 +39,6 @@ copy:
 	@patch -p0 <remove_hidids.patch
 
 clean:
-	@rm -rvf .tmp_versions/ .*.cmd *.o *.ko *.mod.? modules.order Module.symvers *.orig
+	@rm -rvf .tmp_versions/ .*.cmd *.o *.ko *.mod.? modules.order Module.symvers *.orig *.rej
 
 endif
