@@ -1,0 +1,13 @@
+--- ../../xwiimote_kernel/drivers/hid/hid-wiimote.c	2011-07-24 13:02:23.509944851 +0200
++++ hid-wiimote.c	2011-07-24 13:29:40.724476852 +0200
+@@ -18,7 +18,9 @@
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+ #include <linux/spinlock.h>
+-#include "hid-ids.h"
++
++#define USB_VENDOR_ID_NINTENDO 0x057e
++#define USB_DEVICE_ID_NINTENDO_WIIMOTE 0x0306
+ 
+ #define WIIMOTE_VERSION "0.1"
+ #define WIIMOTE_NAME "Nintendo Wii Remote"
