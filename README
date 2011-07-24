@@ -1,7 +1,7 @@
-= Nintendo Wii Remote Device Driver Tools =
+= Nintendo Wii Remote Linux Device Driver Tools =
 
 This distribution contains tools and libraries related to the open
-source Nintendo Wii Remote device driver which is available at:
+source Nintendo Wii Remote linux device driver which is available at:
   https://github.com/dvdhrm/xwiimote_kernel
 
 This distribution is hosted at:
@@ -30,4 +30,5 @@ Please see ./DEV for development information.
 
 == Copying ==
 
-Please see ./COPYING for licensing information.
+This whole distribution is dedicated to the Public Domain. Please see ./COPYING
+for more information.

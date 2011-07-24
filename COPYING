@@ -3,6 +3,14 @@
 This software package is dedicated to the Public Domain. This includes
 all files (code, documentation, ...) shipped with this distribution.
 
+== Exceptions ==
+
+The following files are not considered part of this distribution and are not
+dedicated to the Public Domain:
+ - driver/hid-wiimote.c: The kernel driver is licensed under the terms of the
+                         GPL. This file is only a copy of the current driver.
+                         See the xwiimote_kernel repo for driver developmnt.
+
 == Developers ==
 
 This software is written by:
