@@ -144,9 +144,9 @@ static struct udev_device *next_enum(struct xwii_monitor *monitor)
 	return NULL;
 }
 
-static struct xwii_device *make_device(struct udev_device *dev)
+static struct xwii_dev *make_device(struct udev_device *dev)
 {
-	struct xwii_device *ret = NULL;
+	struct xwii_dev *ret = NULL;
 	const char *tmp;
 	struct udev_device *p;
 
@@ -170,17 +170,19 @@ static struct xwii_device *make_device(struct udev_device *dev)
 	if (!tmp || 0 != strcmp(tmp, "0005:0000057E:00000306"))
 		goto out;
 
-	ret = xwii_device_new(dev);
+	tmp = udev_device_get_syspath(dev);
+	if (tmp)
+		ret = xwii_dev_new(tmp);
 
 out:
 	udev_device_unref(dev);
 	return ret;
 }
 
-struct xwii_device *xwii_monitor_poll(struct xwii_monitor *monitor)
+struct xwii_dev *xwii_monitor_poll(struct xwii_monitor *monitor)
 {
 	struct udev_device *dev;
-	struct xwii_device *ret = NULL;
+	struct xwii_dev *ret = NULL;
 
 	if (monitor->enumerate) {
 		while (1) {

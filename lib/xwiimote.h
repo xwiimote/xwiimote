@@ -22,18 +22,19 @@ extern "C" {
  */
 
 struct xwii_monitor;
-struct xwii_device;
+struct xwii_dev;
 
 extern struct xwii_monitor *xwii_monitor_new(bool poll, bool direct);
 extern void xwii_monitor_free(struct xwii_monitor *monitor);
 extern int xwii_monitor_get_fd(struct xwii_monitor *monitor, bool blocking);
-extern struct xwii_device *xwii_monitor_poll(struct xwii_monitor *monitor);
+extern struct xwii_dev *xwii_monitor_poll(struct xwii_monitor *monitor);
 
 /*
  * Device Control
  * This API is used to control and modify connected devices.
  */
 
+#define XWII_KEY_NONE	0x0
 #define XWII_KEY_UP	0x0001
 #define XWII_KEY_DOWN	0x0002
 #define XWII_KEY_LEFT	0x0004
@@ -68,17 +69,17 @@ enum xwii_ir {
 	XWII_IR_FULL
 };
 
-extern struct xwii_device *xwii_device_new(void *dev);
-extern void xwii_device_free(struct xwii_device *dev);
+extern struct xwii_dev *xwii_dev_new(const char *dev);
+extern void xwii_dev_free(struct xwii_dev *dev);
 
-extern int xwii_device_open_input(struct xwii_device *dev, bool wr);
-extern const struct xwii_state *xwii_device_state(struct xwii_device *dev);
-extern uint16_t xwii_device_poll(struct xwii_device *dev, int fd);
+extern int xwii_dev_open_input(struct xwii_dev *dev, bool wr);
+extern const struct xwii_state *xwii_dev_state(struct xwii_dev *dev);
+extern uint16_t xwii_dev_poll(struct xwii_dev *dev);
 
-extern bool xwii_device_read_led(struct xwii_device *dev, int led);
-extern bool xwii_device_read_rumble(struct xwii_device *dev);
-extern bool xwii_device_read_accel(struct xwii_device *dev);
-extern enum xwii_ir xwii_device_read_ir(struct xwii_device *dev);
+extern bool xwii_dev_read_led(struct xwii_dev *dev, int led);
+extern bool xwii_dev_read_rumble(struct xwii_dev *dev);
+extern bool xwii_dev_read_accel(struct xwii_dev *dev);
+extern enum xwii_ir xwii_dev_read_ir(struct xwii_dev *dev);
 
 #ifdef __cplusplus
 }

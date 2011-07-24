@@ -6,7 +6,7 @@
 
 /*
  * Device Control
- * Use sysfs to control connected wiimotes.
+ * Use sysfs and evdev to control connected wiimotes.
  */
 
 #include <errno.h>
@@ -18,7 +18,6 @@
 
 #include <dirent.h>
 #include <fcntl.h>
-#include <libudev.h>
 #include <linux/input.h>
 #include <linux/limits.h>
 #include <sys/ioctl.h>
@@ -26,32 +25,46 @@
 
 #include "xwiimote.h"
 
-struct xwii_device {
-	struct udev_device *udev;
+struct xwii_dev {
+	char *path;
+	signed int input;
 	struct xwii_state state;
 	struct xwii_state cache;
 	uint16_t cache_bits;
 };
 
-struct xwii_device *xwii_device_new(void *dev)
+struct xwii_dev *xwii_dev_new(const char *syspath)
 {
-	struct xwii_device *ret;
+	struct xwii_dev *dev;
 
-	ret = malloc(sizeof(*ret));
-	if (!ret)
+	dev = malloc(sizeof(*dev));
+	if (!dev)
 		return NULL;
 
-	memset(ret, 0, sizeof(*ret));
-	ret->udev = udev_device_ref(dev);
-	return ret;
+	memset(dev, 0, sizeof(*dev));
+	dev->path = strdup(syspath);
+	if (!dev->path) {
+		free(dev);
+		return NULL;
+	}
+
+	dev->input = -1;
+	return dev;
 }
 
-void xwii_device_free(struct xwii_device *dev)
+void xwii_dev_free(struct xwii_dev *dev)
 {
-	udev_device_unref(dev->udev);
+	if (dev->input >= 0)
+		close(dev->input);
+	free(dev->path);
 	free(dev);
 }
 
+/*
+ * Concat "add" to "path" and return new allocated string. Free "path" if
+ * do_free is true.
+ * Returns NULL on malloc failure but "path" is ALWAYS freed if do_free is set.
+ */
 static char *concat_path(const char *path, const char *add, bool do_free)
 {
 	char *str;
@@ -72,6 +85,11 @@ static char *concat_path(const char *path, const char *add, bool do_free)
 	return str;
 }
 
+/*
+ * Finds the input directory of a wiimote. "dev" must be the sysfs path
+ * to the base directory of the wiimote.
+ * Returns NULL on failure.
+ */
 static char *find_input_path(const char *dev)
 {
 	DIR *dir;
@@ -83,10 +101,8 @@ static char *find_input_path(const char *dev)
 		return NULL;
 
 	dir = opendir(path);
-	if (!dir) {
-		free(path);
-		return NULL;
-	}
+	if (!dir)
+		goto error;
 
 	while ((e = readdir(dir))) {
 		if (strncmp(e->d_name, "input", 5))
@@ -98,11 +114,17 @@ static char *find_input_path(const char *dev)
 	}
 
 	closedir(dir);
+error:
 	free(path);
-
 	return NULL;
 }
 
+/*
+ * Finds the event name of a wiimote. Should get as argument the result of
+ * find_input_path(). Returns a string like "event5" which then can be used to
+ * open /dev/input/eventX.
+ * Returns NULL on failure;
+ */
 static char *find_event_name(const char *dev_input)
 {
 	DIR *dir;
@@ -127,6 +149,10 @@ static char *find_event_name(const char *dev_input)
 	return NULL;
 }
 
+/*
+ * Open event device and test whether it really is a wiimote.
+ * Returns an open fd or -1 on failure
+ */
 static int open_dev_event(const char *event, bool wr)
 {
 	char *path;
@@ -137,7 +163,7 @@ static int open_dev_event(const char *event, bool wr)
 	if (!path)
 		return -1;
 
-	fd = open(path, wr?O_RDWR:O_RDONLY);
+	fd = open(path, wr ? O_RDWR : O_RDONLY);
 	free(path);
 
 	if (fd < 0)
@@ -155,17 +181,14 @@ static int open_dev_event(const char *event, bool wr)
 	return -1;
 }
 
-int xwii_device_open_input(struct xwii_device *dev, bool wr)
+int xwii_dev_open_input(struct xwii_dev *dev, bool wr)
 {
-	const char *path;
-	char *input, *event, *event2;
-	int fd;
+	char *input, *event;
 
-	path = udev_device_get_syspath(dev->udev);
-	if (!path)
-		return -1;
+	if (dev->input >= 0)
+		return dev->input;
 
-	input = find_input_path(path);
+	input = find_input_path(dev->path);
 	if (!input)
 		return -1;
 
@@ -175,52 +198,55 @@ int xwii_device_open_input(struct xwii_device *dev, bool wr)
 		return -1;
 	}
 
-	fd = open_dev_event(event, wr);
-
-	/*
-	 * Find event name again to go sure our device didn't disconnect
-	 * and another wiimote connected and got the same event name.
-	 */
-	if (fd >= 0) {
-		event2 = find_event_name(input);
-		if (!event2 || strcmp(event, event2)) {
-			close(fd);
-			fd = -1;
-		}
-		free(event2);
-	}
+	dev->input = open_dev_event(event, wr);
 
 	free(event);
 	free(input);
 
-	return fd;
+	return dev->input;
 }
 
-const struct xwii_state *xwii_device_state(struct xwii_device *dev)
+const struct xwii_state *xwii_dev_state(struct xwii_dev *dev)
 {
 	return &dev->state;
 }
 
-static uint16_t keymap[] = {
-	[KEY_LEFT] = XWII_KEY_LEFT,
-	[KEY_RIGHT] = XWII_KEY_RIGHT,
-	[KEY_UP] = XWII_KEY_UP,
-	[KEY_DOWN] = XWII_KEY_DOWN,
-	[KEY_NEXT] = XWII_KEY_PLUS,
-	[KEY_PREVIOUS] = XWII_KEY_MINUS,
-	[BTN_1] = XWII_KEY_ONE,
-	[BTN_2] = XWII_KEY_TWO,
-	[BTN_A] = XWII_KEY_A,
-	[BTN_B] = XWII_KEY_B,
-	[BTN_MODE] = XWII_KEY_HOME,
-};
+static uint16_t map_key(int32_t key)
+{
+	switch (key) {
+	case KEY_LEFT:
+		return XWII_KEY_LEFT;
+	case KEY_RIGHT:
+		return XWII_KEY_RIGHT;
+	case KEY_UP:
+		return XWII_KEY_UP;
+	case KEY_DOWN:
+		return XWII_KEY_DOWN;
+	case KEY_NEXT:
+		return XWII_KEY_PLUS;
+	case KEY_PREVIOUS:
+		return XWII_KEY_MINUS;
+	case BTN_1:
+		return XWII_KEY_ONE;
+	case BTN_2:
+		return XWII_KEY_TWO;
+	case BTN_A:
+		return XWII_KEY_A;
+	case BTN_B:
+		return XWII_KEY_B;
+	case BTN_MODE:
+		return XWII_KEY_HOME;
+	default:
+		return XWII_KEY_NONE;
+	}
+}
 
-static void cache_key(struct xwii_device *dev, struct input_event *ev)
+static void cache_key(struct xwii_dev *dev, struct input_event *ev)
 {
 	uint16_t key;
 
-	key = keymap[ev->code];
-	if (!key)
+	key = map_key(ev->code);
+	if (key == XWII_KEY_NONE)
 		return;
 
 	if (ev->value == 0) {
@@ -230,7 +256,7 @@ static void cache_key(struct xwii_device *dev, struct input_event *ev)
 	}
 }
 
-static void cache_abs(struct xwii_device *dev, struct input_event *ev)
+static void cache_abs(struct xwii_dev *dev, struct input_event *ev)
 {
 	switch (ev->code) {
 		case ABS_X:
@@ -280,7 +306,7 @@ static void cache_abs(struct xwii_device *dev, struct input_event *ev)
 	}
 }
 
-uint16_t xwii_device_poll(struct xwii_device *dev, int fd)
+uint16_t xwii_dev_poll(struct xwii_dev *dev)
 {
 	struct input_event ev;
 	int ret;
@@ -288,7 +314,7 @@ uint16_t xwii_device_poll(struct xwii_device *dev, int fd)
 
 try_again:
 
-	ret = read(fd, &ev, sizeof(ev));
+	ret = read(dev->input, &ev, sizeof(ev));
 	if (ret != sizeof(ev)) {
 		if (ret < 0 && errno == EAGAIN)
 			return XWII_BLOCKING;
@@ -314,22 +340,22 @@ try_again:
 	goto try_again;
 }
 
-bool xwii_device_read_led(struct xwii_device *dev, int led)
+bool xwii_dev_read_led(struct xwii_dev *dev, int led)
 {
 	return false;
 }
 
-bool xwii_device_read_rumble(struct xwii_device *dev)
+bool xwii_dev_read_rumble(struct xwii_dev *dev)
 {
 	return false;
 }
 
-bool xwii_device_read_accel(struct xwii_device *dev)
+bool xwii_dev_read_accel(struct xwii_dev *dev)
 {
 	return false;
 }
 
-enum xwii_ir xwii_device_read_ir(struct xwii_device *dev)
+enum xwii_ir xwii_dev_read_ir(struct xwii_dev *dev)
 {
 	return XWII_IR_OFF;
 }
