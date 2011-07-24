@@ -17,7 +17,7 @@
 static void list()
 {
 	struct xwii_monitor *mon;
-	struct xwii_device *dev;
+	struct xwii_dev *dev;
 
 	mon = xwii_monitor_new(false, false);
 	if (!mon)
@@ -27,7 +27,7 @@ static void list()
 
 	while ((dev = xwii_monitor_poll(mon))) {
 		printf(" - device %p\n", dev);
-		xwii_device_free(dev);
+		xwii_dev_free(dev);
 	}
 
 	printf("End of list\n");
