@@ -16,13 +16,68 @@ write an email to the current maintainer at:
 
 Thank you for using this driver!
 
-== Install ==
-
-Please see ./INSTALL for information on how to install this driver.
-
 == Usage ==
 
-Please see ./USAGE for information on how to use this driver.
+This distribution contains only the userspace helper libraries and tools. The
+actual kernel driver is part of the official linux kernel since version 3.1. The
+upstream kernel does not always include the latest release of the kernel driver,
+so you may choose to remove the driver from your kernel and compile a more
+recent one.
+If wou want to compile your own module, please read ./driver/Makefile or just
+try:
+	cd ./driver
+	make
+This should create the hid-wiimote.ko module. This distribution contains a copy
+of the last stable release of the driver inside ./driver/hid-wiimote.c. It is
+recommended that you download the most recent one from the xwiimote_kernel
+repository instead of using this one.
+
+If you have your module loaded (either from your upstream kernel or your own
+compiled one) the following directory should exist:
+	ls /sys/module/hid_wiimote
+If it does, you have loaded the module successfully (or it is compiled
+statically into your kernel).
+
+To connect a wiimote, you need at least bluez-4.96. Older bluetooth versions
+will only work if you do NOT pair your wiimote, but simply connect without
+pairing/bonding. Be sure your bluez does contain the "wiimote" module. It is
+part of the official distribution but may be disabled by your operating system
+distribution.
+You can connect your wiimote just like any other bluetooth device and it should
+work out of the box. If you don't want to reconnect your wiimote manually every
+time, you can use "auto-reconnect":
+You need to pair your wiimote with your PC by pressing the red "sync"-button on
+the back of the wiimote under the battery cover (Pressing 1+2 buttons DOES NOT
+WORK). It is important that you PAIR with the wiimote. A simple connect will not
+work. After that, the wiimote should reconnect to your PC if you press any
+button.
+
+Happy Playing!
+
+== Install ==
+
+The wiimote kernel module is shipped with linux kernel version 3.1 or higher so
+it should be already installed on your system. If not, please see USAGE
+information above.
+To install the userspace libraries or tools, read below.
+
+This distribution contains a library to access connected wiimotes. This library
+is not needed at all to use wiimotes in your own application, though, it eases
+the task. To use wiimotes without this library, see ./doc/INTERFACE for
+documentation.
+
+To install this library, you need libudev installed on your system. Then do:
+	make build
+to build "libxwiimote.so". You may want to install this shared library in your
+system with:
+	cp libxwiimote.so /usr/lib/
+	cp lib/xwiimote.h /usr/include
+There is currently no "make install". Please use your distributions package
+manager or copy them manually as shown above.
+Please see ./doc/LIBRARY for usage information of the library.
+
+To install the tools, run "make" inside the tools directory. Please read each
+source file to get information on those tools.
 
 == Development ==
 

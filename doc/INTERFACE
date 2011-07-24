@@ -1,0 +1,49 @@
+= Wiimote Interface =
+
+This is the documentation of the kernel interface to the wiimote. If you use the
+xwiimote library, you do not need to know this, however, if you plan to write an
+XINPUT driver or similar and don't want to use this library, read below.
+
+A wiimote, when connected to the system, will show up as:
+	/sys/bus/hid/devices/<deviceID>
+<deviceID> is a unique id which will never be used twice. To monitor for new
+devices, you can simply place an inotify on /sys/bus/hid/devices or use libudev.
+
+Notice: When this directory shows up, you need to wait a short time until
+everything below this directory is set up. If you use libudev, it will notify
+you, when the device is fully setup. A short sleep of 10ms should be enough,
+though.
+
+To work with a wiimote, there are actually two APIs. Input events are reported
+through an input device. The subdirectory of each device:
+	./input/inputX/
+contains information about the input device. Udev will automatically set up:
+	/dev/input/eventY
+for each wiimote. However, if you run without udev, you need to create your own
+device node with "mknod". Major and minor number are available in:
+	./input/inputX/dev
+The name of the eventY file that is created by udev is actually the same as:
+	./input/inputX/eventY
+However, its only the same name, not the same file! Also inputX and eventY have
+different suffixes. The X of inputX increases systemwide and is never reused,
+whereas eventY may reuse free numbers which are no longer used.
+
+This input device is used to report input events. Please see INTERFACE_INPUT for
+information about what data is reported.
+
+The input interface can not be used to control the wiimote, though. It only
+reports information. To change the wiimote status, you must use the other files
+in the sysfs directry. All of them are placed directly in:
+	/sys/bus/hid/devices/<deviceID>
+and can be accessed from a shell. See INTERFACE_SYSFS for information about
+these files. They allow to change the LEDs, control the rumble motor, enable or
+disable the accelerometer and IR and much more.
+
+Last but not least, there are some debugfs files. These are only for debugging
+wiimotes and shall not be used in applications. If debugfs is mounted as:
+	/sys/kernel/debug
+then you may access it via:
+	/sys/kernel/debug/hid/<device>/
+It will contains several files to access the wiimote. Be sure NOT TO WRITE to
+them files if you don't know what they do. For instance, writing to the "eeprom"
+file allows to overwrite the internal EEPROM memory of the wiimote.

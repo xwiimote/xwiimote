@@ -1,0 +1,3 @@
+There is currently no documentation available. Please see lib/xwiimote.h for the
+function prototypes and tools/*.c for examples. Especially tools/xwiishow.c
+should be helpful.
