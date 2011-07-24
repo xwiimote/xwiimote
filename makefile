@@ -4,23 +4,12 @@
 # Dedicated to the Public Domain
 #
 
-.PHONY: menu all lib tools clean
+.PHONY: build clean
 
-menu:
-	@echo "Available Targets: all lib tools clean"
+build: libxwiimote.so
 
-all: lib tools
-
-lib:
-	@echo Making library
-	@cd lib && make --no-print-directory
-	@echo Library done
-
-tools:
-	@echo Making tools
-	@cd tools && make --no-print-directory
-	@echo Tools done
+libxwiimote.so: lib/*.c
+	gcc -shared -o libxwiimote.so lib/*.c -fPIC -Wall -O2 -ludev
 
 clean:
-	@cd lib && make clean --no-print-directory
-	@cd tools && make clean --no-print-directory
+	@rm -fv libxwiimote.so
