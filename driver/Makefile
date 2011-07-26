@@ -12,8 +12,6 @@
 # into this directy.
 # "make copy" does exactly this, assuming you have checked out "xwiimote_kernel"
 # in the same directory as "xwiimote".
-# Patch the file with "remove_hidids.patch" before compiling it, otherwise you
-# will get some errors.
 #
 # Run "make" or "make build" to compile the source. This will produce a
 # hid-wiimote.ko file which can be loaded with: "insmod ./hid-wiimote.ko"
@@ -36,7 +34,6 @@ build:
 
 copy:
 	@cp -v ../../xwiimote_kernel/drivers/hid/hid-wiimote.c .
-	@patch -p0 <remove_hidids.patch
 
 clean:
 	@rm -rvf .tmp_versions/ .*.cmd *.o *.ko *.mod.? modules.order Module.symvers *.orig *.rej
