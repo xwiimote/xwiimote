@@ -7,9 +7,11 @@ all files (code, documentation, ...) shipped with this distribution.
 
 The following files are not considered part of this distribution and are not
 dedicated to the Public Domain:
- - driver/hid-wiimote.c: The kernel driver is licensed under the terms of the
-                         GPL. This file is only a copy of the current driver.
-                         See the xwiimote_kernel repo for driver developmnt.
+ - driver/hid-wiimote.h
+ - driver/hid-wiimote-*.c
+ - driver/hid-wiimote.ko: The kernel driver is licensed under the terms of the
+                          GPL. This file is only a copy of the current driver.
+                          See the xwiimote_kernel repo for driver development.
 
 == Developers ==
 
