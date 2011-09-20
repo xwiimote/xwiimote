@@ -6,13 +6,10 @@
 
 .PHONY: all clean
 
-all: xwiiconn xwiishow xwiidump
+all: xwiishow xwiidump
 
 clean:
-	@rm -fv xwiiconn xwiishow xwiidump
-
-xwiiconn: xwiiconn.c
-	gcc -o xwiiconn xwiiconn.c -Wall -lbluetooth `pkg-config --libs --cflags dbus-glib-1 glib-2.0`
+	@rm -fv xwiishow xwiidump
 
 xwiishow: xwiishow.c ../lib/libxwiimote.so
 	gcc -o xwiishow xwiishow.c -Wall ../lib/libxwiimote.so -I../lib
