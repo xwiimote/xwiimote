@@ -25,21 +25,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-/* number of characters read at once */
-#define NUM 1
-
 static void show(const char *buf, size_t len)
 {
 	size_t i;
 
-	for (i = 0; i < len; ++i) {
+	for (i = 0; i < len; ++i)
 		printf(" 0x%02hhx", buf[i]);
-	}
 }
 
 static void dump(int fd)
 {
-	char buf[NUM];
+	char buf[1];
 	int ret;
 	size_t off, i;
 
@@ -47,13 +43,13 @@ static void dump(int fd)
 	while (1) {
 		printf("0x%08lx:", off);
 
-		for (i = 0; i < 8; i += NUM) {
+		for (i = 0; i < 8; ++i) {
 			ret = read(fd, buf, sizeof(buf));
 			if (ret > 0) {
 				show(buf, ret);
 			} else if (ret < 0) {
 				printf(" (read error %d)", errno);
-				if (lseek(fd, NUM, SEEK_CUR) < 0) {
+				if (lseek(fd, 1, SEEK_CUR) < 0) {
 					printf(" (Seek failed %d)", errno);
 					goto out;
 				}
@@ -61,7 +57,7 @@ static void dump(int fd)
 				printf(" (eof)");
 				goto out;
 			}
-			off += NUM;
+			++off;
 		}
 		printf("\n");
 	}
@@ -94,6 +90,8 @@ int main(int argc, char **argv)
 	if (fd >= 0) {
 		dump(fd);
 		close(fd);
+	} else {
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;
