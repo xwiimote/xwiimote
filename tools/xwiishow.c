@@ -1,121 +1,74 @@
 /*
- * XWiimote - tools
+ * XWiimote - tools - xwiishow
  * Written 2010, 2011 by David Herrmann
  * Dedicated to the Public Domain
  */
 
-/*
- * XWiimote Visualizer
- * This tool selects a connected wiimote and prints its current state to the
- * screen. It listens to new events and updates the state accordingly.
- * Exit with ctrl+c.
- */
-
+#include <errno.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <xwiimote.h>
+#include "xwiimote.h"
 
-static void show_keys(const struct xwii_state *state)
+static int run_iface(struct xwii_iface *iface)
 {
-	fprintf(stdout, "Key LEFT RIGHT UP DOWN\n");
-	fprintf(stdout, "    %d    %d     %d  %d\n",
-					!!(state->keys & XWII_KEY_LEFT),
-					!!(state->keys & XWII_KEY_RIGHT),
-					!!(state->keys & XWII_KEY_UP),
-					!!(state->keys & XWII_KEY_DOWN));
-	fprintf(stdout, "Key A B ONE TWO\n");
-	fprintf(stdout, "    %d %d %d   %d\n",
-					!!(state->keys & XWII_KEY_A),
-					!!(state->keys & XWII_KEY_B),
-					!!(state->keys & XWII_KEY_ONE),
-					!!(state->keys & XWII_KEY_TWO));
-	fprintf(stdout, "Key MINUS HOME PLUS\n");
-	fprintf(stdout, "    %d     %d    %d\n",
-					!!(state->keys & XWII_KEY_MINUS),
-					!!(state->keys & XWII_KEY_HOME),
-					!!(state->keys & XWII_KEY_PLUS));
+	struct xwii_event event;
+	int ret;
+
+	ret = xwii_iface_read(iface, &event);
+	printf("%d is-again: %d\n", ret, ret == -EAGAIN);
+
+	return 0;
 }
 
-static void show_accel(const struct xwii_state *state)
+static int enumerate()
 {
-	fprintf(stdout, "Accel X: %d\n", state->accelx);
-	fprintf(stdout, "Accel Y: %d\n", state->accely);
-	fprintf(stdout, "Accel Z: %d\n", state->accelz);
-}
+	struct xwii_monitor *mon;
+	char *ent;
 
-static void show_ir(const struct xwii_state *state)
-{
-	fprintf(stdout, "HAT 0 X: %u\n", state->irx[0]);
-	fprintf(stdout, "HAT 0 Y: %u\n", state->iry[0]);
-	fprintf(stdout, "HAT 1 X: %u\n", state->irx[1]);
-	fprintf(stdout, "HAT 1 Y: %u\n", state->iry[1]);
-	fprintf(stdout, "HAT 2 X: %u\n", state->irx[2]);
-	fprintf(stdout, "HAT 2 Y: %u\n", state->iry[2]);
-	fprintf(stdout, "HAT 3 X: %u\n", state->irx[3]);
-	fprintf(stdout, "HAT 3 Y: %u\n", state->iry[3]);
-}
-
-static void show(struct xwii_dev *dev)
-{
-	int fd;
-	uint16_t ev;
-	const struct xwii_state *state;
-
-	fd = xwii_dev_open_input(dev, false);
-	if (fd < 0) {
-		fprintf(stderr, "Cannot open device input\n");
-		return;
+	mon = xwii_monitor_new(false, false);
+	if (!mon) {
+		printf("Cannot create monitor\n");
+		return -EINVAL;
 	}
 
-	state = xwii_dev_state(dev);
+	while ((ent = xwii_monitor_poll(mon))) {
+		printf("  Found device: %s\n", ent);
+		free(ent);
+	}
 
-	do {
-		ev = xwii_dev_poll(dev);
-		fprintf(stdout, "\nReceived device event:\n");
-		if (!ev)
-			fprintf(stdout, "Empty event\n");
-		if (ev & XWII_CLOSED)
-			fprintf(stdout, "Device input closed\n");
-		if (ev & XWII_BLOCKING)
-			fprintf(stdout, "Device poll would block\n");
-		fprintf(stdout, "Changed: ");
-		if (ev & XWII_KEYS)
-			fprintf(stdout, "Keys ");
-		if (ev & XWII_ACCEL)
-			fprintf(stdout, "Accel ");
-		if (ev & XWII_IR)
-			fprintf(stdout, "IR ");
-		fprintf(stdout, "\n");
-		show_keys(state);
-		show_accel(state);
-		show_ir(state);
-	} while (!(ev & XWII_CLOSED));
-
-	close(fd);
+	xwii_monitor_unref(mon);
+	return 0;
 }
 
 int main(int argc, char **argv)
 {
-	struct xwii_monitor *mon;
-	struct xwii_dev *dev;
+	int ret = 0;
+	struct xwii_iface *iface;
 
-	mon = xwii_monitor_new(false, false);
-	if (!mon) {
-		fprintf(stderr, "Cannot open xwii-monitor\n");
-		return EXIT_FAILURE;
+	if (argc < 2) {
+		printf("No device path given. Listing devices:\n");
+		ret = enumerate();
+		if (ret)
+			return -ret;
+		printf("End of device list\n");
+		return 0;
 	}
 
-	dev = xwii_monitor_poll(mon);
-	if (dev) {
-		fprintf(stdout, "Showing device %p\n", dev);
-		show(dev);
-		xwii_dev_free(dev);
-	} else {
-		fprintf(stderr, "Didn't find connected wiimote\n");
+	ret = xwii_iface_new(&iface, "/sys/bus/hid/devices");
+	if (ret) {
+		printf("Cannot create xwii_iface %d\n", ret);
+		return -ret;
 	}
 
-	xwii_monitor_free(mon);
+	ret = xwii_iface_open(iface, XWII_IFACE_CORE);
+	if (ret)
+		printf("Cannot open core iface %d\n", ret);
+	else
+		ret = run_iface(iface);
 
-	return EXIT_SUCCESS;
+	xwii_iface_unref(iface);
+
+	return -ret;
 }
