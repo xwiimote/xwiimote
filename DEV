@@ -1,7 +1,7 @@
 = Development =
 
-This file contains information about the development of this software package. This
-contains no information for end-users.
+This file contains information about the development of this software package.
+This contains no information for end-users.
 
 == Git ==
 
@@ -16,10 +16,10 @@ The related linux device driver development is hosted at:
 The kernel driver repository "xwiimote_kernel" is a fork linus' linux git tree.
 There are several branches which reflect different states of development:
  - stable: This branch is the current stable tree of the driver. Since the
-   driver is included in upstream kernel, this is mostly a copy of linus' master
-   branch.
+   driver is included in upstream kernel, this is mostly a copy of the stable
+   tree from git.kernel.org.
  - testing: This is based on "stable" but contains additional features which are
-   considered to be stable but not yet tested enough. Feel free to build this
+   considered to be stable but not tested enough. Feel free to build this
    tree and test the new features.
  - master: This is current HEAD of development. It contains unstable and
    untested code so use it at your own risk.
