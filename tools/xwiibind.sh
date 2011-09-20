@@ -7,8 +7,12 @@
 #
 
 #
-# This script enables auto-reconnect on your wiimote. Current bluetooth applets
-# do not support this, yet.
+# This script enables auto-reconnect on your wiimote. This script should only be
+# used if you really require auto-reconnect now. There is work going on to get
+# auto-reconnect of wiimotes into upstream bluez repository.
+# If you need this feature now, you may read below, but be aware that this
+# method described here is neither fast nor reliable. It is a small hack to get
+# it work.
 #
 # To run this tool, you need:
 #  - "simple-agent"
@@ -54,7 +58,7 @@ PYTHON="python2"
 DEV=$1
 
 if test x"$1" = "x" ; then
-	echo "Please specify bdaddr as first argument"
+	echo "Please specify bdaddr of wiimote as first argument"
 	exit 1
 fi
 
@@ -65,6 +69,8 @@ read
 
 echo "Please press red sync-button on the back of the wiimote and press any key
 to continue"
+echo "If this asks you for PIN input, then your bluetoothd daemon does not
+include the wiimote.so plugin. Please install it or contact your distributor."
 read
 "$PYTHON" "test-device" create "$DEV"
 echo "Please disconnect the device by pressing the power button and then press
@@ -77,4 +83,4 @@ echo "Pairing with the remote device..."
 "$PYTHON" "simple-agent" "hci0" "$DEV"
 echo "Connecting to input device..."
 "$PYTHON" "test-input" connect "$DEV"
-echo "Connected to input device. Autoconnect should be enabled now"
+echo "Connected to input device. Autoconnect should be enabled now."
