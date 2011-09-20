@@ -12,7 +12,8 @@ devices, you can simply place an inotify on /sys/bus/hid/devices or use libudev.
 Notice: When this directory shows up, you need to wait a short time until
 everything below this directory is set up. If you use libudev, it will notify
 you, when the device is fully setup. A short sleep of 10ms should be enough,
-though.
+though. Or simply wait for the correct child device to show up instead of
+waiting for the parent device.
 
 To work with a wiimote, there are actually two APIs. Input events are reported
 through an input device. The subdirectory of each device:
@@ -29,15 +30,16 @@ different suffixes. The X of inputX increases systemwide and is never reused,
 whereas eventY may reuse free numbers which are no longer used.
 
 This input device is used to report input events. Please see INTERFACE_INPUT for
-information about what data is reported.
+information about what data is reported. Recent versions of the wiimote driver
+create multiple input devices to allow proper power management and split the
+events. See INTERFACE_INPUT for more information.
 
-The input interface can not be used to control the wiimote, though. It only
-reports information. To change the wiimote status, you must use the other files
-in the sysfs directry. All of them are placed directly in:
+Other features which can not be controlled via the input device include debug
+information and extension setup. The can be controlled with sysfs attributes in:
 	/sys/bus/hid/devices/<deviceID>
 and can be accessed from a shell. See INTERFACE_SYSFS for information about
-these files. They allow to change the LEDs, control the rumble motor, enable or
-disable the accelerometer and IR and much more.
+these files. They allow to read battery status, control wiimote LEDs and much
+more.
 
 Last but not least, there are some debugfs files. These are only for debugging
 wiimotes and shall not be used in applications. If debugfs is mounted as:
@@ -45,5 +47,6 @@ wiimotes and shall not be used in applications. If debugfs is mounted as:
 then you may access it via:
 	/sys/kernel/debug/hid/<device>/
 It will contains several files to access the wiimote. Be sure NOT TO WRITE to
-them files if you don't know what they do. For instance, writing to the "eeprom"
-file allows to overwrite the internal EEPROM memory of the wiimote.
+the files if you don't know what they do. For instance, writing to the "eeprom"
+file allows to overwrite the internal EEPROM memory of the wiimote. These files
+are also documented in INTERFACE_SYSFS.
