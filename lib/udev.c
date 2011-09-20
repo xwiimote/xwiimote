@@ -8,19 +8,22 @@
  * Device Enumeration and Monitorig
  * Use libudev to enumerate all currently connected devices and allow
  * monitoring the system for new devices.
+ * Normal applications should integrate this into their own udev-monitor.
+ * However, smaller applications might not use udev on their own so this API
+ * wraps the udev API in a small easy xwiimote API.
  */
 
+#include <assert.h>
+#include <fcntl.h>
+#include <libudev.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include <fcntl.h>
-#include <libudev.h>
 #include <unistd.h>
-
 #include "xwiimote.h"
 
 struct xwii_monitor {
+	size_t ref;
 	struct udev *udev;
 	struct udev_enumerate *enumerate;
 	struct udev_list_entry *entry;
@@ -50,12 +53,11 @@ struct xwii_monitor *xwii_monitor_new(bool poll, bool direct)
 
 	if (poll) {
 		monitor = udev_monitor_new_from_netlink(udev,
-							direct?"kernel":"udev");
+						direct ? "kernel" : "udev");
 		if (!monitor)
 			goto out;
 		if (udev_monitor_filter_add_match_subsystem_devtype(monitor,
-									"input",
-									NULL))
+								"input", NULL))
 			goto out;
 		if (udev_monitor_enable_receiving(monitor))
 			goto out;
@@ -64,10 +66,12 @@ struct xwii_monitor *xwii_monitor_new(bool poll, bool direct)
 	mon = malloc(sizeof(*mon));
 	if (!mon)
 		goto out;
+	mon->ref = 1;
 	mon->udev = udev;
 	mon->enumerate = enumerate;
 	mon->entry = entry;
 	mon->monitor = monitor;
+
 	return mon;
 
 out:
@@ -79,6 +83,14 @@ out:
 	return NULL;
 }
 
+struct xwii_monitor *xwii_monitor_ref(struct xwii_monitor *mon)
+{
+	assert(mon);
+	mon->ref++;
+	assert(mon->ref);
+	return mon;
+}
+
 static inline void free_enum(struct xwii_monitor *monitor)
 {
 	if (monitor->enumerate) {
@@ -88,8 +100,16 @@ static inline void free_enum(struct xwii_monitor *monitor)
 	}
 }
 
-void xwii_monitor_free(struct xwii_monitor *monitor)
+void xwii_monitor_unref(struct xwii_monitor *monitor)
 {
+	if (!monitor)
+		return;
+
+	assert(monitor->ref);
+
+	if (--monitor->ref)
+		return;
+
 	free_enum(monitor);
 	if (monitor->monitor)
 		udev_monitor_unref(monitor->monitor);
@@ -144,14 +164,14 @@ static struct udev_device *next_enum(struct xwii_monitor *monitor)
 	return NULL;
 }
 
-static struct xwii_dev *make_device(struct udev_device *dev)
+static char *make_device(struct udev_device *dev)
 {
-	struct xwii_dev *ret = NULL;
 	const char *tmp;
 	struct udev_device *p;
+	char *ret = NULL;
 
 	tmp = udev_device_get_action(dev);
-	if (tmp && *tmp && strcmp(tmp, "add"))
+	if (tmp && strcmp(tmp, "add"))
 		goto out;
 
 	tmp = udev_device_get_sysname(dev);
@@ -167,37 +187,44 @@ static struct xwii_dev *make_device(struct udev_device *dev)
 	dev = p;
 
 	tmp = udev_device_get_property_value(dev, "HID_ID");
-	if (!tmp || 0 != strcmp(tmp, "0005:0000057E:00000306"))
+	if (!tmp || strcmp(tmp, "0005:0000057E:00000306"))
 		goto out;
 
 	tmp = udev_device_get_syspath(dev);
 	if (tmp)
-		ret = xwii_dev_new(tmp);
+		ret = strdup(tmp);
 
 out:
 	udev_device_unref(dev);
 	return ret;
 }
 
-struct xwii_dev *xwii_monitor_poll(struct xwii_monitor *monitor)
+char *xwii_monitor_poll(struct xwii_monitor *monitor)
 {
 	struct udev_device *dev;
-	struct xwii_dev *ret = NULL;
+	char *ret;
 
 	if (monitor->enumerate) {
 		while (1) {
 			dev = next_enum(monitor);
 			if (!dev)
-				return NULL; /* signal end of enum */
+				/* notify application of end of enum */
+				return NULL;
+
 			ret = make_device(dev);
 			if (ret)
 				return ret;
 		}
 	} else if (monitor->monitor) {
-		dev = udev_monitor_receive_device(monitor->monitor);
-		if (!dev)
-			return NULL;
-		return make_device(dev);
+		while (1) {
+			dev = udev_monitor_receive_device(monitor->monitor);
+			if (!dev)
+				return NULL;
+
+			ret = make_device(dev);
+			if (ret)
+				return ret;
+		}
 	}
 
 	return NULL;

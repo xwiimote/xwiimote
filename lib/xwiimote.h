@@ -94,6 +94,25 @@ extern void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces);
 extern unsigned int xwii_iface_opened(struct xwii_iface *dev);
 extern int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
 
+/*
+ * Device monitor
+ * This monitor can be used to enumerate all connected wiimote devices and also
+ * monitoring the system for hotplugged wiimote devices.
+ * This is a simple wrapper around libudev and should only be used if your
+ * application does not use udev on its own.
+ * See the implementation of the monitor to integrate wiimote-monitoring into
+ * your own udev routines.
+ */
+
+struct xwii_monitor;
+
+extern struct xwii_monitor *xwii_monitor_new(bool poll, bool direct);
+extern struct xwii_monitor *xwii_monitor_ref(struct xwii_monitor *mon);
+extern void xwii_monitor_unref(struct xwii_monitor *mon);
+
+extern int xwii_monitor_get_fd(struct xwii_monitor *monitor, bool blocking);
+extern char *xwii_monitor_poll(struct xwii_monitor *monitor);
+
 #ifdef __cplusplus
 }
 #endif
