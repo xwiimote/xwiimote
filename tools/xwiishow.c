@@ -9,6 +9,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
 #include "xwiimote.h"
 
 static const char *code2str(unsigned int code)
@@ -90,7 +92,8 @@ static int run_iface(struct xwii_iface *iface)
 	while (true) {
 		ret = xwii_iface_read(iface, &event);
 		if (ret == -EAGAIN) {
-			usleep(5000);
+			nanosleep(&(struct timespec)
+				{.tv_sec = 0, .tv_nsec = 5000000 }, NULL);
 		} else if (ret) {
 			printf("Read error: %d\n", ret);
 			break;
