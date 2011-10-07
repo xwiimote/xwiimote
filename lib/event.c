@@ -161,7 +161,7 @@ static int open_ev(const char *path, unsigned int type, bool wr)
 		return -abs(ret);
 	}
 
-	return 0;
+	return fd;
 }
 
 /*
