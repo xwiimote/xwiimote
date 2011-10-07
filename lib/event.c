@@ -175,7 +175,7 @@ static int open_ev(const char *path, unsigned int type, bool wr)
 static char *find_event(struct sfs_input_dev *list, unsigned int iface)
 {
 	char *res;
-	static const char *prefix = "/dev/input/";
+	static const char prefix[] = "/dev/input/";
 	static const size_t plen = sizeof(prefix) - 1;
 	size_t len, size;
 
@@ -185,10 +185,10 @@ static char *find_event(struct sfs_input_dev *list, unsigned int iface)
 		list = list->next;
 	}
 
-	if (!list)
+	if (!list || !list->event)
 		return NULL;
 
-	len = strlen(list->name);
+	len = strlen(list->event);
 	size = plen + len;
 	res = malloc(size + 1);
 	if (!res)
@@ -196,7 +196,7 @@ static char *find_event(struct sfs_input_dev *list, unsigned int iface)
 
 	res[size] = 0;
 	memcpy(res, prefix, plen);
-	memcpy(&res[plen], list->name, len);
+	memcpy(&res[plen], list->event, len);
 	return res;
 }
 
