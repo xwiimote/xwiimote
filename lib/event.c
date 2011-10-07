@@ -269,18 +269,21 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 		if (ret < 0)
 			goto err_sys;
 		dev->if_core = ret;
+		ret = 0;
 	}
 	if (ifaces & XWII_IFACE_ACCEL) {
 		ret = open_iface(dev, XWII_IFACE_ACCEL, wr, list);
 		if (ret < 0)
 			goto err_sys;
 		dev->if_accel = ret;
+		ret = 0;
 	}
 	if (ifaces & XWII_IFACE_IR) {
 		ret = open_iface(dev, XWII_IFACE_IR, wr, list);
 		if (ret < 0)
 			goto err_sys;
 		dev->if_ir = ret;
+		ret = 0;
 	}
 
 err_sys:
