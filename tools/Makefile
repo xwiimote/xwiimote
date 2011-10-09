@@ -12,7 +12,7 @@ clean:
 	@rm -fv xwiishow xwiidump
 
 xwiishow: xwiishow.c ../lib/libxwiimote.so
-	gcc -o xwiishow xwiishow.c -Wall ../lib/libxwiimote.so -I../lib
+	gcc -o xwiishow xwiishow.c -Wall ../lib/libxwiimote.so -I../lib -lncurses
 
 xwiidump: xwiidump.c
 	gcc -o xwiidump xwiidump.c -Wall

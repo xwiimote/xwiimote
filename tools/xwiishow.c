@@ -4,7 +4,25 @@
  * Dedicated to the Public Domain
  */
 
+/*
+ * Interactive Wiimote Testing Tool
+ * If you run this tool without arguments, then it lists all currently connected
+ * wiimotes and exits.
+ * You need to pass one path as argument and the given wiimote is opened and
+ * printed to the screen. When wiimote events are received, then the screen is
+ * updated correspondingly. You can use the keyboard to control the wiimote:
+ *    q: quit the application
+ *    a: toggle accelerometer
+ *    r: toggle rumble
+ *
+ * Example:
+ *  ./xwiishow /sys/bus/hid/devices/<device>
+ * This will opened the given wiimote device and print it to the screen.
+ */
+
 #include <errno.h>
+#include <fcntl.h>
+#include <ncurses.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -13,66 +31,58 @@
 #include <time.h>
 #include "xwiimote.h"
 
-static const char *code2str(unsigned int code)
-{
-	switch (code) {
-	case XWII_KEY_LEFT:
-		return "LEFT";
-	case XWII_KEY_RIGHT:
-		return "RIGHT";
-	case XWII_KEY_UP:
-		return "UP";
-	case XWII_KEY_DOWN:
-		return "DOWN";
-	case XWII_KEY_A:
-		return "A";
-	case XWII_KEY_B:
-		return "B";
-	case XWII_KEY_PLUS:
-		return "PLUS";
-	case XWII_KEY_MINUS:
-		return "MINUS";
-	case XWII_KEY_HOME:
-		return "HOME";
-	case XWII_KEY_ONE:
-		return "ONE";
-	case XWII_KEY_TWO:
-		return "TWO";
-	default:
-		return "UNKNOWN";
-	}
-}
-
-static const char *state2str(unsigned int state)
-{
-	switch (state) {
-	case 0:
-		return "released";
-	case 1:
-		return "pressed";
-	default:
-		return "unknown";
-	}
-}
-
-static const char *ev2str(unsigned int type)
-{
-	switch (type) {
-	case XWII_EVENT_KEY:
-		return "key";
-	case XWII_EVENT_ACCEL:
-		return "accelerometer";
-	case XWII_EVENT_IR:
-		return "ir";
-	default:
-		return "unknown";
-	}
-}
+static struct xwii_iface *iface;
 
 static void show_key_event(const struct xwii_event *event)
 {
-	printf("Code: %s (%s)\n", code2str(event->v.key.code),
-						state2str(event->v.key.state));
+	unsigned int code = event->v.key.code;
+	bool pressed = event->v.key.state;
+	char *str = NULL;
+
+	if (pressed)
+		str = "X";
+	else
+		str = " ";
+
+	if (code == XWII_KEY_LEFT) {
+		mvprintw(4, 7, "%s", str);
+	} else if (code == XWII_KEY_RIGHT) {
+		mvprintw(4, 11, "%s", str);
+	} else if (code == XWII_KEY_UP) {
+		mvprintw(2, 9, "%s", str);
+	} else if (code == XWII_KEY_DOWN) {
+		mvprintw(6, 9, "%s", str);
+	} else if (code == XWII_KEY_A) {
+		if (pressed)
+			str = "A";
+		mvprintw(10, 5, "%s", str);
+	} else if (code == XWII_KEY_B) {
+		if (pressed)
+			str = "B";
+		mvprintw(10, 13, "%s", str);
+	} else if (code == XWII_KEY_HOME) {
+		if (pressed)
+			str = "HOME+";
+		else
+			str = "     ";
+		mvprintw(13, 7, "%s", str);
+	} else if (code == XWII_KEY_MINUS) {
+		if (pressed)
+			str = "-";
+		mvprintw(13, 3, "%s", str);
+	} else if (code == XWII_KEY_PLUS) {
+		if (pressed)
+			str = "+";
+		mvprintw(13, 15, "%s", str);
+	} else if (code == XWII_KEY_ONE) {
+		if (pressed)
+			str = "1";
+		mvprintw(20, 9, "%s", str);
+	} else if (code == XWII_KEY_TWO) {
+		if (pressed)
+			str = "2";
+		mvprintw(21, 9, "%s", str);
+	}
 }
 
 static void show_accel_event(const struct xwii_event *event)
@@ -83,22 +93,109 @@ static void show_ir_event(const struct xwii_event *event)
 {
 }
 
+static void show_rumble(bool on)
+{
+	mvprintw(1, 21, on ? "RUMBLE" : "      ");
+}
+
+static int setup_window()
+{
+	size_t i;
+
+	if (LINES < 24 || COLS < 80) {
+		printw("Error: Screen is too small\n");
+		return -EINVAL;
+	}
+
+	i = 0;
+	mvprintw(i++, 0, "+-----------------+ +------+");
+	mvprintw(i++, 0, "|       +-+       | |      |");
+	mvprintw(i++, 0, "|       | |       | +------+");
+	mvprintw(i++, 0, "|     +-+ +-+     |");
+	mvprintw(i++, 0, "|     |     |     |");
+	mvprintw(i++, 0, "|     +-+ +-+     |");
+	mvprintw(i++, 0, "|       | |       |");
+	mvprintw(i++, 0, "|       +-+       |");
+	mvprintw(i++, 0, "|                 |");
+	mvprintw(i++, 0, "|   +-+     +-+   |");
+	mvprintw(i++, 0, "|   | |     | |   |");
+	mvprintw(i++, 0, "|   +-+     +-+   |");
+	mvprintw(i++, 0, "|                 |");
+	mvprintw(i++, 0, "| ( ) |     | ( ) |");
+	mvprintw(i++, 0, "|                 |");
+	mvprintw(i++, 0, "|      +++++      |");
+	mvprintw(i++, 0, "|      +   +      |");
+	mvprintw(i++, 0, "|      +   +      |");
+	mvprintw(i++, 0, "|      +++++      |");
+	mvprintw(i++, 0, "|                 |");
+	mvprintw(i++, 0, "|       | |       |");
+	mvprintw(i++, 0, "|       | |       |");
+	mvprintw(i++, 0, "|                 |");
+	mvprintw(i++, 0, "+-----------------+");
+
+	return 0;
+}
+
+static void toggle_accel()
+{
+	if (xwii_iface_opened(iface) & XWII_IFACE_ACCEL)
+		xwii_iface_close(iface, XWII_IFACE_ACCEL);
+	else
+		xwii_iface_open(iface, XWII_IFACE_ACCEL);
+}
+
+static void toggle_rumble()
+{
+	static bool on = false;
+
+	if (on) {
+	} else {
+	}
+
+	on = !on;
+	show_rumble(on);
+}
+
+static int keyboard()
+{
+	int key;
+
+	key = getch();
+	if (key == ERR)
+		return 0;
+
+	switch (key) {
+	case 'a':
+		toggle_accel();
+		break;
+	case 'r':
+		toggle_rumble();
+		break;
+	case 'q':
+		return -ECANCELED;
+	}
+
+	return 0;
+}
+
 static int run_iface(struct xwii_iface *iface)
 {
 	struct xwii_event event;
-	int ret;
+	int ret = 0;
 
-	printf("Waiting for events\n");
+	ret = setup_window();
+	if (ret)
+		return ret;
+
 	while (true) {
 		ret = xwii_iface_read(iface, &event);
 		if (ret == -EAGAIN) {
 			nanosleep(&(struct timespec)
 				{.tv_sec = 0, .tv_nsec = 5000000 }, NULL);
 		} else if (ret) {
-			printf("Read error: %d\n", ret);
+			printw("Error: Read failed with err:%d\n", ret);
 			break;
 		} else {
-			printf("Event type: %s\n", ev2str(event.type));
 			switch (event.type) {
 			case XWII_EVENT_KEY:
 				show_key_event(&event);
@@ -111,9 +208,16 @@ static int run_iface(struct xwii_iface *iface)
 				break;
 			}
 		}
+
+		ret = keyboard();
+		if (ret == -ECANCELED)
+			return 0;
+		else if (ret)
+			return ret;
+		refresh();
 	}
 
-	return 0;
+	return ret;
 }
 
 static int enumerate()
@@ -139,32 +243,40 @@ static int enumerate()
 int main(int argc, char **argv)
 {
 	int ret = 0;
-	struct xwii_iface *iface;
 
 	if (argc < 2) {
 		printf("No device path given. Listing devices:\n");
 		ret = enumerate();
-		if (ret)
-			return -ret;
 		printf("End of device list\n");
-		return 0;
+	} else {
+
+		ret = xwii_iface_new(&iface, argv[1]);
+		if (ret) {
+			printf("Cannot create xwii_iface '%s' err:%d\n",
+								argv[1], ret);
+		} else {
+			ret = xwii_iface_open(iface, XWII_IFACE_CORE);
+			if (ret) {
+				printf("Cannot open core iface '%s' err:%d\n",
+								argv[1], ret);
+			} else {
+				initscr();
+				curs_set(0);
+				raw();
+				noecho();
+				timeout(0);
+				ret = run_iface(iface);
+				xwii_iface_unref(iface);
+				if (ret) {
+					printw("Program failed; press any key to exit\n");
+					refresh();
+					timeout(-1);
+					getch();
+				}
+				endwin();
+			}
+		}
 	}
 
-	printf("Opening %s\n", argv[1]);
-	ret = xwii_iface_new(&iface, argv[1]);
-	if (ret) {
-		printf("Cannot create xwii_iface %d\n", ret);
-		return -ret;
-	}
-
-	printf("Opening core interface\n");
-	ret = xwii_iface_open(iface, XWII_IFACE_CORE);
-	if (ret)
-		printf("Cannot open core iface %d\n", ret);
-	else
-		ret = run_iface(iface);
-
-	xwii_iface_unref(iface);
-
-	return -ret;
+	return abs(ret);
 }
