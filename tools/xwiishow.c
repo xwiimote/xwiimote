@@ -148,11 +148,8 @@ static void toggle_rumble()
 {
 	static bool on = false;
 
-	if (on) {
-	} else {
-	}
-
 	on = !on;
+	xwii_iface_rumble(iface, on);
 	show_rumble(on);
 }
 
@@ -255,7 +252,8 @@ int main(int argc, char **argv)
 			printf("Cannot create xwii_iface '%s' err:%d\n",
 								argv[1], ret);
 		} else {
-			ret = xwii_iface_open(iface, XWII_IFACE_CORE);
+			ret = xwii_iface_open(iface, XWII_IFACE_CORE |
+							XWII_IFACE_WRITABLE);
 			if (ret) {
 				printf("Cannot open core iface '%s' err:%d\n",
 								argv[1], ret);
