@@ -94,6 +94,7 @@ extern int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces);
 extern void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces);
 extern unsigned int xwii_iface_opened(struct xwii_iface *dev);
 extern int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
+extern int xwii_iface_rumble(struct xwii_iface *dev, bool on);
 
 /*
  * Device monitor

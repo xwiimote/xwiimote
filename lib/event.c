@@ -20,6 +20,7 @@
 struct xwii_iface {
 	size_t ref;
 	char *syspath;
+	int rumble_id;
 
 	unsigned int ifaces;
 	int if_core;
@@ -55,6 +56,7 @@ int xwii_iface_new(struct xwii_iface **dev, const char *syspath)
 	d->if_core = -1;
 	d->if_accel = -1;
 	d->if_ir = -1;
+	d->rumble_id = -1;
 
 	d->syspath = strdup(syspath);
 	if (!d->syspath) {
@@ -227,6 +229,24 @@ static int open_iface(struct xwii_iface *dev, unsigned int iface,
 }
 
 /*
+ * Upload the generic rumble event to the device. This may later be used for
+ * force-feedback effects. The event id is safed for later use.
+ */
+static void upload_rumble(struct xwii_iface *dev)
+{
+	struct ff_effect effect = {
+		.type = FF_RUMBLE,
+		.id = -1,
+		.u.rumble.strong_magnitude = 1,
+		.replay.length = 0,
+		.replay.delay = 0,
+	};
+
+	if (ioctl(dev->if_core, EVIOCSFF, &effect) != -1)
+		dev->rumble_id = effect.id;
+}
+
+/*
  * Opens the interfaces that are specified by \ifaces.
  * If an interface is already opened, it is not touched. If \ifaces contains
  * XWII_IFACE_WRITABLE, then the interfaces are also opened for writing. But
@@ -270,6 +290,7 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 			goto err_sys;
 		dev->if_core = ret;
 		ret = 0;
+		upload_rumble(dev);
 	}
 	if (ifaces & XWII_IFACE_ACCEL) {
 		ret = open_iface(dev, XWII_IFACE_ACCEL, wr, list);
@@ -515,4 +536,28 @@ int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
 		return ret;
 
 	return -EAGAIN;
+}
+
+/*
+ * Toogle wiimote rumble motor
+ * Enable or disable the rumble motor of \dev depending on \on. This requires
+ * the core interface to be opened.
+ */
+int xwii_iface_rumble(struct xwii_iface *dev, bool on)
+{
+	struct input_event ev;
+	int ret;
+
+	if (dev->if_core == -1 || dev->rumble_id == -1)
+		return -EINVAL;
+
+	ev.type = EV_FF;
+	ev.code = dev->rumble_id;
+	ev.value = on;
+	ret = write(dev->if_core, &ev, sizeof(ev));
+
+	if (ret == -1)
+		return -errno;
+	else
+		return 0;
 }
