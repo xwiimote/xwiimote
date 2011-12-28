@@ -1,8 +1,8 @@
 = Nintendo Wii Remote Linux Device Driver Tools =
 
 This distribution contains tools and libraries related to the open
-source Nintendo Wii Remote linux device driver which is available at:
-  https://github.com/dvdhrm/xwiimote_kernel
+source Nintendo Wii Remote linux device driver which is available since
+linux-3.1 in the official linux sources.
 
 This distribution is hosted at:
   https://github.com/dvdhrm/xwiimote
@@ -28,9 +28,7 @@ try:
 	cd ./driver
 	make
 This should create the hid-wiimote.ko module. This distribution contains a copy
-of the last stable release of the driver inside ./driver/hid-wiimote.c. It is
-recommended that you download the most recent one from the xwiimote_kernel
-repository instead of using this one.
+of the last stable release of the driver inside ./driver/hid-wiimote*.[ch]
 
 If you have your module loaded (either from your upstream kernel or your own
 compiled one) the following directory should exist:

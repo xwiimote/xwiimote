@@ -8,27 +8,10 @@ This contains no information for end-users.
 This software is developed in a git-repository hosted by github:
   https://github.com/dvdhrm/xwiimote
 
-The related linux device driver development is hosted at:
-  https://github.com/dvdhrm/xwiimote_kernel
-
-== Kernel Driver ==
-
-The kernel driver repository "xwiimote_kernel" is a fork linus' linux git tree.
-There are several branches which reflect different states of development:
- - stable: This branch is the current stable tree of the driver. Since the
-   driver is included in upstream kernel, this is mostly a copy of the stable
-   tree from git.kernel.org.
- - testing: This is based on "stable" but contains additional features which are
-   considered to be stable but not tested enough. Feel free to build this
-   tree and test the new features.
- - master: This is current HEAD of development. It contains unstable and
-   untested code so use it at your own risk.
-
-All branches are rebased when "stable" changes so do not pull them into your
-tree or you may get unexpected results. Instead, rebase your tree on this one.
-Additional branches may be available which test different approaches for a
-feature and are not considered to be used for productive environment. Use them
-at your own risk.
+The related linux device driver development is hosted at kernel.org:
+  http://git.kernel.org
+The driver is developed upstream. Discussion takes place at
+  linux-input@vger.kernel.org
 
 == Changelog ==
 
