@@ -12,6 +12,7 @@
 
 #include <linux/debugfs.h>
 #include <linux/module.h>
+#include <linux/seq_file.h>
 #include <linux/spinlock.h>
 #include <linux/uaccess.h>
 #include "hid-wiimote.h"
@@ -87,40 +88,28 @@ static const struct file_operations wiidebug_eeprom_fops = {
 	.llseek = generic_file_llseek,
 };
 
-const char *wiidebug_drmmap[] = {
-	[WIIPROTO_REQ_NULL] = "null",
-	[WIIPROTO_REQ_DRM_K] = "k",
-	[WIIPROTO_REQ_DRM_KA] = "ka",
-	[WIIPROTO_REQ_DRM_KE] = "ke",
-	[WIIPROTO_REQ_DRM_KAI] = "kai",
-	[WIIPROTO_REQ_DRM_KEE] = "kee",
-	[WIIPROTO_REQ_DRM_KAE] = "kae",
-	[WIIPROTO_REQ_DRM_KIE] = "kie",
-	[WIIPROTO_REQ_DRM_KAIE] = "kaie",
-	[WIIPROTO_REQ_DRM_E] = "e",
-	[WIIPROTO_REQ_DRM_SKAI1] = "skai",
-	[WIIPROTO_REQ_DRM_SKAI2] = "skai",
+static const char *wiidebug_drmmap[] = {
+	[WIIPROTO_REQ_NULL] = "NULL",
+	[WIIPROTO_REQ_DRM_K] = "K",
+	[WIIPROTO_REQ_DRM_KA] = "KA",
+	[WIIPROTO_REQ_DRM_KE] = "KE",
+	[WIIPROTO_REQ_DRM_KAI] = "KAI",
+	[WIIPROTO_REQ_DRM_KEE] = "KEE",
+	[WIIPROTO_REQ_DRM_KAE] = "KAE",
+	[WIIPROTO_REQ_DRM_KIE] = "KIE",
+	[WIIPROTO_REQ_DRM_KAIE] = "KAIE",
+	[WIIPROTO_REQ_DRM_E] = "E",
+	[WIIPROTO_REQ_DRM_SKAI1] = "SKAI1",
+	[WIIPROTO_REQ_DRM_SKAI2] = "SKAI2",
 	[WIIPROTO_REQ_MAX] = NULL
 };
 
-static int wiidebug_drm_open(struct inode *i, struct file *f)
+static int wiidebug_drm_show(struct seq_file *f, void *p)
 {
-	f->private_data = i->i_private;
-	return 0;
-}
-
-static ssize_t wiidebug_drm_read(struct file *f, char __user *u, size_t s,
-								loff_t *off)
-{
-	struct wiimote_debug *dbg = f->private_data;
-	unsigned long flags;
+	struct wiimote_debug *dbg = f->private;
 	const char *str = NULL;
-	char buf[16];
-	ssize_t len;
+	unsigned long flags;
 	__u8 drm;
-
-	if (s == 0)
-		return -EINVAL;
 
 	spin_lock_irqsave(&dbg->wdata->state.lock, flags);
 	drm = dbg->wdata->state.drm;
@@ -131,14 +120,14 @@ static ssize_t wiidebug_drm_read(struct file *f, char __user *u, size_t s,
 	if (!str)
 		str = "unknown";
 
-	len = snprintf(buf, sizeof(buf), "%s %hhu\n", str, drm);
-	if (s > len)
-		s = len;
+	seq_printf(f, "%s\n", str);
 
-	if (copy_to_user(u, buf, s))
-		return -EFAULT;
+	return 0;
+}
 
-	return s;
+static int wiidebug_drm_open(struct inode *i, struct file *f)
+{
+	return single_open(f, wiidebug_drm_show, i->i_private);
 }
 
 static ssize_t wiidebug_drm_write(struct file *f, const char __user *u,
@@ -179,8 +168,10 @@ static ssize_t wiidebug_drm_write(struct file *f, const char __user *u,
 static const struct file_operations wiidebug_drm_fops = {
 	.owner = THIS_MODULE,
 	.open = wiidebug_drm_open,
-	.read = wiidebug_drm_read,
+	.read = seq_read,
+	.llseek = seq_lseek,
 	.write = wiidebug_drm_write,
+	.release = single_release,
 };
 
 int wiidebug_init(struct wiimote_data *wdata)

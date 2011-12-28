@@ -233,10 +233,15 @@ void wiiext_event(struct wiimote_data *wdata, bool plugged)
 		return;
 
 	wdata->ext->plugged = plugged;
+
 	if (!plugged)
 		wdata->ext->mp_plugged = false;
 
-/*	wiiext_schedule(wdata->ext);*/
+	/*
+	 * We need to call wiiext_schedule(wdata->ext) here, however, the
+	 * extension initialization logic is not fully understood and so
+	 * automatic initialization is not supported, yet.
+	 */
 }
 
 /*
@@ -311,8 +316,10 @@ static void handler_motionp(struct wiimote_ext *ext, const __u8 *payload)
 	input_sync(ext->mp_input);
 
 	plugged = payload[5] & 0x01;
-	if (plugged != ext->mp_plugged)
+	if (plugged != ext->mp_plugged) {
 		ext->mp_plugged = plugged;
+		wiiext_schedule(ext);
+	}
 }
 
 static void handler_nunchuck(struct wiimote_ext *ext, const __u8 *payload)

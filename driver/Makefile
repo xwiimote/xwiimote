@@ -1,18 +1,25 @@
 #
 # XWiimote - driver - makefile
 # Written by David Herrmann, 2011
-# Dedicated to the Public Domain
+# Released under the terms of the GPLv2
+# See COPYING for details
 #
 
 #
+# Build the Wii Remote Kernel Driver
+#
+# Starting with linux-3.1 the upstream linux kernel includes the Wii Remote
+# driver. You do not need to compile it on your own. Please read below if you
+# want to compile an out-of-tree module, anyway:
+#
 # This builds the wiimote driver for the currently running kernel. This
 # distribution contains a recent stable source code of the driver
-# (hid-wiimote.c), but if you want a more recent one with unstable features,
-# copy the ./hid/drivers/hid-wiimote.c file from the xwiimote_kernel repository
-# into this directy.
-# "make copy" does exactly this, assuming you have checked out "xwiimote_kernel"
+# (hid-wiimote-*.c), but if you want a more recent one with unstable features,
+# copy the files ./hid/drivers/hid-wiimote* from the xwiimote kernel repository
+# into this directory.
+# "make copy" does exactly this, assuming you have checked out a kernel source
 # in the same directory as "xwiimote". You can adjust DRVPATH to point to your
-# xwiimote_kernel directory if you want to use "make copy". This path is
+# kernel source directory if you want to use "make copy". This path is
 # relative to this "./driver/" directory.
 #
 # New wiimote driver releases split the source into multiple files so the
@@ -27,7 +34,7 @@
 
 ifeq ($(KERNELRELEASE),)
 
-DRVPATH=../../xwiimote_kernel
+DRVPATH=../../kernel/xwiimote_kernel
 KERNELDIR ?= /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
 .PHONY: build copy clean test
