@@ -7,7 +7,7 @@
 ACLOCAL_AMFLAGS = -I m4
 
 lib_LTLIBRARIES = libxwiimote.la
-bin_PROGRAMS = xwiishow
+bin_PROGRAMS = xwiishow xwiikeymap
 noinst_PROGRAMS = xwiidump
 include_HEADERS = lib/xwiimote.h
 
@@ -45,6 +45,11 @@ xwiishow_LDADD = \
 xwiishow_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-lncurses
+
+xwiikeymap_SOURCES = \
+	tools/xwiikeymap.c
+xwiikeymap_LDADD = \
+	libxwiimote.la
 
 xwiidump_SOURCES = \
 	tools/xwiidump.c
