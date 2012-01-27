@@ -6,7 +6,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-lib_LTLIBRARIES = libxwiimote.la
+lib_LTLIBRARIES = libxwiimote.la libxwiimote_compat.la
 bin_PROGRAMS = xwiishow xwiikeymap
 noinst_PROGRAMS = xwiidump
 include_HEADERS = lib/xwiimote.h
@@ -36,6 +36,19 @@ libxwiimote_la_CPPFLAGS = \
 libxwiimote_la_LIBADD = \
 	$(UDEV_LIBS)
 libxwiimote_la_LDFLAGS = \
+	-version-info 0:0:0
+
+libxwiimote_compat_la_SOURCES = \
+	compat/xwiimote_cwiid.h \
+	compat/xwiimote_wiiuse.h \
+	compat/wiiuse.c \
+	compat/cwiid.c
+
+libxwiimote_compat_la_CPPFLAGS = \
+	$(AM_CPPFLAGS)
+libxwiimote_compat_la_LIBADD = \
+	libxwiimote.la
+libxwiimote_compat_la_LDFLAGS = \
 	-version-info 0:0:0
 
 xwiishow_SOURCES = \
