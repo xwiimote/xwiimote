@@ -7,7 +7,8 @@ XINPUT driver or similar and don't want to use this library, read below.
 A wiimote, when connected to the system, will show up as:
 	/sys/bus/hid/devices/<deviceID>
 <deviceID> is a unique id which will never be used twice. To monitor for new
-devices, you can simply place an inotify on /sys/bus/hid/devices or use libudev.
+devices, you can simply place an inotify on /sys/bus/hid/devices or use
+libudev (recommended).
 
 Notice: When this directory shows up, you need to wait a short time until
 everything below this directory is set up. If you use libudev, it will notify
@@ -35,7 +36,7 @@ create multiple input devices to allow proper power management and split the
 events. See INTERFACE_INPUT for more information.
 
 Other features which can not be controlled via the input device include debug
-information and extension setup. The can be controlled with sysfs attributes in:
+information and extension setup. They can be controlled with sysfs attributes in
 	/sys/bus/hid/devices/<deviceID>
 and can be accessed from a shell. See INTERFACE_SYSFS for information about
 these files. They allow to read battery status, control wiimote LEDs and much

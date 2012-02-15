@@ -45,3 +45,18 @@ The input devices can be matched by name. The following devices are available:
 		The wiimote accelerometer reports 3 axis accelerometer data as
 		EV_ABS values via: ABS_RX, ABS_RY and ABS_RZ
 		Maximum value of each is 500, minimum is -500.
+
+	- "Nintendo Wii Remote IR"
+		Reading this device will report IR events. The IR Cam can track
+		up to 4 dots and reports absolute positions for each dot. It
+		reports them via ABS_HAT0X/Y to ABS_HAT3X/Y.
+
+	- "Nintendo Wii Remote Motion+"
+		If a motion+ adapter is attached, this device will appear. You
+		can read ABS_RX, ABS_RY and ABS_RZ values which represent the
+		gyro-sensor values.
+
+	- "Nintendo Wii Remote Extension"
+		If an extension is attached, you can read extension events from
+		this device. Depending on the connected extension, the received
+		values may differ.

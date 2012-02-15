@@ -9,3 +9,33 @@ Description:	This is the evdev interface of the wiimote. It can be used to
 		Read .../input/<inputX>/name to identify the input device and
 		read .../input/<inputX>/eventY to get the event name. Only open
 		the event devices that you really need.
+
+What:		/sys/bus/hid/drivers/wiimote/<dev>/leds/<ledX>/
+Date:		February 2012
+Contact:	David Herrmann <dh.herrmann@googlemail.com>
+Description:	Four directories for each LED of the Wii Remote is available
+		here. You can use the "brightness" file in each directory to set
+		the brightness. You can only set it to 0 or 1 to disable or
+		enable the LED.
+
+What:		/sys/bus/hid/drivers/wiimote/<dev>/power_supply/wiimote_battery/
+Date:		February 2012
+Contact:	David Herrmann <dh.herrmann@googlemail.com>
+Description:	This represents the battery of the Wii Remote. Reading the
+		"capacity" file will return the current battery charge level in
+		per-cent.
+
+What:		/sys/bus/hid/drivers/wiimote/<dev>/extension
+Date:		February 2012
+Contact:	David Herrmann <dh.herrmann@googlemail.com>
+Description:	This file contains the name of the currently connected and
+		initialized extensions. It can be one of:
+			motionp+nunchuck
+			motionp+classic
+			motionp
+			nunchuck
+			classic
+			none
+		The driver does not support extension hotplug. If the extensions
+		are removed you need to reconnect the device to redetect them
+		properly.

@@ -88,7 +88,8 @@ The XWiimote software stack is split into 3 parts:
 
 		This plugin is responsible for pairing Wii Remotes. It does not
 		provide any input from the peripheral. This is done by the
-		kernel driver.
+		kernel driver. This plugin is provided by most distributions by
+		default and you shouldn't care about this.
 	- Kernel: The linux kernel includes an hid-wiimote.ko plugin since
 		version linux-3.1. The related config option is
 		CONFIG_HID_WIIMOTE. It is available in the configuration under:
@@ -96,6 +97,8 @@ The XWiimote software stack is split into 3 parts:
 		With linux-3.1 only basic LED and button input is available.
 		With linux-3.2 accelerometer, IR and rumble support is added.
 		With linux-3.3 extension and debug support is added.
+		Your kernel should already include this driver and you shouldn't
+		care about this.
 		If the kernel driver is loaded and a Wii Remote is connected via
 		BlueZ, the driver automatically takes control over the Wii
 		Remote and provides a kernel interface to user-space. The
@@ -104,7 +107,7 @@ The XWiimote software stack is split into 3 parts:
 		description of the kernel interface. It is recommended to use
 		the library, though.
 		The kernel interface hides the protocol details but still
-		provides very general access to the Wii Remote. This interface
+		provides very generic access to the Wii Remote. This interface
 		is not suitable to be used as direct application input. Instead
 		several emulators exist which emulate a mouse or keyboard based
 		on the kernel interface. This is needed because there are
