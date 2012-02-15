@@ -472,6 +472,11 @@ int main(int argc, char **argv)
 	if (argc > 1)
 		parse_args(&app, argc - 1, &argv[1]);
 
+	if (app.daemon) {
+		log_info("app: forking into background\n");
+		daemon(0, 0);
+	}
+
 	ret = app_setup(&app);
 	if (ret)
 		goto err;
