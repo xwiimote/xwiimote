@@ -35,6 +35,12 @@ struct app {
 	struct xwii_monitor *monitor;
 	int monitor_fd;
 	struct ev_fd *monitor_fdo;
+};
+
+struct dev {
+	struct xwii_iface *iface;
+	int iface_fd;
+	struct ev_fd *iface_fdo;
 	int uinput_fd;
 };
 
@@ -45,44 +51,44 @@ static void sig_term(struct ev_signal *sig, int signum, void *data)
 	terminate = 1;
 }
 
-static void uinput_destroy(struct app *app)
+static void uinput_destroy(struct dev *dev)
 {
-	if (app->uinput_fd < 0)
+	if (dev->uinput_fd < 0)
 		return;
 
-	ioctl(app->uinput_fd, UI_DEV_DESTROY);
-	close(app->uinput_fd);
+	ioctl(dev->uinput_fd, UI_DEV_DESTROY);
+	close(dev->uinput_fd);
 }
 
-static int uinput_init(struct app *app)
+static int uinput_init(struct dev *dev)
 {
 	int ret, i;
-	struct uinput_user_dev dev;
+	struct uinput_user_dev udev;
 	uint16_t keys[] = { 0 };
 
-	app->uinput_fd = open(UINPUT_PATH, O_RDWR | O_CLOEXEC | O_NONBLOCK);
-	if (app->uinput_fd < 0) {
+	dev->uinput_fd = open(UINPUT_PATH, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+	if (dev->uinput_fd < 0) {
 		ret = -errno;
 		log_err("app: cannot open uinput device %s: %m (%d)\n",
 							UINPUT_PATH, ret);
 		return ret;
 	}
 
-	memset(&dev, 0, sizeof(dev));
-	strncpy(dev.name, UINPUT_NAME, UINPUT_MAX_NAME_SIZE);
-	dev.id.bustype = XWII_ID_BUS;
-	dev.id.vendor = XWII_ID_VENDOR;
-	dev.id.product = XWII_ID_PRODUCT;
-	dev.id.version = 0;
+	memset(&udev, 0, sizeof(udev));
+	strncpy(udev.name, UINPUT_NAME, UINPUT_MAX_NAME_SIZE);
+	udev.id.bustype = XWII_ID_BUS;
+	udev.id.vendor = XWII_ID_VENDOR;
+	udev.id.product = XWII_ID_PRODUCT;
+	udev.id.version = 0;
 
-	ret = write(app->uinput_fd, &dev, sizeof(dev));
-	if (ret != sizeof(dev)) {
+	ret = write(dev->uinput_fd, &udev, sizeof(udev));
+	if (ret != sizeof(udev)) {
 		ret = -EFAULT;
 		log_err("app: cannot register uinput device\n");
 		goto err;
 	}
 
-	ret = ioctl(app->uinput_fd, UI_SET_EVBIT, EV_KEY);
+	ret = ioctl(dev->uinput_fd, UI_SET_EVBIT, EV_KEY);
 	if (ret) {
 		ret = -EFAULT;
 		log_err("app: cannot initialize uinput device\n");
@@ -90,7 +96,7 @@ static int uinput_init(struct app *app)
 	}
 
 	for (i = 0; keys[i]; ++i) {
-		ret = ioctl(app->uinput_fd, UI_SET_KEYBIT, keys[i]);
+		ret = ioctl(dev->uinput_fd, UI_SET_KEYBIT, keys[i]);
 		if (ret) {
 			ret = -EFAULT;
 			log_err("app: cannot initialize uinput device\n");
@@ -98,7 +104,7 @@ static int uinput_init(struct app *app)
 		}
 	}
 
-	ret = ioctl(app->uinput_fd, UI_DEV_CREATE);
+	ret = ioctl(dev->uinput_fd, UI_DEV_CREATE);
 	if (ret) {
 		ret = -EFAULT;
 		log_err("app: cannot create uinput device\n");
@@ -108,18 +114,105 @@ static int uinput_init(struct app *app)
 	return 0;
 
 err:
-	close(app->uinput_fd);
-	app->uinput_fd = -1;
+	close(dev->uinput_fd);
+	dev->uinput_fd = -1;
 	return ret;
+}
+
+static void destroy_device(struct dev *dev)
+{
+	if (!dev)
+		return;
+
+	uinput_destroy(dev);
+	ev_eloop_rm_fd(dev->iface_fdo);
+	xwii_iface_unref(dev->iface);
+	free(dev);
+}
+
+static void device_event(struct ev_fd *fdo, int mask, void *data)
+{
+	struct dev *dev = data;
+	struct xwii_event event;
+	int ret;
+
+	if (mask & (EV_HUP | EV_ERR)) {
+		log_err("app: Wii Remote device closed\n");
+		destroy_device(dev);
+	} else if (mask & EV_READABLE) {
+		ret = xwii_iface_read(dev->iface, &event);
+		if (ret != -EAGAIN) {
+			if (ret) {
+				log_err("app: reading Wii Remote failed; "
+							"closing device...\n");
+				destroy_device(dev);
+			} else {
+				log_info("app: incoming data\n");
+			}
+		}
+	}
 }
 
 static void monitor_poll(struct app *app)
 {
-	char *dev;
+	char *str;
+	struct dev *dev;
+	int ret;
 
-	while ((dev = xwii_monitor_poll(app->monitor))) {
-		log_info("app: new Wii Remote detected: %s\n", dev);
-		free(dev);
+	while ((str = xwii_monitor_poll(app->monitor))) {
+		dev = malloc(sizeof(*dev));
+		if (!dev) {
+			log_warn("app: cannot create new Wii Remote device\n");
+			free(str);
+			continue;
+		}
+
+		memset(dev, 0, sizeof(*dev));
+		ret = xwii_iface_new(&dev->iface, str);
+
+		if (ret) {
+			log_warn("app: cannot create new Wii Remote device\n");
+			free(dev);
+			free(str);
+			continue;
+		}
+
+		ret = xwii_iface_open(dev->iface, XWII_IFACE_CORE);
+		if (ret) {
+			log_warn("app: cannot open Wii Remote core iface\n");
+			xwii_iface_unref(dev->iface);
+			free(dev);
+			free(str);
+			continue;
+		}
+
+		dev->iface_fd = xwii_iface_get_fd(dev->iface);
+		ret = ev_eloop_new_fd(app->eloop,
+					&dev->iface_fdo,
+					dev->iface_fd,
+					EV_READABLE,
+					device_event,
+					dev);
+		if (ret) {
+			log_warn("app: cannot create new Wii Remote device\n");
+			xwii_iface_unref(dev->iface);
+			free(dev);
+			free(str);
+			continue;
+		}
+
+		ret = uinput_init(dev);
+		if (ret) {
+			log_warn("app: cannot create new Wii Remote device\n");
+			ev_eloop_rm_fd(dev->iface_fdo);
+			xwii_iface_unref(dev->iface);
+			free(dev);
+			free(str);
+			continue;
+		}
+
+		log_info("app: new Wii Remote detected: %s\n", str);
+		free(str);
 	}
 }
 
@@ -137,7 +230,6 @@ static void monitor_event(struct ev_fd *fdo, int mask, void *data)
 
 static void app_destroy(struct app *app)
 {
-	uinput_destroy(app);
 	ev_eloop_rm_fd(app->monitor_fdo);
 	xwii_monitor_unref(app->monitor);
 	ev_eloop_rm_signal(app->sig_int);
@@ -192,10 +284,6 @@ static int app_setup(struct app *app)
 	if (ret)
 		goto err;
 
-	ret = uinput_init(app);
-	if (ret)
-		goto err;
-
 	return 0;
 
 err:
@@ -211,7 +299,6 @@ int main(int argc, char **argv)
 	log_info("app: initializing\n");
 
 	memset(&app, 0, sizeof(app));
-	app.uinput_fd = -1;
 
 	ret = app_setup(&app);
 	if (ret)
@@ -227,6 +314,8 @@ int main(int argc, char **argv)
 	}
 
 	log_info("app: stopping\n");
+
+	/* TODO: add device into global list and remove all devices here */
 
 	app_destroy(&app);
 err:
