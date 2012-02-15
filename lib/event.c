@@ -419,6 +419,7 @@ try_again:
 	}
 
 	memset(ev, 0, sizeof(*ev));
+	memcpy(&ev->time, &input.time, sizeof(struct timeval));
 	ev->type = XWII_EVENT_KEY;
 	ev->v.key.code = key;
 	ev->v.key.state = input.value;
@@ -444,6 +445,7 @@ try_again:
 
 	if (input.type == EV_SYN) {
 		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(ev->v.abs, &dev->accel_cache, sizeof(dev->accel_cache));
 		ev->type = XWII_EVENT_ACCEL;
 		return 0;
@@ -481,6 +483,7 @@ try_again:
 
 	if (input.type == EV_SYN) {
 		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(&ev->v.abs, dev->ir_cache, sizeof(dev->ir_cache));
 		ev->type = XWII_EVENT_IR;
 		return 0;

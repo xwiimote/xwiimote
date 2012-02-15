@@ -14,6 +14,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <time.h>
 
 /*
  * Kernel Interface
@@ -77,6 +79,7 @@ struct xwii_event_abs {
 };
 
 struct xwii_event {
+	struct timeval time;
 	unsigned int type;
 	union xwii_event_union {
 		struct xwii_event_key key;
