@@ -151,3 +151,26 @@ Please see ./DEV for development information.
 
 This whole distribution is dedicated to the Public Domain. Please see ./COPYING
 for more information.
+
+== Compatibility ==
+
+Two other commonly used Wii-Remote libraries are cwiid and wiiuse. Both provide
+a full user-space driver and were used heavily in the past. We do not provide
+API compatibility to them as both APIs are very restricted:
+
+	- cwiid: This API is highly asynchronous with threads. It does not allow
+	  a single-threaded application to use it. This makes it very hard to
+	  use and we decided not to provide a compatibility layer as we do not
+	  want to support such library-API designs.
+	- wiiuse: This API is tightly bound to the idea that the application is
+	  supposed to discover and connect the Bluetooth devices. It uses a
+	  static array for all used Wii Remotes and requires callbacks for
+	  notification. Same as cwiid, we do not provide a compatibility layer
+	  as the API is very different from our API.
+
+We designed our API to have as few restrictions as possible. We do not force an
+application to use a special programming technique. Instead, an application can
+use our API to support event-based, callback-based or thread-based event-loops
+or any other kind that it wants. We achieve this by keeping the user-space API
+very similar to the kernel-API so the application can integrate this into any
+infrastructure it wants.
