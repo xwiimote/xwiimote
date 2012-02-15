@@ -44,6 +44,21 @@ struct dev {
 	int uinput_fd;
 };
 
+uint16_t mapping[] = {
+	[XWII_KEY_LEFT] = KEY_LEFT,
+	[XWII_KEY_RIGHT] = KEY_RIGHT,
+	[XWII_KEY_UP] = KEY_UP,
+	[XWII_KEY_DOWN] = KEY_DOWN,
+	[XWII_KEY_A] = KEY_ENTER,
+	[XWII_KEY_B] = KEY_SPACE,
+	[XWII_KEY_PLUS] = KEY_VOLUMEUP,
+	[XWII_KEY_MINUS] = KEY_VOLUMEDOWN,
+	[XWII_KEY_HOME] = KEY_ESC,
+	[XWII_KEY_ONE] = KEY_1,
+	[XWII_KEY_TWO] = KEY_2,
+	[XWII_KEY_NUM] = 0,
+};
+
 static volatile sig_atomic_t terminate = 0;
 
 static void sig_term(struct ev_signal *sig, int signum, void *data)
@@ -64,7 +79,6 @@ static int uinput_init(struct dev *dev)
 {
 	int ret, i;
 	struct uinput_user_dev udev;
-	uint16_t keys[] = { 0 };
 
 	dev->uinput_fd = open(UINPUT_PATH, O_RDWR | O_CLOEXEC | O_NONBLOCK);
 	if (dev->uinput_fd < 0) {
@@ -95,8 +109,11 @@ static int uinput_init(struct dev *dev)
 		goto err;
 	}
 
-	for (i = 0; keys[i]; ++i) {
-		ret = ioctl(dev->uinput_fd, UI_SET_KEYBIT, keys[i]);
+	for (i = 0; i < XWII_KEY_NUM; ++i) {
+		if (!mapping[i])
+			continue;
+
+		ret = ioctl(dev->uinput_fd, UI_SET_KEYBIT, mapping[i]);
 		if (ret) {
 			ret = -EFAULT;
 			log_err("app: cannot initialize uinput device\n");
@@ -130,26 +147,61 @@ static void destroy_device(struct dev *dev)
 	free(dev);
 }
 
+static void handle_data(struct dev *dev, struct xwii_event *ev)
+{
+	struct input_event output;
+
+	if (ev->type != XWII_EVENT_KEY)
+		return;
+
+	if (ev->v.key.code >= XWII_KEY_NUM || !mapping[ev->v.key.code])
+		return;
+
+	memset(&output, 0, sizeof(output));
+	output.type = EV_KEY;
+	output.code = mapping[ev->v.key.code];
+	output.value = ev->v.key.state;
+	gettimeofday(&output.time, NULL);
+
+	if (write(dev->uinput_fd, &output, sizeof(output)) != sizeof(output))
+		log_warn("app: cannot write to uinput device\n");
+}
+
 static void device_event(struct ev_fd *fdo, int mask, void *data)
 {
 	struct dev *dev = data;
 	struct xwii_event event;
 	int ret;
+	struct input_event ev;
 
 	if (mask & (EV_HUP | EV_ERR)) {
 		log_err("app: Wii Remote device closed\n");
 		destroy_device(dev);
 	} else if (mask & EV_READABLE) {
-		ret = xwii_iface_read(dev->iface, &event);
-		if (ret != -EAGAIN) {
-			if (ret) {
-				log_err("app: reading Wii Remote failed; "
-							"closing device...\n");
-				destroy_device(dev);
+		while (1) {
+			ret = xwii_iface_read(dev->iface, &event);
+			if (ret != -EAGAIN) {
+				if (ret) {
+					log_err("app: reading Wii Remote "
+						"failed; closing device...\n");
+					destroy_device(dev);
+					return;
+				} else {
+					handle_data(dev, &event);
+				}
 			} else {
-				log_info("app: incoming data\n");
+				break;
 			}
 		}
+
+		memset(&ev, 0, sizeof(ev));
+		ev.type = EV_SYN;
+		ev.code = SYN_REPORT;
+		ev.value = 0;
+		gettimeofday(&ev.time, NULL);
+
+		if (write(dev->uinput_fd, &ev, sizeof(ev)) != sizeof(ev))
+			log_warn("app: cannot write to uinput device\n");
 	}
 }
 
