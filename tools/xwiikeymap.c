@@ -17,6 +17,7 @@
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -25,9 +26,6 @@
 #include "log.h"
 #include "xwiimote.h"
 
-#define UINPUT_PATH "/dev/uinput"
-#define UINPUT_NAME "XWiimote Keyboard"
-
 struct app {
 	struct ev_eloop *eloop;
 	struct ev_signal *sig_term;
@@ -35,6 +33,7 @@ struct app {
 	struct xwii_monitor *monitor;
 	int monitor_fd;
 	struct ev_fd *monitor_fdo;
+	bool daemon;
 };
 
 struct dev {
@@ -44,7 +43,10 @@ struct dev {
 	int uinput_fd;
 };
 
-uint16_t mapping[] = {
+static const char *uinput_path = "/dev/uinput";
+static const char *uinput_name = "XWiimote Keyboard";
+
+static uint16_t mapping[] = {
 	[XWII_KEY_LEFT] = KEY_LEFT,
 	[XWII_KEY_RIGHT] = KEY_RIGHT,
 	[XWII_KEY_UP] = KEY_UP,
@@ -80,16 +82,16 @@ static int uinput_init(struct dev *dev)
 	int ret, i;
 	struct uinput_user_dev udev;
 
-	dev->uinput_fd = open(UINPUT_PATH, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+	dev->uinput_fd = open(uinput_path, O_RDWR | O_CLOEXEC | O_NONBLOCK);
 	if (dev->uinput_fd < 0) {
 		ret = -errno;
 		log_err("app: cannot open uinput device %s: %m (%d)\n",
-							UINPUT_PATH, ret);
+							uinput_path, ret);
 		return ret;
 	}
 
 	memset(&udev, 0, sizeof(udev));
-	strncpy(udev.name, UINPUT_NAME, UINPUT_MAX_NAME_SIZE);
+	strncpy(udev.name, uinput_name, UINPUT_MAX_NAME_SIZE);
 	udev.id.bustype = XWII_ID_BUS;
 	udev.id.vendor = XWII_ID_VENDOR;
 	udev.id.product = XWII_ID_PRODUCT;
@@ -343,6 +345,122 @@ err:
 	return ret;
 }
 
+struct arg {
+	char name_s;		/* short argument name */
+	const char *name_l;	/* long argument name */
+	bool need_arg;		/* does it require an argument? */
+	const char *arg;	/* the parsed argument or "no_value" */
+};
+
+struct arg args[] = {
+	{ 'L', "left", true, NULL },
+	{ 'R', "right", true, NULL },
+	{ 'U', "up", true, NULL },
+	{ 'D', "down", true, NULL },
+	{ 'A', "a", true, NULL },
+	{ 'B', "b", true, NULL },
+	{ 'P', "plus", true, NULL },
+	{ 'M', "minus", true, NULL },
+	{ 'H', "home", true, NULL },
+	{ 'O', "one", true, NULL },
+	{ 'T', "two", true, NULL },
+	{ 'u', "uinput", true, NULL },
+	{ 'n', "name", true, NULL },
+	{ 'd', "daemon", false, NULL },
+	{ 0, NULL, false, NULL },
+};
+
+static const char *no_value = "no value";
+
+static void parse_args(struct app *app, int argc, char **argv)
+{
+	int i, j;
+	bool handled;
+	char *v;
+	struct arg *arg;
+
+	for (i = 0; i < argc; ++i) {
+		if (!argv[i][0])
+			continue;
+
+		handled = false;
+
+		if (argv[i][0] == '-' && argv[i][1] == '-') {
+			v = &argv[i][2];
+			for (j = 0; args[j].name_s || args[j].name_l; ++j) {
+				arg = &args[j];
+				if (!arg->name_l)
+					continue;
+				if (strcmp(v, arg->name_l))
+					continue;
+
+				handled = true;
+				if (!arg->need_arg) {
+					arg->arg = no_value;
+					break;
+				}
+				++i;
+				if (i >= argc)
+					log_warn("app: missing arg for %s\n",
+									v);
+				else
+					arg->arg = argv[i];
+			}
+		} else if (argv[i][0] == '-') {
+			v = &argv[i][1];
+			for (j = 0; args[j].name_s || args[j].name_l; ++j) {
+				arg = &args[j];
+				if (arg->name_s != *v)
+					continue;
+
+				handled = true;
+				if (!arg->need_arg) {
+					arg->arg = no_value;
+					break;
+				}
+				++i;
+				if (i >= argc)
+					log_warn("app: missing arg for %s\n",
+									v);
+				else
+					arg->arg = argv[i];
+			}
+		}
+
+		if (!handled)
+			log_warn("app: unhandled argument '%s'\n", argv[i]);
+	}
+
+	if (args[0].arg)
+		mapping[XWII_KEY_LEFT] = atoi(args[0].arg);
+	if (args[1].arg)
+		mapping[XWII_KEY_RIGHT] = atoi(args[1].arg);
+	if (args[2].arg)
+		mapping[XWII_KEY_UP] = atoi(args[2].arg);
+	if (args[3].arg)
+		mapping[XWII_KEY_DOWN] = atoi(args[3].arg);
+	if (args[4].arg)
+		mapping[XWII_KEY_A] = atoi(args[4].arg);
+	if (args[5].arg)
+		mapping[XWII_KEY_B] = atoi(args[5].arg);
+	if (args[6].arg)
+		mapping[XWII_KEY_PLUS] = atoi(args[6].arg);
+	if (args[7].arg)
+		mapping[XWII_KEY_MINUS] = atoi(args[7].arg);
+	if (args[8].arg)
+		mapping[XWII_KEY_HOME] = atoi(args[8].arg);
+	if (args[9].arg)
+		mapping[XWII_KEY_ONE] = atoi(args[9].arg);
+	if (args[10].arg)
+		mapping[XWII_KEY_TWO] = atoi(args[10].arg);
+	if (args[11].arg)
+		uinput_path = args[11].arg;
+	if (args[12].arg)
+		uinput_name = args[12].arg;
+	if (args[13].arg)
+		app->daemon = true;
+}
+
 int main(int argc, char **argv)
 {
 	int ret;
@@ -351,6 +469,8 @@ int main(int argc, char **argv)
 	log_info("app: initializing\n");
 
 	memset(&app, 0, sizeof(app));
+	if (argc > 1)
+		parse_args(&app, argc - 1, &argv[1]);
 
 	ret = app_setup(&app);
 	if (ret)
