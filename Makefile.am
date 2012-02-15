@@ -60,7 +60,9 @@ xwiishow_LDFLAGS = \
 	-lncurses
 
 xwiikeymap_SOURCES = \
-	tools/xwiikeymap.c
+	tools/xwiikeymap.c \
+	tools/eloop.c tools/eloop.h \
+	tools/log.c tools/log.h
 xwiikeymap_LDADD = \
 	libxwiimote.la
 
