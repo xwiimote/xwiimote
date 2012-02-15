@@ -1,6 +1,6 @@
 /*
  * XWiimote - lib
- * Written 2010, 2011 by David Herrmann
+ * Written 2010, 2011, 2012 by David Herrmann
  * Dedicated to the Public Domain
  */
 
@@ -42,8 +42,10 @@ extern "C" {
 #define XWII_IFACE_CORE		0x0001	/* core interface */
 #define XWII_IFACE_ACCEL	0x0002	/* accelerometer interface */
 #define XWII_IFACE_IR		0x0004	/* ir interface */
-#define XWII_IFACE_ALL (XWII_IFACE_CORE | XWII_IFACE_ACCEL | XWII_IFACE_IR)
-#define XWII_IFACE_WRITABLE	0x0100	/* open iface writable */
+#define XWII_IFACE_MP		0x0008	/* motion+ interface */
+#define XWII_IFACE_EXT		0x0010	/* extension interface */
+#define XWII_IFACE_ALL		0x00ff	/* all interfaces */
+#define XWII_IFACE_WRITABLE	0x0100	/* open iface writable (for rumble) */
 
 enum xwii_event_types {
 	XWII_EVENT_KEY,		/* key event */
@@ -89,15 +91,16 @@ struct xwii_event {
 
 struct xwii_iface;
 
-extern int xwii_iface_new(struct xwii_iface **dev, const char *syspath);
-extern struct xwii_iface *xwii_iface_ref(struct xwii_iface *dev);
-extern void xwii_iface_unref(struct xwii_iface *dev);
+int xwii_iface_new(struct xwii_iface **dev, const char *syspath);
+void xwii_iface_ref(struct xwii_iface *dev);
+void xwii_iface_unref(struct xwii_iface *dev);
+int xwii_iface_get_fd(struct xwii_iface *dev);
 
-extern int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces);
-extern void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces);
-extern unsigned int xwii_iface_opened(struct xwii_iface *dev);
-extern int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
-extern int xwii_iface_rumble(struct xwii_iface *dev, bool on);
+int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces);
+void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces);
+unsigned int xwii_iface_opened(struct xwii_iface *dev);
+int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
+int xwii_iface_rumble(struct xwii_iface *dev, bool on);
 
 /*
  * Device monitor
@@ -111,12 +114,12 @@ extern int xwii_iface_rumble(struct xwii_iface *dev, bool on);
 
 struct xwii_monitor;
 
-extern struct xwii_monitor *xwii_monitor_new(bool poll, bool direct);
-extern struct xwii_monitor *xwii_monitor_ref(struct xwii_monitor *mon);
-extern void xwii_monitor_unref(struct xwii_monitor *mon);
+struct xwii_monitor *xwii_monitor_new(bool poll, bool direct);
+void xwii_monitor_ref(struct xwii_monitor *mon);
+void xwii_monitor_unref(struct xwii_monitor *mon);
 
-extern int xwii_monitor_get_fd(struct xwii_monitor *monitor, bool blocking);
-extern char *xwii_monitor_poll(struct xwii_monitor *monitor);
+int xwii_monitor_get_fd(struct xwii_monitor *monitor, bool blocking);
+char *xwii_monitor_poll(struct xwii_monitor *monitor);
 
 #ifdef __cplusplus
 }

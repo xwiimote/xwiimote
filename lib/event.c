@@ -1,17 +1,17 @@
 /*
  * XWiimote - lib
- * Written 2010, 2011 by David Herrmann
+ * Written 2010, 2011, 2012 by David Herrmann
  * Dedicated to the Public Domain
  */
 
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <linux/input.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "libsfs.h"
@@ -20,12 +20,15 @@
 struct xwii_iface {
 	size_t ref;
 	char *syspath;
+	int efd;
 	int rumble_id;
 
 	unsigned int ifaces;
 	int if_core;
 	int if_accel;
 	int if_ir;
+	int if_mp;
+	int if_ext;
 
 	struct xwii_event_abs accel_cache;
 	struct xwii_event_abs ir_cache[4];
@@ -40,57 +43,83 @@ struct xwii_iface {
  * On success 0 is returned and the new device is stored in \dev. On failure,
  * \dev is not touched and a negative error is returned.
  * Initial refcount is 1 so you need to call *_unref() to free the device.
+ *
+ * Internally we use multiple file-descriptors for all the event devices of each
+ * Wii Remote. However, externally we want only one fd for the application so we
+ * use epoll to multiplex between all the internal fds. Note that you can poll
+ * on epoll-fds like any other fd so the user won't notice.
  */
 int xwii_iface_new(struct xwii_iface **dev, const char *syspath)
 {
 	struct xwii_iface *d;
+	int ret;
 
-	assert(dev);
-	assert(syspath);
+	if (!dev || !syspath)
+		return -EINVAL;
 
 	d = malloc(sizeof(*d));
 	if (!d)
 		return -ENOMEM;
 
 	memset(d, 0, sizeof(*d));
+	d->ref = 1;
 	d->if_core = -1;
 	d->if_accel = -1;
 	d->if_ir = -1;
+	d->if_mp = -1;
+	d->if_ext = -1;
 	d->rumble_id = -1;
 
 	d->syspath = strdup(syspath);
 	if (!d->syspath) {
-		free(d);
-		return -ENOMEM;
+		ret= -ENOMEM;
+		goto err;
 	}
 
-	*dev = xwii_iface_ref(d);
+	d->efd = epoll_create1(EPOLL_CLOEXEC);
+	if (d->efd < 0) {
+		ret = -EFAULT;
+		goto err_path;
+	}
+
+	*dev = d;
 	return 0;
+
+err_path:
+	free(d->syspath);
+err:
+	free(d);
+	return ret;
 }
 
-/* increment refcount by 1; always returns \dev */
-struct xwii_iface *xwii_iface_ref(struct xwii_iface *dev)
+void xwii_iface_ref(struct xwii_iface *dev)
 {
-	assert(dev);
-	dev->ref++;
-	assert(dev->ref);
-	return dev;
-}
-
-/* decrement refcount by 1; frees the device if refcount becomes 0 */
-void xwii_iface_unref(struct xwii_iface *dev)
-{
-	if (!dev)
+	if (!dev || !dev->ref)
 		return;
 
-	assert(dev->ref);
+	dev->ref++;
+}
+
+void xwii_iface_unref(struct xwii_iface *dev)
+{
+	if (!dev || !dev->ref)
+		return;
 
 	if (--dev->ref)
 		return;
 
 	xwii_iface_close(dev, XWII_IFACE_ALL);
+	close(dev->efd);
 	free(dev->syspath);
 	free(dev);
+}
+
+int xwii_iface_get_fd(struct xwii_iface *dev)
+{
+	if (!dev)
+		return -1;
+
+	return dev->efd;
 }
 
 /* maps interface ID to interface name */
@@ -98,24 +127,9 @@ static const char *id2name_map[] = {
 	[XWII_IFACE_CORE] = XWII_NAME_CORE,
 	[XWII_IFACE_ACCEL] = XWII_NAME_ACCEL,
 	[XWII_IFACE_IR] = XWII_NAME_IR,
+	[XWII_IFACE_MP] = XWII_NAME_MP,
+	[XWII_IFACE_EXT] = XWII_NAME_EXT,
 };
-
-/* make fd nonblocking */
-static int make_nblock(int fd)
-{
-	int set;
-
-	set = fcntl(fd, F_GETFL);
-	if (set < 0)
-		return -errno;
-
-	set |= O_NONBLOCK;
-
-	if (fcntl(fd, F_SETFL, set))
-		return -errno;
-
-	return 0;
-}
 
 /*
  * Opens an event interface and checks whether it is of the right type.
@@ -128,16 +142,21 @@ static int open_ev(const char *path, unsigned int type, bool wr)
 {
 	uint16_t id[4];
 	char name[256];
-	int ret, fd;
+	int ret, fd, mod;
 
-	ret = open(path, (wr ? O_RDWR : O_RDONLY) | O_CLOEXEC, 0);
+	if (wr)
+		mod = O_RDWR;
+	else
+		mod = O_RDONLY;
+
+	ret = open(path, mod | O_NONBLOCK | O_CLOEXEC);
 	if (ret < 0)
-		return -abs(errno);
+		return -errno;
 	fd = ret;
 
 	if (ioctl(fd, EVIOCGID, id)) {
 		close(fd);
-		return -abs(errno);
+		return -errno;
 	}
 
 	if (id[ID_BUS] != XWII_ID_BUS || id[ID_VENDOR] != XWII_ID_VENDOR ||
@@ -148,19 +167,13 @@ static int open_ev(const char *path, unsigned int type, bool wr)
 
 	if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) < 0) {
 		close(fd);
-		return -abs(errno);
+		return -errno;
 	}
 
 	name[sizeof(name) - 1] = 0;
 	if (strcmp(id2name_map[type], name)) {
 		close(fd);
 		return -EINVAL;
-	}
-
-	ret = make_nblock(fd);
-	if (ret) {
-		close(fd);
-		return -abs(ret);
 	}
 
 	return fd;
@@ -213,6 +226,7 @@ static int open_iface(struct xwii_iface *dev, unsigned int iface,
 {
 	char *path;
 	int ret;
+	struct epoll_event ep;
 
 	path = find_event(list, iface);
 	if (!path)
@@ -223,6 +237,14 @@ static int open_iface(struct xwii_iface *dev, unsigned int iface,
 
 	if (ret < 0)
 		return ret;
+
+	memset(&ep, 0, sizeof(ep));
+	ep.events = EPOLLIN;
+	ep.data.ptr = dev;
+	if (epoll_ctl(dev->efd, EPOLL_CTL_ADD, ret, &ep) < 0) {
+		close(ret);
+		return -EFAULT;
+	}
 
 	dev->ifaces |= iface;
 	return ret;
@@ -268,7 +290,8 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 	int ret = 0;
 	struct sfs_input_dev *list;
 
-	assert(dev);
+	if (!dev)
+		return -EINVAL;
 
 	wr = ifaces & XWII_IFACE_WRITABLE;
 
@@ -290,7 +313,8 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 			goto err_sys;
 		dev->if_core = ret;
 		ret = 0;
-		upload_rumble(dev);
+		if (wr)
+			upload_rumble(dev);
 	}
 	if (ifaces & XWII_IFACE_ACCEL) {
 		ret = open_iface(dev, XWII_IFACE_ACCEL, wr, list);
@@ -306,6 +330,20 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 		dev->if_ir = ret;
 		ret = 0;
 	}
+	if (ifaces & XWII_IFACE_MP) {
+		ret = open_iface(dev, XWII_IFACE_MP, wr, list);
+		if (ret < 0)
+			goto err_sys;
+		dev->if_mp = ret;
+		ret = 0;
+	}
+	if (ifaces & XWII_IFACE_EXT) {
+		ret = open_iface(dev, XWII_IFACE_EXT, wr, list);
+		if (ret < 0)
+			goto err_sys;
+		dev->if_ext = ret;
+		ret = 0;
+	}
 
 err_sys:
 	sfs_input_unref(list);
@@ -315,21 +353,35 @@ err_sys:
 /* closes the interfaces given in \ifaces */
 void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces)
 {
-	assert(dev);
+	if (!dev || !ifaces)
+		return;
 
 	ifaces &= XWII_IFACE_ALL;
 
 	if (ifaces & XWII_IFACE_CORE && dev->if_core != -1) {
+		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_core, NULL);
 		close(dev->if_core);
 		dev->if_core = -1;
 	}
 	if (ifaces & XWII_IFACE_ACCEL && dev->if_accel != -1) {
+		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_accel, NULL);
 		close(dev->if_accel);
 		dev->if_accel = -1;
 	}
 	if (ifaces & XWII_IFACE_IR && dev->if_ir != -1) {
+		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_ir, NULL);
 		close(dev->if_ir);
 		dev->if_ir = -1;
+	}
+	if (ifaces & XWII_IFACE_MP && dev->if_mp != -1) {
+		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_mp, NULL);
+		close(dev->if_mp);
+		dev->if_mp = -1;
+	}
+	if (ifaces & XWII_IFACE_EXT && dev->if_ext != -1) {
+		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_ext, NULL);
+		close(dev->if_ext);
+		dev->if_ext = -1;
 	}
 
 	dev->ifaces &= ~ifaces;
@@ -525,8 +577,8 @@ int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
 {
 	int ret;
 
-	assert(dev);
-	assert(ev);
+	if (!dev || !ev)
+		return -EFAULT;
 
 	ret = read_core(dev, ev);
 	if (ret != -EAGAIN)

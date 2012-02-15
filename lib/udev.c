@@ -13,7 +13,6 @@
  * wraps the udev API in a small easy xwiimote API.
  */
 
-#include <assert.h>
 #include <fcntl.h>
 #include <libudev.h>
 #include <stdbool.h>
@@ -83,12 +82,12 @@ out:
 	return NULL;
 }
 
-struct xwii_monitor *xwii_monitor_ref(struct xwii_monitor *mon)
+void xwii_monitor_ref(struct xwii_monitor *mon)
 {
-	assert(mon);
+	if (!mon || !mon->ref)
+		return;
+
 	mon->ref++;
-	assert(mon->ref);
-	return mon;
 }
 
 static inline void free_enum(struct xwii_monitor *monitor)
@@ -102,10 +101,8 @@ static inline void free_enum(struct xwii_monitor *monitor)
 
 void xwii_monitor_unref(struct xwii_monitor *monitor)
 {
-	if (!monitor)
+	if (!monitor || !monitor->ref)
 		return;
-
-	assert(monitor->ref);
 
 	if (--monitor->ref)
 		return;
@@ -121,7 +118,7 @@ int xwii_monitor_get_fd(struct xwii_monitor *monitor, bool blocking)
 {
 	signed int fd, set;
 
-	if (!monitor->monitor)
+	if (!monitor || !monitor->monitor)
 		return -1;
 
 	fd = udev_monitor_get_fd(monitor->monitor);
@@ -190,6 +187,9 @@ char *xwii_monitor_poll(struct xwii_monitor *monitor)
 {
 	struct udev_device *dev;
 	char *ret;
+
+	if (!monitor)
+		return NULL;
 
 	if (monitor->enumerate) {
 		while (1) {
