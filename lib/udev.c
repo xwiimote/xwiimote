@@ -45,7 +45,7 @@ struct xwii_monitor *xwii_monitor_new(bool poll, bool direct)
 	enumerate = udev_enumerate_new(udev);
 	if (!enumerate)
 		goto out;
-	if (0 != udev_enumerate_add_match_subsystem(enumerate, "input"))
+	if (0 != udev_enumerate_add_match_subsystem(enumerate, "hid"))
 		goto out;
 	if (0 != udev_enumerate_scan_devices(enumerate))
 		goto out;
@@ -57,7 +57,7 @@ struct xwii_monitor *xwii_monitor_new(bool poll, bool direct)
 		if (!monitor)
 			goto out;
 		if (udev_monitor_filter_add_match_subsystem_devtype(monitor,
-								"input", NULL))
+								"hid", NULL))
 			goto out;
 		if (udev_monitor_enable_receiving(monitor))
 			goto out;
@@ -167,24 +167,11 @@ static struct udev_device *next_enum(struct xwii_monitor *monitor)
 static char *make_device(struct udev_device *dev)
 {
 	const char *tmp;
-	struct udev_device *p;
 	char *ret = NULL;
 
 	tmp = udev_device_get_action(dev);
 	if (tmp && strcmp(tmp, "add"))
 		goto out;
-
-	tmp = udev_device_get_sysname(dev);
-	if (!tmp || strncmp(tmp, "event", 5))
-		goto out;
-
-	p = udev_device_get_parent_with_subsystem_devtype(dev, "hid", NULL);
-	if (!p)
-		goto out;
-
-	udev_device_ref(p);
-	udev_device_unref(dev);
-	dev = p;
 
 	tmp = udev_device_get_property_value(dev, "HID_ID");
 	if (!tmp || strcmp(tmp, "0005:0000057E:00000306"))
