@@ -113,21 +113,25 @@ err:
 	return ret;
 }
 
+static void monitor_poll(struct app *app)
+{
+	char *dev;
+
+	while ((dev = xwii_monitor_poll(app->monitor))) {
+		log_info("app: new Wii Remote detected: %s\n", dev);
+		free(dev);
+	}
+}
+
 static void monitor_event(struct ev_fd *fdo, int mask, void *data)
 {
 	struct app *app = data;
-	char *dev;
 
 	if (mask & (EV_HUP | EV_ERR)) {
 		log_err("app: Wii Remote monitor closed unexpectedly\n");
 		terminate = 1;
 	} else if (mask & EV_READABLE) {
-		dev = xwii_monitor_poll(app->monitor);
-		if (!dev)
-			return;
-
-		log_info("app: new Wii Remote detected: %s\n", dev);
-		free(dev);
+		monitor_poll(app);
 	}
 }
 
@@ -214,6 +218,7 @@ int main(int argc, char **argv)
 		goto err;
 
 	log_info("app: starting\n");
+	monitor_poll(&app);
 
 	while (!terminate) {
 		ret = ev_eloop_dispatch(app.eloop, -1);
