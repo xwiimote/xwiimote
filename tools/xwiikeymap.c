@@ -32,6 +32,9 @@ struct app {
 	struct ev_eloop *eloop;
 	struct ev_signal *sig_term;
 	struct ev_signal *sig_int;
+	struct xwii_monitor *monitor;
+	int monitor_fd;
+	struct ev_fd *monitor_fdo;
 	int uinput_fd;
 };
 
@@ -110,9 +113,29 @@ err:
 	return ret;
 }
 
+static void monitor_event(struct ev_fd *fdo, int mask, void *data)
+{
+	struct app *app = data;
+	char *dev;
+
+	if (mask & (EV_HUP | EV_ERR)) {
+		log_err("app: Wii Remote monitor closed unexpectedly\n");
+		terminate = 1;
+	} else if (mask & EV_READABLE) {
+		dev = xwii_monitor_poll(app->monitor);
+		if (!dev)
+			return;
+
+		log_info("app: new Wii Remote detected: %s\n", dev);
+		free(dev);
+	}
+}
+
 static void app_destroy(struct app *app)
 {
 	uinput_destroy(app);
+	ev_eloop_rm_fd(app->monitor_fdo);
+	xwii_monitor_unref(app->monitor);
 	ev_eloop_rm_signal(app->sig_int);
 	ev_eloop_rm_signal(app->sig_term);
 	ev_eloop_unref(app->eloop);
@@ -138,6 +161,29 @@ static int app_setup(struct app *app)
 				&app->sig_int,
 				SIGINT,
 				sig_term,
+				app);
+	if (ret)
+		goto err;
+
+	app->monitor = xwii_monitor_new(true, false);
+	if (!app->monitor) {
+		ret = -EFAULT;
+		log_err("app: cannot create Wii Remote monitor\n");
+		goto err;
+	}
+
+	app->monitor_fd = xwii_monitor_get_fd(app->monitor, false);
+	if (app->monitor_fd < 0) {
+		ret = -EFAULT;
+		log_err("app: cannot get monitor fd\n");
+		goto err;
+	}
+
+	ret = ev_eloop_new_fd(app->eloop,
+				&app->monitor_fdo,
+				app->monitor_fd,
+				EV_READABLE,
+				monitor_event,
 				app);
 	if (ret)
 		goto err;
@@ -177,8 +223,8 @@ int main(int argc, char **argv)
 
 	log_info("app: stopping\n");
 
-err:
 	app_destroy(&app);
+err:
 	if (ret) {
 		log_info("app: failed with %d\n", ret);
 		return EXIT_FAILURE;
