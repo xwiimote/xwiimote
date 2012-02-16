@@ -56,4 +56,4 @@ xwiikeymap_LDADD = \
 xwiidump_SOURCES = \
 	tools/xwiidump.c
 
-EXTRA_DIST = README COPYING DEV
+EXTRA_DIST = README COPYING DEV LICENSE
