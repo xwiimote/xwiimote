@@ -1,12 +1,14 @@
 = Licensing Information =
 
-This software package is dedicated to the Public Domain. This includes
-all files (code, documentation, ...) shipped with this distribution.
+This software package is licensed under a 2-clause BSD license. See LICENSE for
+the licensing terms. This applies to all files (code, documentation, ...)
+shipped with this distribution. If a specific file has no license header, the
+header in LICENSE shall apply. If a file has a license header which differs from
+LICENSE, then the license terms specified in this file shall apply.
 
 == Exceptions ==
 
-The following files are not considered part of this distribution and are not
-dedicated to the Public Domain:
+The following files are not considered part of this distribution:
 - driver/* including:
  - driver/hid-wiimote.h
  - driver/hid-wiimote-*.c
