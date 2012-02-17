@@ -6,10 +6,17 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
+EXTRA_DIST = README COPYING DEV LICENSE
+
 lib_LTLIBRARIES = libxwiimote.la
 bin_PROGRAMS = xwiishow xwiikeymap
 noinst_PROGRAMS = xwiidump
 include_HEADERS = lib/xwiimote.h
+man_MANS = \
+	doc/xwiimote.7 \
+	doc/libxwiimote.7 \
+	doc/xwiishow.1 \
+	doc/xwiikeymap.1
 
 AM_CFLAGS = \
 	-Wall
@@ -55,5 +62,3 @@ xwiikeymap_LDADD = \
 
 xwiidump_SOURCES = \
 	tools/xwiidump.c
-
-EXTRA_DIST = README COPYING DEV LICENSE
