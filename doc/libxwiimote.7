@@ -1,0 +1,34 @@
+.\"
+.\" Written 2012 by David Herrmann
+.\" Dedicated to the Public Domain
+.\"
+.TH "LIBXWIIMOTE" 7 "February 2012" "David Herrmann" "Wii Remote Driver"
+.SH NAME
+libxwiimote \- XWiimote user-space library
+
+.SH SYNOPSIS
+.B #include <xwiimote.h>
+
+.SH DESCRIPTION
+The xwiimote library is a helper-library to manage connected Wii Remotes from
+user-space. If you write an application that wants to support Wii Remotes as
+input devics but you cannot rely on X or the kernel to provide a suitable input
+device for you (eg., because you need finer grained access), then you an use
+this library to access Wii Remotes.
+
+This library provides an simple, but still comprehensive, API to access
+connected Wii Remotes. The API documentation is still in process. Please read
+the tools in xwiimote/tools/ or the header in xwiimote/lib/xwiimote.h for
+information on the API.
+
+.SH BUGS
+The library does not support all Wii Remote peripherals, yet. Please consider
+contributing to the project if you need further functionality.
+
+.SH AUTHOR
+David Herrmann <dh.herrmann@googlemail.com>
+.br
+The XWiimote Project: http://github.com/dvdhrm/xwiimote
+
+.SH "SEE ALSO"
+.BR xwiimote (7),
