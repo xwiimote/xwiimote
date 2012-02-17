@@ -214,6 +214,9 @@ static void monitor_poll(struct app *app)
 	int ret;
 
 	while ((str = xwii_monitor_poll(app->monitor))) {
+		/* sleep short time (10ms) to have the device fully setup */
+		usleep(10000);
+
 		dev = malloc(sizeof(*dev));
 		if (!dev) {
 			log_warn("app: cannot create new Wii Remote device\n");
