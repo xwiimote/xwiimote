@@ -1,0 +1,52 @@
+.\"
+.\" Written 2012 by David Herrmann
+.\" Dedicated to the Public Domain
+.\"
+.TH "XWIISHOW" 1 "February 2012" "David Herrmann" "Wii Remote Driver"
+.SH NAME
+xwiishow \- Test connected Wii Remote devices
+
+.SH SYNOPSIS
+.B xwiishow [/sys/path/to/device]
+
+.SH DESCRIPTION
+The
+.B xwiishow
+tool, when called without arguments, lists all connected Wii Remotes. The paths
+that are listed can be passed as argument to the tool and it will open the
+device and print an ASCII-image to the console representing the Wii Remote. If
+you press a key on the device, the tool will notify you by highlighting the
+related parts of the image.
+
+In the ncurses-based interface you can press 'q' to quit the application, 'r' to
+toggle the rumble motor and 'a' to toggle the accelerometer.
+
+.SH EXAMPLES
+.B $ xwiishow
+.br
+No device path given. Listing devices:
+.br
+  Found device: /sys/devices/pci0000:00/0000:00:1d.1/usb3/3-2/3-2:1.0/bluetooth/hci0/hci0:11/0005:057E:0306.0001
+.br
+End of device list
+
+.B $ xwiishow /sys/devices/pci0000:00/0000:00:1d.1/usb3/3-2/3-2:1.0/bluetooth/hci0/hci0:11/0005:057E:0306.0001
+.br
+<ncurses based interface>
+
+.SH BUGS
+This tool is quite incomplete. It does not support all interfaces that are
+provided by the wiimote kernel driver. However, it provides enough functionality
+to test whether a Wii Remote is detected properly.
+
+The tool reads the input devices directly so you might need root rights to
+properly access the Wii Remote.
+
+.SH AUTHOR
+David Herrmann <dh.herrmann@googlemail.com>
+.br
+The XWiimote Project: http://github.com/dvdhrm/xwiimote
+
+.SH "SEE ALSO"
+.BR xwiimote (7),
+.BR libxwiimote (7),

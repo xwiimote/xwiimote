@@ -1,0 +1,145 @@
+.\"
+.\" Written 2012 by David Herrmann
+.\" Dedicated to the Public Domain
+.\"
+.TH "XWIIMOTE" 7 "February 2012" "David Herrmann" "Wii Remote Driver"
+.SH NAME
+XWiimote \- Nintendo Wii Remote Linux Device Driver
+
+.SH DESCRIPTION
+The XWiimote driver and utilities can be used to connect a Nintendo Wii Remote
+to your computer. It consists of a linux kernel driver, a BlueZ Bluetooth plugin
+and user-space utilities. They replace the old user-space drivers like
+.B cwiid
+or
+.B wiiuse.
+
+Since bluez-4.96 the
+.B wiimote plugin
+is available upstream and you should be able to pair your Wii Remote like any
+other Bluetooth device. If pairing fails, simply connect the Wii Remote without
+pairing/bonding. The
+.B linux kernel driver
+for the Wii Remote is available since linux-3.1 and full support for Wii Remotes
+since linux-3.3. It is called
+.B hid-wiimote
+and requires the HID core drivers to be loaded. No configuration is needed for
+the driver and plugin.
+
+The user-space utilities provide a library that can be used to monitor and
+access connected Wii Remotes and they provide several applications to manage
+connected Wii Remotes. There are also tools to remap the peripheral input to
+arbitrary system input so you can use Wii Remotes as input devices for any
+application even if the desired application has no special Wii Remote support.
+
+.SS Connecting Wii Remotes
+To connect a Wii Remote to your host be sure that the official linux Bluetooth
+stack (BlueZ) is installed on your system and your kernel has the
+.B hid-wiimote
+kernel plugin loaded. Then connect your Wii Remote like any other Bluetooth
+device. The system log
+.B (dmesg)
+should print some messages about the new connected device.
+
+The Wii Remote can be put into discoverable mode by pressing the red sync-button
+behind the battery cover on the back. The Wii Remote will stay in discoverable
+mode for 20s. You can also hold the 1+2 buttons to put the Wii Remote into
+discoverable state. However, the first method works more reliably!
+If you are asked for PIN input while bonding the devices, then your BlueZ
+bluetoothd daemon does not include the wiimote plugin. See
+.B Bugs
+below for more information. If this does not help, you can still connect to your
+Wii Remote without pairing/bonding (i.e. not using authentication with a PIN).
+This should work with any BlueZ version.
+
+.SS User-Space Tools
+If you have a Wii Remote connected to your host you can test it with the
+.BR xwiishow (1)
+application. However, if you do not have the
+.B xwiimote
+user-space tools installed, you can find Wii Remotes with
+.br
+.B "    ls /sys/module/hid_wiimote/drivers/hid:wiimote/"
+.br
+They are listed there with their device ID inside that directory. For example
+.B /sys/module/hid_wiimote/drivers/hid:wiimote/0005:057E:0306.0001
+.br
+You can retrieve kernel information about the device by reading the files in
+this directory.
+
+If you want to remap the keys of the Wii Remote to other keys, use the
+.BR xwiikeymap (1)
+utility. Further tools are under development.
+
+.SS BlueZ wiimote plugin
+Since bluez-4.96 the bluetooth daemon includes a special wiimote plugin which
+handles wiimote pairing requests. If you pair a Wii Remote, the plugin will
+automatically generate the right PIN and pair the device. If you are asked for
+PIN input, you either do not have this plugin installed or your device is not
+detected. See
+.B BUGS
+for troubleshooting Wii Remote connection problems.
+
+.SS Wii Remote kernel driver
+The wiimote kernel driver is available since linux-3.1 in the official linux
+kernel. Since linux-3.2 the accelerometer and IR sensor are supported. Since
+linux-3.3 extension support is available.
+There is no need to configure this driver. All configuration should be done in
+the user-space utilities. The kernel driver provides a simple abstraction layer
+which does not need any configuration.
+
+.SS libxwiimote
+The kernel API for the Wii Remote is quite complex. It is documented in the
+xwiimote source repository in
+.B doc/INTERFACE
+.br
+To help application developers to use special Wii Remote functionality, we
+developed the
+.BR libxwiimote (7)
+library which provides an easy API to manage connected Wii Remotes. If an
+application does not support Wii Remotes explicitely you can still use the
+user-space tools like
+.BR xwiikeymap (1)
+to map Wii Remote buttons to arbitrary keys which then can be access as input
+device by any application which accepts keyboard input.
+
+However, if an application wants to use the IR or accelerometer sensors of a Wii
+Remote or if it requires more advanced key-maps, then it should use
+.B libxwiimote
+to access connected Wii Remotes.
+
+.SH BUGS
+.SS Connecting the Wii Remote requires PIN input
+If you are asked for PIN input while connecting your Wii Remote then you either
+do not have the BlueZ wiimote plugin installed or your device is not detected as
+a Wii Remote. This might happen with 3rd party Wii Remotes which are not sold by
+Nintendo. You can still use these devices by connecting them without pairing or
+bonding. Tools like gnome-bluetooth require you to select "Use no PIN" to
+connect devices without pairing/bonding.
+
+There are attempts to improve the detection of Wii Remotes in BlueZ. If you are
+sure that your device is not detected properly, please report a bug upstream.
+
+.SS The X-Server reacts weirdly on Wii Remote input
+By default the X-Server opens all input devices that are available on your
+machine. The Wii Remote input devices are very useless without a proper keymap
+so you should instruct your X-Server to ignore raw Wii Remotes input devices.
+The xwiimote source repository contains an xorg-config file
+.B res/50-xorg-disable-wiimote.conf
+which can be installed into
+.B /etc/X11/xorg.conf.d/
+to ignore all raw Wii Remote input devices.
+.br
+This only ignores raw Wii Remote devices. If you used some of the user-space
+utilities to remap the buttons then the new devices will still be detected by
+your X-Server.
+
+.SH AUTHOR
+David Herrmann <dh.herrmann@googlemail.com>
+.br
+The XWiimote Project: http://github.com/dvdhrm/xwiimote
+
+.SH "SEE ALSO"
+.BR libxwiimote (7),
+.BR xwiishow (1),
+.BR xwiikeymap (1)

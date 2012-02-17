@@ -1,0 +1,119 @@
+.\"
+.\" Written 2012 by David Herrmann
+.\" Dedicated to the Public Domain
+.\"
+.TH "XWIIKEYMAP" 1 "February 2012" "David Herrmann" "Wii Remote Driver"
+.SH NAME
+xwiikeymap \- Remap Wii Remote buttons to other keys
+
+.SH SYNOPSIS
+.B xwiikeymap [-d|--daemon] [-u|--uinput /dev/uinput] [-n|--name "XWiimote Keyboard"] [-L|--left <val>] ... [-T|--two <val>]
+
+.SH DESCRIPTION
+The
+.B xwiikeymap
+tool is a low level button mapping application which can be used to remap the
+buttons of connected Wii Remotes to other keys. The application will run as a
+daemon and wait for connecting Wii Remotes. If a Wii Remote is detected, it will
+create a new input device via
+.B uinput
+(the kernel
+.B uinput
+module must be loaded). If a button is pressed on the device, the daemon will
+emit the mapped key on the fake input device. An application that uses the new
+faked input device will therefore only get the new mapping and not the raw
+keycodes.
+
+When starting the daemon, you can pass the mapping as command line arguments.
+You can find the available keys in
+.B /usr/include/linux/input.h
+with the
+.B KEY_*
+prefix. You need the decimal value of the constants and then you can pass it to
+the daemon. For instance to remap the
+.B HOME
+button of the Wii Remote to
+.B KEY_F1 59
+you would pass
+.B --home 59
+as argument. See below for more information on arguments.
+
+This key-mapping works on a very low-level. It works on the kernel<->user-space
+layer and you won't find all keys you want inside /usr/include/linux/input.h.
+For instance there is no KEY_PLUS as this key is not available on standard
+American keyboards. They use SHIFT+KEY_MINUS. You must also take into account,
+that the X-Server will put a keyboard-layout on top of your mapping. So if you
+map a button to KEY_Z but the xserver puts an European layout on the keyboard,
+this might become KEY_Y instead.
+
+.SH OPTIONS
+.IP "\fB\-d, \-\-daemon\fP"
+Start application as daemon, that is, fork into background.
+
+.IP "\fB\-u, \-\-uinput \fIdevice\-path\fP"
+Path to the uinput device. This is used to create new user-space controlled
+input devices. By default this is "/dev/uinput".
+
+.IP "\fB\-n, \-\-name \fIdevice\-name\fP"
+Specify the device name that will be used for the new fake input device that is
+created with uinput. By default this is "XWiimote Keyboard".
+
+.SS Mappings
+To remap buttons to other keys you can use the following options. All options
+take as argument a decimal value which will be the new value of the key. If it
+is 0, the key is disabled and never emitted.
+.br
+You can find the key-constants in /usr/include/linux/input.h
+
+.IP "\fB\-L, \-\-left \fIval\fP"
+Map the left button to the new value. By default this is KEY_LEFT.
+
+.IP "\fB\-R, \-\-right \fIval\fP"
+Map the right button to the new value. By default this is KEY_RIGHT.
+
+.IP "\fB\-U, \-\-up \fIval\fP"
+Map the up button to the new value. By default this is KEY_UP.
+
+.IP "\fB\-D, \-\-down \fIval\fP"
+Map the down button to the new value. By default this is KEY_DOWN.
+
+.IP "\fB\-A, \-\-a \fIval\fP"
+Map the A button to the new value. By default this is KEY_ENTER.
+
+.IP "\fB\-B, \-\-b \fIval\fP"
+Map the B button to the new value. By default this is KEY_SPACE.
+
+.IP "\fB\-P, \-\-plus \fIval\fP"
+Map the plus button to the new value. By default this is KEY_VOLUMEUP.
+
+.IP "\fB\-M, \-\-minus \fIval\fP"
+Map the minus button to the new value. By default this is KEY_VOLUMEDOWN.
+
+.IP "\fB\-H, \-\-home \fIval\fP"
+Map the home button to the new value. By default this is KEY_ESC.
+
+.IP "\fB\-O, \-\-one \fIval\fP"
+Map the 1 button to the new value. By default this is KEY_1.
+
+.IP "\fB\-T, \-\-two \fIval\fP"
+Map the 2 button to the new value. By default this is KEY_2.
+
+.SH EXAMPLES
+.B $ xwiikeymap -d --home 59 --one 0 --two 0
+.br
+This will keep the standard keymap but map the HOME-button to KEY_F1 and disable
+the ONE and TWO buttons. It will run as daemon in the background.
+
+.SH BUGS
+This tool works on a very low level and may not be suitable for your needs. It
+is recommended to use X11 mappings instead. See the other tools of the xwiimote
+suite for better mappings.
+
+.SH AUTHOR
+David Herrmann <dh.herrmann@googlemail.com>
+.br
+The XWiimote Project: http://github.com/dvdhrm/xwiimote
+
+.SH "SEE ALSO"
+.BR xwiimote (7),
+.BR libxwiimote (7),
