@@ -17,6 +17,7 @@ man_MANS = \
 	doc/libxwiimote.7 \
 	doc/xwiishow.1 \
 	doc/xwiikeymap.1
+EXTRA_DIST += $(man_MANS)
 
 AM_CFLAGS = \
 	-Wall
