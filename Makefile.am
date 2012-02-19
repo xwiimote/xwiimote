@@ -6,7 +6,12 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-EXTRA_DIST = README COPYING DEV LICENSE
+EXTRA_DIST = \
+	README \
+	COPYING \
+	DEV \
+	LICENSE \
+	res/50-xorg-disable-wiimote.conf
 
 lib_LTLIBRARIES = libxwiimote.la
 bin_PROGRAMS = xwiishow xwiikeymap
