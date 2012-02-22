@@ -24,6 +24,10 @@ man_MANS = \
 	doc/xwiikeymap.1
 EXTRA_DIST += $(man_MANS)
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libxwiimote.pc
+EXTRA_DIST += $(pkgconfig_DATA)
+
 AM_CFLAGS = \
 	-Wall
 AM_CPPFLAGS = \

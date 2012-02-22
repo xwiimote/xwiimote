@@ -39,5 +39,5 @@ AC_ARG_ENABLE([debug],
 AM_CONDITIONAL([DEBUG], [test x$debug = xyes])
 AC_MSG_RESULT([$debug])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile libxwiimote.pc])
 AC_OUTPUT
