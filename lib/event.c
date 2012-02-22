@@ -419,11 +419,9 @@ static int read_core(struct xwii_iface *dev, struct xwii_event *ev)
 
 try_again:
 	ret = read_event(dev->if_core, &input);
-	if (ret < 0)
-		return ret;
-	if (ret == 0) {
+	if (ret <= 0) {
 		xwii_iface_close(dev, XWII_IFACE_CORE);
-		return -EAGAIN;
+		return -ENODEV;
 	}
 
 	if (input.type != EV_KEY)
@@ -488,11 +486,9 @@ static int read_accel(struct xwii_iface *dev, struct xwii_event *ev)
 
 try_again:
 	ret = read_event(dev->if_accel, &input);
-	if (ret < 0)
-		return ret;
-	if (ret == 0) {
+	if (ret <= 0) {
 		xwii_iface_close(dev, XWII_IFACE_ACCEL);
-		return -EAGAIN;
+		return -ENODEV;
 	}
 
 	if (input.type == EV_SYN) {
@@ -526,11 +522,9 @@ static int read_ir(struct xwii_iface *dev, struct xwii_event *ev)
 
 try_again:
 	ret = read_event(dev->if_ir, &input);
-	if (ret < 0)
-		return ret;
-	if (ret == 0) {
+	if (ret <= 0) {
 		xwii_iface_close(dev, XWII_IFACE_IR);
-		return -EAGAIN;
+		return -ENODEV;
 	}
 
 	if (input.type == EV_SYN) {
@@ -569,9 +563,12 @@ try_again:
  * Returns -EAGAIN if no new event can be read.
  * Returns 0 on success and writes the new event into \ev.
  * Returns negative error on failure.
- * Currently, it is not possible to get notified when an event interface gets
- * closed other than checking xwii_iface_opened() after every call. This may be
- * changed in the future.
+ * Returns -ENODEV *once* if *any* interface failed and got closed. Further
+ * reads may succeed on other interfaces but this seems unlikely as all event
+ * devices are created and destroyed by the kernel at the same time. Therefore,
+ * it is recommended to assume the device was disconnected if this returns
+ * -ENODEV.
+ * Returns -EAGAIN on further reads if no interface is open anymore.
  */
 int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
 {
