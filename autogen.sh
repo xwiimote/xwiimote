@@ -8,4 +8,4 @@
 
 mkdir -p m4/
 autoreconf -i
-./configure --enable-debug $*
+./configure --enable-debug --prefix=/usr $*
