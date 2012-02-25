@@ -22,16 +22,16 @@ extern "C" {
  * This defines kernel interface constants that we use.
  */
 
-#define XWII_ID_BUS 0x0005
-#define XWII_ID_VENDOR 0x057e
-#define XWII_ID_PRODUCT 0x0306
+#define XWII_ID_BUS		0x0005
+#define XWII_ID_VENDOR		0x057e
+#define XWII_ID_PRODUCT		0x0306
 
-#define XWII__NAME "Nintendo Wii Remote"
-#define XWII_NAME_CORE XWII__NAME
-#define XWII_NAME_ACCEL XWII__NAME " Accelerometer"
-#define XWII_NAME_IR XWII__NAME " IR"
-#define XWII_NAME_MP XWII__NAME " Motion+"
-#define XWII_NAME_EXT XWII__NAME " Extension"
+#define XWII__NAME		"Nintendo Wii Remote"
+#define XWII_NAME_CORE		XWII__NAME
+#define XWII_NAME_ACCEL		XWII__NAME " Accelerometer"
+#define XWII_NAME_IR		XWII__NAME " IR"
+#define XWII_NAME_MP		XWII__NAME " Motion+"
+#define XWII_NAME_EXT		XWII__NAME " Extension"
 
 /*
  * Event reader
