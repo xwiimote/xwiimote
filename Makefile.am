@@ -42,10 +42,11 @@ AM_CFLAGS += -O2
 endif
 
 libxwiimote_la_SOURCES = \
+	lib/internal.h \
 	lib/xwiimote.h \
-	lib/event.c \
-	lib/udev.c \
-	lib/libsfs.h lib/sfs.c
+	lib/core.c \
+	lib/monitor.c \
+	lib/sfs.c
 
 libxwiimote_la_CPPFLAGS = \
 	$(AM_CPPFLAGS) \

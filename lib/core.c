@@ -14,7 +14,7 @@
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include "libsfs.h"
+#include "internal.h"
 #include "xwiimote.h"
 
 struct xwii_iface {

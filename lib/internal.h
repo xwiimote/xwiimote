@@ -1,11 +1,11 @@
 /*
- * Sysfs Helper Library
- * Written 2011 by David Herrmann
+ * XWiimote - lib
+ * Written 2010, 2011, 2012 by David Herrmann
  * Dedicated to the Public Domain
  */
 
-#ifndef SFS_LIBSFS_H
-#define SFS_LIBSFS_H
+#ifndef XWII_INTERNAL_H
+#define XWII_INTERNAL_H
 
 #include <dirent.h>
 #include <stdlib.h>
@@ -53,4 +53,4 @@ extern int sfs_input_foreach(const char *path, sfs_input_callback callback,
 								void *extra);
 extern int sfs_input_list(const char *path, struct sfs_input_dev **first);
 
-#endif /* SFS_LIBSFS_H */
+#endif /* XWII_INTERNAL_H */

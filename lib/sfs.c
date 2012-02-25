@@ -14,7 +14,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include "libsfs.h"
+#include "internal.h"
 
 /*
  * Concatenate two strings
