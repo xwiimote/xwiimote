@@ -186,7 +186,7 @@ static int run_iface(struct xwii_iface *iface)
 		return ret;
 
 	while (true) {
-		ret = xwii_iface_read(iface, &event);
+		ret = xwii_iface_poll(iface, &event);
 		if (ret == -EAGAIN) {
 			nanosleep(&(struct timespec)
 				{.tv_sec = 0, .tv_nsec = 5000000 }, NULL);
