@@ -181,7 +181,7 @@ static void device_event(struct ev_fd *fdo, int mask, void *data)
 		destroy_device(dev);
 	} else if (mask & EV_READABLE) {
 		while (1) {
-			ret = xwii_iface_read(dev->iface, &event);
+			ret = xwii_iface_poll(dev->iface, &event);
 			if (ret != -EAGAIN) {
 				if (ret) {
 					log_err("app: reading Wii Remote "
