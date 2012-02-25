@@ -17,6 +17,12 @@ extern "C" {
 #include <sys/time.h>
 #include <time.h>
 
+#if (__GNUC__ > 3)
+#define XWII__DEPRECATED __attribute__((__deprecated__))
+#else
+#define XWII__DEPRECATED
+#endif /* __GNUC__ */
+
 /*
  * Kernel Interface
  * This defines kernel interface constants that we use.
@@ -99,8 +105,12 @@ int xwii_iface_get_fd(struct xwii_iface *dev);
 int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces);
 void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces);
 unsigned int xwii_iface_opened(struct xwii_iface *dev);
-int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
+int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev);
+
 int xwii_iface_rumble(struct xwii_iface *dev, bool on);
+
+/* old deprecated functions */
+XWII__DEPRECATED int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
 
 /*
  * Device monitor

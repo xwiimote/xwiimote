@@ -570,7 +570,7 @@ try_again:
  * -ENODEV.
  * Returns -EAGAIN on further reads if no interface is open anymore.
  */
-int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
+static int read_iface(struct xwii_iface *dev, struct xwii_event *ev)
 {
 	int ret;
 
@@ -588,6 +588,38 @@ int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
 		return ret;
 
 	return -EAGAIN;
+}
+
+int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
+{
+	return read_iface(dev, ev);
+}
+
+/*
+ * Poll for events on device \dev.
+ * Returns -EAGAIN if no new events can be read.
+ * Returns 0 on success and writes the new event into \ev.
+ * Returns negative error on failure.
+ * Returns -ENODEV *once* if *any* interface failed and got closed. Further
+ * reads may succeed on other interfaces but this seems unlikely as all event
+ * devices are created and destroyed by the kernel at the same time. Therefore,
+ * it is recommended to assume the device was disconnected if this returns
+ * -ENODEV.
+ * Returns -EAGAIN on further reads if no interface is open anymore.
+ *
+ * This also writes all pending requests to the devices in contrast to *_read()
+ * which only reads for events. If \ev is NULL, only pending requests are
+ * written but no read is performed.
+ */
+int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev)
+{
+	if (!dev)
+		return -EFAULT;
+
+	if (ev)
+		return read_iface(dev, ev);
+
+	return 0;
 }
 
 /*
