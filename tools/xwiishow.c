@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 #include <time.h>
 #include "xwiimote.h"
@@ -241,12 +242,22 @@ int main(int argc, char **argv)
 {
 	int ret = 0;
 
-	if (argc < 2) {
-		printf("No device path given. Listing devices:\n");
+	if (argc < 2 || !strcmp(argv[1], "-h")) {
+		printf("Usage:\n");
+		printf("\txwiishow [-h]: Show help\n");
+		printf("\txwiishow list: List connected devices\n");
+		printf("\txwiishow <num>: Show device with number #num\n");
+		printf("\txwiishow /sys/path/to/device: Show given device\n");
+		printf("UI commands:\n");
+		printf("\tq: Quit application\n");
+		printf("\tr: Toggle rumble motor\n");
+		printf("\ta: Toggle accelerometer\n");
+		ret = -1;
+	} else if (!strcmp(argv[1], "list")) {
+		printf("Listing connected Wii Remote devices:\n");
 		ret = enumerate();
 		printf("End of device list\n");
 	} else {
-
 		ret = xwii_iface_new(&iface, argv[1]);
 		if (ret) {
 			printf("Cannot create xwii_iface '%s' err:%d\n",
