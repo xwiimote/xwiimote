@@ -222,6 +222,7 @@ static int enumerate()
 {
 	struct xwii_monitor *mon;
 	char *ent;
+	int num = 0;
 
 	mon = xwii_monitor_new(false, false);
 	if (!mon) {
@@ -230,7 +231,7 @@ static int enumerate()
 	}
 
 	while ((ent = xwii_monitor_poll(mon))) {
-		printf("  Found device: %s\n", ent);
+		printf("  Found device #%d: %s\n", ++num, ent);
 		free(ent);
 	}
 
@@ -238,9 +239,36 @@ static int enumerate()
 	return 0;
 }
 
+static char *get_dev(int num)
+{
+	struct xwii_monitor *mon;
+	char *ent;
+	int i = 0;
+
+	mon = xwii_monitor_new(false, false);
+	if (!mon) {
+		printf("Cannot create monitor\n");
+		return NULL;
+	}
+
+	while ((ent = xwii_monitor_poll(mon))) {
+		if (++i == num)
+			break;
+		free(ent);
+	}
+
+	xwii_monitor_unref(mon);
+
+	if (!ent)
+		printf("Cannot find device with number #%d\n", num);
+
+	return ent;
+}
+
 int main(int argc, char **argv)
 {
 	int ret = 0;
+	char *path = NULL;
 
 	if (argc < 2 || !strcmp(argv[1], "-h")) {
 		printf("Usage:\n");
@@ -258,7 +286,11 @@ int main(int argc, char **argv)
 		ret = enumerate();
 		printf("End of device list\n");
 	} else {
-		ret = xwii_iface_new(&iface, argv[1]);
+		if (argv[1][0] != '/')
+			path = get_dev(atoi(argv[1]));
+
+		ret = xwii_iface_new(&iface, path ? path : argv[1]);
+		free(path);
 		if (ret) {
 			printf("Cannot create xwii_iface '%s' err:%d\n",
 								argv[1], ret);
