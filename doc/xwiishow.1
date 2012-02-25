@@ -7,22 +7,31 @@
 xwiishow \- Test connected Wii Remote devices
 
 .SH SYNOPSIS
-.B xwiishow [/sys/path/to/device]
+.B xwiishow [-h]
+.br
+.B xwiishow list
+.br
+.B xwiishow <num>
+.br
+.B xwiishow /sys/bus/hid/devices/<device>
 
 .SH DESCRIPTION
 The
 .B xwiishow
-tool, when called without arguments, lists all connected Wii Remotes. The paths
-that are listed can be passed as argument to the tool and it will open the
-device and print an ASCII-image to the console representing the Wii Remote. If
-you press a key on the device, the tool will notify you by highlighting the
-related parts of the image.
+tool, when called without arguments, shows a short usage information. If the
+.B list
+parameter is given, it lists all connected Wii Remotes. Each connected Wii
+Remote is given a number. If you pass this number to
+.B xwiishow
+then this device is opened and the UI shows a graphical representation of the
+device. Instead of passing this number you can also pass an absolute path to
+the device-root in the sysfs directory.
 
 In the ncurses-based interface you can press 'q' to quit the application, 'r' to
 toggle the rumble motor and 'a' to toggle the accelerometer.
 
 .SH EXAMPLES
-.B $ xwiishow
+.B $ xwiishow list
 .br
 No device path given. Listing devices:
 .br
