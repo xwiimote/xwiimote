@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <ncurses.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -33,6 +34,17 @@
 #include "xwiimote.h"
 
 static struct xwii_iface *iface;
+
+static void print_error(const char *format, ...)
+{
+	va_list list;
+
+	va_start(list, format);
+	move(23, 22);
+	vw_printw(stdscr, format, list);
+	printw("        ");
+	va_end(list);
+}
 
 static void show_key_event(const struct xwii_event *event)
 {
@@ -109,30 +121,31 @@ static int setup_window()
 	}
 
 	i = 0;
-	mvprintw(i++, 0, "+-----------------+ +------+");
-	mvprintw(i++, 0, "|       +-+       | |      |");
-	mvprintw(i++, 0, "|       | |       | +------+");
-	mvprintw(i++, 0, "|     +-+ +-+     |");
-	mvprintw(i++, 0, "|     |     |     |");
-	mvprintw(i++, 0, "|     +-+ +-+     |");
-	mvprintw(i++, 0, "|       | |       |");
-	mvprintw(i++, 0, "|       +-+       |");
-	mvprintw(i++, 0, "|                 |");
-	mvprintw(i++, 0, "|   +-+     +-+   |");
-	mvprintw(i++, 0, "|   | |     | |   |");
-	mvprintw(i++, 0, "|   +-+     +-+   |");
-	mvprintw(i++, 0, "|                 |");
-	mvprintw(i++, 0, "| ( ) |     | ( ) |");
-	mvprintw(i++, 0, "|                 |");
-	mvprintw(i++, 0, "|      +++++      |");
-	mvprintw(i++, 0, "|      +   +      |");
-	mvprintw(i++, 0, "|      +   +      |");
-	mvprintw(i++, 0, "|      +++++      |");
-	mvprintw(i++, 0, "|                 |");
-	mvprintw(i++, 0, "|       | |       |");
-	mvprintw(i++, 0, "|       | |       |");
-	mvprintw(i++, 0, "|                 |");
-	mvprintw(i++, 0, "+-----------------+");
+	/* 80x24 Box */
+	mvprintw(i++, 0, "+-----------------+ +------+ +-------------------------------------------------+");
+	mvprintw(i++, 0, "|       +-+       | |      |                                                   |");
+	mvprintw(i++, 0, "|       | |       | +------+                                                   |");
+	mvprintw(i++, 0, "|     +-+ +-+     |                                                            |");
+	mvprintw(i++, 0, "|     |     |     |                                                            |");
+	mvprintw(i++, 0, "|     +-+ +-+     |                                                            |");
+	mvprintw(i++, 0, "|       | |       |                                                            |");
+	mvprintw(i++, 0, "|       +-+       |                                                            |");
+	mvprintw(i++, 0, "|                 |                                                            |");
+	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
+	mvprintw(i++, 0, "|   | |     | |   |                                                            |");
+	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
+	mvprintw(i++, 0, "|                 |                                                            |");
+	mvprintw(i++, 0, "| ( ) |     | ( ) |                                                            |");
+	mvprintw(i++, 0, "|                 |                                                            |");
+	mvprintw(i++, 0, "|      +++++      |                                                            |");
+	mvprintw(i++, 0, "|      +   +      |                                                            |");
+	mvprintw(i++, 0, "|      +   +      |                                                            |");
+	mvprintw(i++, 0, "|      +++++      |                                                            |");
+	mvprintw(i++, 0, "|                 |                                                            |");
+	mvprintw(i++, 0, "|       | |       |                                                            |");
+	mvprintw(i++, 0, "|       | |       |                                                            |");
+	mvprintw(i++, 0, "|                 | +----------------------------------------------------------+");
+	mvprintw(i++, 0, "+-----------------+ |");
 
 	return 0;
 }
@@ -191,7 +204,7 @@ static int run_iface(struct xwii_iface *iface)
 			nanosleep(&(struct timespec)
 				{.tv_sec = 0, .tv_nsec = 5000000 }, NULL);
 		} else if (ret) {
-			printw("Error: Read failed with err:%d\n", ret);
+			print_error("Error: Read failed with err:%d\n", ret);
 			break;
 		} else {
 			switch (event.type) {
