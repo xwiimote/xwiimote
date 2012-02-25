@@ -45,13 +45,13 @@ extern "C" {
  * new events to the caller when receiving a sync-event.
  */
 
-#define XWII_IFACE_CORE		0x0001	/* core interface */
-#define XWII_IFACE_ACCEL	0x0002	/* accelerometer interface */
-#define XWII_IFACE_IR		0x0004	/* ir interface */
-#define XWII_IFACE_MP		0x0008	/* motion+ interface */
-#define XWII_IFACE_EXT		0x0010	/* extension interface */
-#define XWII_IFACE_ALL		0x00ff	/* all interfaces */
-#define XWII_IFACE_WRITABLE	0x0100	/* open iface writable (for rumble) */
+#define XWII_IFACE_CORE		0x000001	/* core interface */
+#define XWII_IFACE_ACCEL	0x000002	/* accelerometer interface */
+#define XWII_IFACE_IR		0x000004	/* ir interface */
+#define XWII_IFACE_MP		0x000008	/* motion+ interface */
+#define XWII_IFACE_EXT		0x000010	/* extension interface */
+#define XWII_IFACE_ALL		0x00ffff	/* all interfaces */
+#define XWII_IFACE_WRITABLE	0x010000	/* open iface writable */
 
 enum xwii_event_types {
 	XWII_EVENT_KEY,		/* key event */
@@ -89,9 +89,11 @@ struct xwii_event_abs {
 struct xwii_event {
 	struct timeval time;
 	unsigned int type;
+
 	union xwii_event_union {
 		struct xwii_event_key key;
 		struct xwii_event_abs abs[4];
+		uint8_t reserved[128];
 	} v;
 };
 
