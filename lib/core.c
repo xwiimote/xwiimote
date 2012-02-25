@@ -419,7 +419,9 @@ static int read_core(struct xwii_iface *dev, struct xwii_event *ev)
 
 try_again:
 	ret = read_event(dev->if_core, &input);
-	if (ret <= 0) {
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret <= 0) {
 		xwii_iface_close(dev, XWII_IFACE_CORE);
 		return -ENODEV;
 	}
@@ -486,7 +488,9 @@ static int read_accel(struct xwii_iface *dev, struct xwii_event *ev)
 
 try_again:
 	ret = read_event(dev->if_accel, &input);
-	if (ret <= 0) {
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret <= 0) {
 		xwii_iface_close(dev, XWII_IFACE_ACCEL);
 		return -ENODEV;
 	}
@@ -522,7 +526,9 @@ static int read_ir(struct xwii_iface *dev, struct xwii_event *ev)
 
 try_again:
 	ret = read_event(dev->if_ir, &input);
-	if (ret <= 0) {
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret <= 0) {
 		xwii_iface_close(dev, XWII_IFACE_IR);
 		return -ENODEV;
 	}
