@@ -6,7 +6,7 @@
 
 AC_PREREQ(2.68)
 
-AC_INIT([xwiimote], [0.2])
+AC_INIT([xwiimote], [0.3])
 AC_SUBST(PACKAGE_URL, [https://github.com/dvdhrm/xwiimote])
 AC_CONFIG_SRCDIR([lib/xwiimote.h])
 AC_CONFIG_AUX_DIR([build-aux])

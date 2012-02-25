@@ -37,12 +37,12 @@ This software packages contains:
 	xwiishow: A test application which lists all connected Wii Remotes. If a
 		Wii Remote is passed as argument, it continuously reads input
 		from the device and prints it to the screen.
-	50-xorg-disable-wiimote.conf: X configuration file which should be
+	50-xorg-fix-xwiimote.conf: X configuration file which should be
 		installed into /etc/X11/xorg.conf.d/ by your distribution. It
 		adds all Wii Remotes to the input blacklist of the X-server.
 		This is needed since the raw Wii Remote kernel interface is
 		useless (even irritating) to the X-server. Instead the
-		emulators should be used.
+		emulators should be used or the xf86-input-xwiimote driver.
 	xwiikeymap: The most basic emulator. It reads input from a Wii Remote,
 		maps it to other configured keys and feeds it as input into the
 		system. This allows to remap the Wii Remote buttons to your

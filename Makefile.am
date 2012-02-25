@@ -11,7 +11,7 @@ EXTRA_DIST = \
 	COPYING \
 	DEV \
 	LICENSE \
-	res/50-xorg-disable-wiimote.conf
+	res/50-xorg-fix-xwiimote.conf
 
 lib_LTLIBRARIES = libxwiimote.la
 bin_PROGRAMS = xwiishow xwiikeymap
@@ -54,7 +54,7 @@ libxwiimote_la_CPPFLAGS = \
 libxwiimote_la_LIBADD = \
 	$(UDEV_LIBS)
 libxwiimote_la_LDFLAGS = \
-	-version-info 0:0:0
+	-version-info 1:0:0
 
 xwiishow_SOURCES = \
 	tools/xwiishow.c
