@@ -108,6 +108,17 @@ static void show_accel_event(const struct xwii_event *event)
 
 static void show_ir_event(const struct xwii_event *event)
 {
+	mvprintw(5, 29, "%" PRId32, event->v.abs[0].x);
+	mvprintw(6, 29, "%" PRId32, event->v.abs[0].y);
+
+	mvprintw(5, 56, "%" PRId32, event->v.abs[1].x);
+	mvprintw(6, 56, "%" PRId32, event->v.abs[1].y);
+
+	mvprintw(8, 29, "%" PRId32, event->v.abs[2].x);
+	mvprintw(9, 29, "%" PRId32, event->v.abs[2].y);
+
+	mvprintw(8, 56, "%" PRId32, event->v.abs[3].x);
+	mvprintw(9, 56, "%" PRId32, event->v.abs[3].y);
 }
 
 static void show_rumble(bool on)
@@ -131,12 +142,12 @@ static int setup_window()
 	mvprintw(i++, 0, "|       | |       | +------+                 y:                                |");
 	mvprintw(i++, 0, "|     +-+ +-+     |                          z:                                |");
 	mvprintw(i++, 0, "|     |     |     | +----------------------------------------------------------+");
-	mvprintw(i++, 0, "|     +-+ +-+     |                                                            |");
-	mvprintw(i++, 0, "|       | |       |                                                            |");
+	mvprintw(i++, 0, "|     +-+ +-+     | IR #1 x:                      #2 x:                        |");
+	mvprintw(i++, 0, "|       | |       |       y:                         y:                        |");
 	mvprintw(i++, 0, "|       +-+       |                                                            |");
-	mvprintw(i++, 0, "|                 |                                                            |");
-	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
-	mvprintw(i++, 0, "|   | |     | |   |                                                            |");
+	mvprintw(i++, 0, "|                 |    #3 x:                      #4 x:                        |");
+	mvprintw(i++, 0, "|   +-+     +-+   |       y:                         y:                        |");
+	mvprintw(i++, 0, "|   | |     | |   | +----------------------------------------------------------+");
 	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
 	mvprintw(i++, 0, "|                 |                                                            |");
 	mvprintw(i++, 0, "| ( ) |     | ( ) |                                                            |");
@@ -162,6 +173,14 @@ static void toggle_accel()
 		xwii_iface_open(iface, XWII_IFACE_ACCEL);
 }
 
+static void toggle_ir()
+{
+	if (xwii_iface_opened(iface) & XWII_IFACE_IR)
+		xwii_iface_close(iface, XWII_IFACE_IR);
+	else
+		xwii_iface_open(iface, XWII_IFACE_IR);
+}
+
 static void toggle_rumble()
 {
 	static bool on = false;
@@ -182,6 +201,9 @@ static int keyboard()
 	switch (key) {
 	case 'a':
 		toggle_accel();
+		break;
+	case 'i':
+		toggle_ir();
 		break;
 	case 'r':
 		toggle_rumble();
@@ -297,6 +319,7 @@ int main(int argc, char **argv)
 		printf("\tq: Quit application\n");
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
+		printf("\ti: Toggle IR\n");
 		ret = -1;
 	} else if (!strcmp(argv[1], "list")) {
 		printf("Listing connected Wii Remote devices:\n");
