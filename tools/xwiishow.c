@@ -1,6 +1,6 @@
 /*
  * XWiimote - tools - xwiishow
- * Written 2010, 2011 by David Herrmann
+ * Written 2010-2013 by David Herrmann
  * Dedicated to the Public Domain
  */
 
@@ -22,6 +22,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <ncurses.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -100,6 +101,9 @@ static void show_key_event(const struct xwii_event *event)
 
 static void show_accel_event(const struct xwii_event *event)
 {
+	mvprintw(1, 48, "%" PRId32, event->v.abs[0].x);
+	mvprintw(2, 48, "%" PRId32, event->v.abs[0].y);
+	mvprintw(3, 48, "%" PRId32, event->v.abs[0].z);
 }
 
 static void show_ir_event(const struct xwii_event *event)
@@ -123,10 +127,10 @@ static int setup_window()
 	i = 0;
 	/* 80x24 Box */
 	mvprintw(i++, 0, "+-----------------+ +------+ +-------------------------------------------------+");
-	mvprintw(i++, 0, "|       +-+       | |      |                                                   |");
-	mvprintw(i++, 0, "|       | |       | +------+                                                   |");
-	mvprintw(i++, 0, "|     +-+ +-+     |                                                            |");
-	mvprintw(i++, 0, "|     |     |     |                                                            |");
+	mvprintw(i++, 0, "|       +-+       | |      |  Accelerometer  x:                                |");
+	mvprintw(i++, 0, "|       | |       | +------+                 y:                                |");
+	mvprintw(i++, 0, "|     +-+ +-+     |                          z:                                |");
+	mvprintw(i++, 0, "|     |     |     | +----------------------------------------------------------+");
 	mvprintw(i++, 0, "|     +-+ +-+     |                                                            |");
 	mvprintw(i++, 0, "|       | |       |                                                            |");
 	mvprintw(i++, 0, "|       +-+       |                                                            |");
