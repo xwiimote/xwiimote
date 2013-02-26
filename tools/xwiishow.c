@@ -101,24 +101,24 @@ static void show_key_event(const struct xwii_event *event)
 
 static void show_accel_event(const struct xwii_event *event)
 {
-	mvprintw(1, 48, "%" PRId32, event->v.abs[0].x);
-	mvprintw(2, 48, "%" PRId32, event->v.abs[0].y);
-	mvprintw(3, 48, "%" PRId32, event->v.abs[0].z);
+	mvprintw(1, 48, "%5" PRId32, event->v.abs[0].x);
+	mvprintw(2, 48, "%5" PRId32, event->v.abs[0].y);
+	mvprintw(3, 48, "%5" PRId32, event->v.abs[0].z);
 }
 
 static void show_ir_event(const struct xwii_event *event)
 {
-	mvprintw(5, 29, "%" PRId32, event->v.abs[0].x);
-	mvprintw(6, 29, "%" PRId32, event->v.abs[0].y);
+	mvprintw(5, 29, "%5" PRId32, event->v.abs[0].x);
+	mvprintw(6, 29, "%5" PRId32, event->v.abs[0].y);
 
-	mvprintw(5, 56, "%" PRId32, event->v.abs[1].x);
-	mvprintw(6, 56, "%" PRId32, event->v.abs[1].y);
+	mvprintw(5, 56, "%5" PRId32, event->v.abs[1].x);
+	mvprintw(6, 56, "%5" PRId32, event->v.abs[1].y);
 
-	mvprintw(8, 29, "%" PRId32, event->v.abs[2].x);
-	mvprintw(9, 29, "%" PRId32, event->v.abs[2].y);
+	mvprintw(8, 29, "%5" PRId32, event->v.abs[2].x);
+	mvprintw(9, 29, "%5" PRId32, event->v.abs[2].y);
 
-	mvprintw(8, 56, "%" PRId32, event->v.abs[3].x);
-	mvprintw(9, 56, "%" PRId32, event->v.abs[3].y);
+	mvprintw(8, 56, "%5" PRId32, event->v.abs[3].x);
+	mvprintw(9, 56, "%5" PRId32, event->v.abs[3].y);
 }
 
 static void show_rumble(bool on)
