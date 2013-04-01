@@ -499,7 +499,7 @@ static void ir_show_ext(const struct xwii_event *event)
 	}
 
 	for (i = 0; i < 4; ++i) {
-		if (event->v.abs[i].x == 1023 && event->v.abs[i].y == 1023)
+		if (!xwii_event_ir_is_valid(&event->v.abs[i]))
 			continue;
 
 		num = 0;
@@ -525,17 +525,37 @@ static void ir_show_ext(const struct xwii_event *event)
 
 static void ir_show(const struct xwii_event *event)
 {
-	mvprintw(3, 27, "%04" PRId32, event->v.abs[0].x);
-	mvprintw(3, 32, "%04" PRId32, event->v.abs[0].y);
+	if (xwii_event_ir_is_valid(&event->v.abs[0])) {
+		mvprintw(3, 27, "%04" PRId32, event->v.abs[0].x);
+		mvprintw(3, 32, "%04" PRId32, event->v.abs[0].y);
+	} else {
+		mvprintw(3, 27, "N/A ");
+		mvprintw(3, 32, " N/A");
+	}
 
-	mvprintw(3, 41, "%04" PRId32, event->v.abs[1].x);
-	mvprintw(3, 46, "%04" PRId32, event->v.abs[1].y);
+	if (xwii_event_ir_is_valid(&event->v.abs[1])) {
+		mvprintw(3, 41, "%04" PRId32, event->v.abs[1].x);
+		mvprintw(3, 46, "%04" PRId32, event->v.abs[1].y);
+	} else {
+		mvprintw(3, 41, "N/A ");
+		mvprintw(3, 46, " N/A");
+	}
 
-	mvprintw(3, 55, "%04" PRId32, event->v.abs[2].x);
-	mvprintw(3, 60, "%04" PRId32, event->v.abs[2].y);
+	if (xwii_event_ir_is_valid(&event->v.abs[2])) {
+		mvprintw(3, 55, "%04" PRId32, event->v.abs[2].x);
+		mvprintw(3, 60, "%04" PRId32, event->v.abs[2].y);
+	} else {
+		mvprintw(3, 55, "N/A ");
+		mvprintw(3, 60, " N/A");
+	}
 
-	mvprintw(3, 69, "%04" PRId32, event->v.abs[3].x);
-	mvprintw(3, 74, "%04" PRId32, event->v.abs[3].y);
+	if (xwii_event_ir_is_valid(&event->v.abs[3])) {
+		mvprintw(3, 69, "%04" PRId32, event->v.abs[3].x);
+		mvprintw(3, 74, "%04" PRId32, event->v.abs[3].y);
+	} else {
+		mvprintw(3, 69, "N/A ");
+		mvprintw(3, 74, " N/A");
+	}
 }
 
 static void ir_clear(void)
