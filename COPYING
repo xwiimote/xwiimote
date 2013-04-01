@@ -1,25 +1,15 @@
 = Licensing Information =
 
-This software package is licensed under a 2-clause BSD license. See LICENSE for
+This software package is licensed under a MIT-like license. See LICENSE for
 the licensing terms. This applies to all files (code, documentation, ...)
 shipped with this distribution. If a specific file has no license header, the
 header in LICENSE shall apply. If a file has a license header which differs from
 LICENSE, then the license terms specified in this file shall apply.
 
-== Exceptions ==
-
-The following files are not considered part of this distribution:
-- driver/* including:
- - driver/hid-wiimote.h
- - driver/hid-wiimote-*.c
- - driver/hid-wiimote.ko: The kernel driver is licensed under the terms of the
-                          GPL. This file is only a copy of the current driver.
-                          See the official kernel repo for driver development.
-
 == Developers ==
 
 This software is written by:
-  David Herrmann - dh.herrmann@googlemail.com
+  David Herrmann - dh.herrmann@gmail.com
 
 == Contributors ==
 

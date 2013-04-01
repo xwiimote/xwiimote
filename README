@@ -12,7 +12,7 @@ repository.
 
 For email contact please see ./COPYING for a list of contributors or
 write an email to the current maintainer at:
-  dh.herrmann@googlemail.com
+  dh.herrmann@gmail.com
 
 Thank you for using this driver!
 
@@ -58,8 +58,6 @@ Following software is not part of this package:
 	hid-wiimote.ko: The wiimote kernel module is available in the official
 		linux kernel sources and should already be installed in your
 		system if you run a kernel linux-3.1 or newer.
-		The ./driver/ directory contains a copy of the driver but you
-		should instead rely on the in-kernel driver.
 	wiimote.so: The BlueZ bluetoothd wiimote plugin is part of the upstream
 		BlueZ package and available since bluez-4.96. It should be
 		already installed on your system.
@@ -72,7 +70,8 @@ The XWiimote software stack is split into 3 parts:
 		BlueZ since bluez-4.96. They are available as plugin wiimote.so,
 		which needs to be enabled during configuration with:
 			./configure --enable-wiimote
-		Most distribution should already contain the plugin.
+		Most distribution should already contain the plugin. It is
+		enabled by default in newer bluez distributions.
 
 		With this plugin you should be able to pair your Wii Remote like
 		any other bluetooth device. If this plugin is not available, you
@@ -145,6 +144,8 @@ Happy Playing!
 ./doc/*.3: Manpages of the tools
 ./doc/LIBRARY: Description of the libxwiimote.so library interface
 ./doc/INTERFACE: Description of the direct kernel interface of hid-wiimote.ko
+./doc/DEVICES: Enumeration of all Nintendo Wii / Wii U related devices
+./doc/DEV_*: Device communication/protocol descriptions
 
 == Development ==
 
@@ -152,8 +153,7 @@ Please see ./DEV for development information.
 
 == Copying ==
 
-This whole distribution is dedicated to the Public Domain. Please see ./COPYING
-for more information.
+Please see ./COPYING for more information.
 
 == Compatibility ==
 
