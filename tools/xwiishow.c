@@ -27,7 +27,16 @@
 #include <time.h>
 #include "xwiimote.h"
 
+enum window_mode {
+	MODE_ERROR,
+	MODE_NORMAL,
+	MODE_EXTENDED,
+};
+
 static struct xwii_iface *iface;
+static unsigned int mode = MODE_ERROR;
+
+/* error messages */
 
 static void print_error(const char *format, ...)
 {
@@ -40,7 +49,9 @@ static void print_error(const char *format, ...)
 	va_end(list);
 }
 
-static void show_key_event(const struct xwii_event *event)
+/* key events */
+
+static void key_show(const struct xwii_event *event)
 {
 	unsigned int code = event->v.key.code;
 	bool pressed = event->v.key.state;
@@ -92,14 +103,38 @@ static void show_key_event(const struct xwii_event *event)
 	}
 }
 
-static void show_accel_event(const struct xwii_event *event)
+/* accelerometer events */
+
+static void accel_show(const struct xwii_event *event)
 {
 	mvprintw(1, 39, "%5" PRId32, event->v.abs[0].x);
 	mvprintw(1, 48, "%5" PRId32, event->v.abs[0].y);
 	mvprintw(1, 57, "%5" PRId32, event->v.abs[0].z);
 }
 
-static void show_ir_event(const struct xwii_event *event)
+static void accel_clear(void)
+{
+	struct xwii_event ev;
+
+	ev.v.abs[0].x = 0;
+	ev.v.abs[0].y = 0;
+	ev.v.abs[0].z = 0;
+	accel_show(&ev);
+}
+
+static void accel_toggle(void)
+{
+	if (xwii_iface_opened(iface) & XWII_IFACE_ACCEL) {
+		xwii_iface_close(iface, XWII_IFACE_ACCEL);
+		accel_clear();
+	} else {
+		xwii_iface_open(iface, XWII_IFACE_ACCEL);
+	}
+}
+
+/* IR events */
+
+static void ir_show(const struct xwii_event *event)
 {
 	mvprintw(3, 27, "%04" PRId32, event->v.abs[0].x);
 	mvprintw(3, 32, "%04" PRId32, event->v.abs[0].y);
@@ -114,19 +149,52 @@ static void show_ir_event(const struct xwii_event *event)
 	mvprintw(3, 74, "%04" PRId32, event->v.abs[3].y);
 }
 
-static void show_rumble(bool on)
+static void ir_clear(void)
+{
+	struct xwii_event ev;
+
+	ev.v.abs[0].x = 0;
+	ev.v.abs[0].y = 0;
+	ev.v.abs[1].x = 0;
+	ev.v.abs[1].y = 0;
+	ev.v.abs[2].x = 0;
+	ev.v.abs[2].y = 0;
+	ev.v.abs[3].x = 0;
+	ev.v.abs[3].y = 0;
+	ir_show(&ev);
+}
+
+static void ir_toggle(void)
+{
+	if (xwii_iface_opened(iface) & XWII_IFACE_IR) {
+		xwii_iface_close(iface, XWII_IFACE_IR);
+		ir_clear();
+	} else {
+		xwii_iface_open(iface, XWII_IFACE_IR);
+	}
+}
+
+/* rumble events */
+
+static void rumble_show(bool on)
 {
 	mvprintw(1, 21, on ? "RUMBLE" : "      ");
 }
 
-static int setup_window()
+static void rumble_toggle(void)
+{
+	static bool on = false;
+
+	on = !on;
+	xwii_iface_rumble(iface, on);
+	rumble_show(on);
+}
+
+/* basic window setup */
+
+static void setup_window(void)
 {
 	size_t i;
-
-	if (LINES < 24 || COLS < 80) {
-		printw("Error: Screen is too small\n");
-		return -EINVAL;
-	}
 
 	i = 0;
 	/* 80x24 Box */
@@ -154,36 +222,28 @@ static int setup_window()
 	mvprintw(i++, 0, "|       | |       |                                                            |");
 	mvprintw(i++, 0, "|                 | +----------------------------------------------------------+");
 	mvprintw(i++, 0, "+-----------------+ |");
-
-	return 0;
 }
 
-static void toggle_accel()
+static void handle_resize(void)
 {
-	if (xwii_iface_opened(iface) & XWII_IFACE_ACCEL)
-		xwii_iface_close(iface, XWII_IFACE_ACCEL);
-	else
-		xwii_iface_open(iface, XWII_IFACE_ACCEL);
+	if (LINES < 24 || COLS < 80) {
+		mode = MODE_ERROR;
+		erase();
+		mvprintw(0, 0, "Error: Screen is too small");
+	} else if (LINES < 40 || COLS < 200) {
+		mode = MODE_NORMAL;
+		erase();
+		setup_window();
+	} else {
+		mode = MODE_EXTENDED;
+		erase();
+		setup_window();
+	}
 }
 
-static void toggle_ir()
-{
-	if (xwii_iface_opened(iface) & XWII_IFACE_IR)
-		xwii_iface_close(iface, XWII_IFACE_IR);
-	else
-		xwii_iface_open(iface, XWII_IFACE_IR);
-}
+/* keyboard handling */
 
-static void toggle_rumble()
-{
-	static bool on = false;
-
-	on = !on;
-	xwii_iface_rumble(iface, on);
-	show_rumble(on);
-}
-
-static int keyboard()
+static int keyboard(void)
 {
 	int key;
 
@@ -192,14 +252,17 @@ static int keyboard()
 		return 0;
 
 	switch (key) {
+	case KEY_RESIZE:
+		handle_resize();
+		break;
 	case 'a':
-		toggle_accel();
+		accel_toggle();
 		break;
 	case 'i':
-		toggle_ir();
+		ir_toggle();
 		break;
 	case 'r':
-		toggle_rumble();
+		rumble_toggle();
 		break;
 	case 'q':
 		return -ECANCELED;
@@ -213,9 +276,9 @@ static int run_iface(struct xwii_iface *iface)
 	struct xwii_event event;
 	int ret = 0;
 
-	ret = setup_window();
-	if (ret)
-		return ret;
+	handle_resize();
+	accel_clear();
+	ir_clear();
 
 	while (true) {
 		ret = xwii_iface_poll(iface, &event);
@@ -228,13 +291,13 @@ static int run_iface(struct xwii_iface *iface)
 		} else {
 			switch (event.type) {
 			case XWII_EVENT_KEY:
-				show_key_event(&event);
+				key_show(&event);
 				break;
 			case XWII_EVENT_ACCEL:
-				show_accel_event(&event);
+				accel_show(&event);
 				break;
 			case XWII_EVENT_IR:
-				show_ir_event(&event);
+				ir_show(&event);
 				break;
 			}
 		}
