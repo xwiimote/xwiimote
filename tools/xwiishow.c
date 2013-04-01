@@ -645,15 +645,18 @@ static int run_iface(struct xwii_iface *iface)
 		} else {
 			switch (event.type) {
 			case XWII_EVENT_KEY:
-				key_show(&event);
+				if (mode != MODE_ERROR)
+					key_show(&event);
 				break;
 			case XWII_EVENT_ACCEL:
 				if (mode == MODE_EXTENDED)
 					accel_show_ext(&event);
-				accel_show(&event);
+				if (mode != MODE_ERROR)
+					accel_show(&event);
 				break;
 			case XWII_EVENT_IR:
-				ir_show(&event);
+				if (mode != MODE_ERROR)
+					ir_show(&event);
 				break;
 			}
 		}
