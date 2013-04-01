@@ -1,0 +1,481 @@
+= Nintendo Wii Devices =
+
+  Nintendo produced many different devices for their Wii and Wii-U products.
+  This file tries to list and describe all of these sorted by their model
+  number. As there is no official documentation by Nintendo, there is no
+  guarantee that this list is complete or correct. Feedback and contributions
+  are welcome!
+
+  This file tries to describe which devices exist and how their look differs
+  from each other depending on the model number. However, this file does not
+  describe any wire/wireless protocols or other software behavior.
+  This file only describes the mechanics and physical views of the devices.
+  See the DEV_* files for further information and communication details.
+
+== Device Identification ==
+
+  On each device you can always find a model number like
+  "RVL-003", "WUP-005", ... These are always present and identify the type of
+  device. However, there might be multiple revisions of a device that behave
+  differently even though they have the same model number. Hence, you can often
+  find additional numbers that identify the device revision. But these numbers
+  aren't found on all devices and might be inconsistent. We haven't exactly
+  figured out what all of these mean and we need much more data from people who
+  own such devices.
+
+  Therefore, please notify us if you have different devices that aren't listed
+  here so we can extend this list continously.
+
+== Device List ==
+
+  Following a list of all devices with their respective model number and other
+  device identifications. First, a list of Wii related products, then Wii U
+  products. Many products work with both, Wii and Wii U, but Nintendo uses a
+  different numbering scheme so we split them up here.
+
+=== Nintendo Wii Products ===
+
+  Wii products have model numbers starting with "RVL". It probably stands for
+  "ReVoLution" which was the codename of the Wii.
+
+  RVL-001
+    Product: Wii Console
+    Label: Wii
+    Model: RVL-001 (EUR)
+    Revision: C/RVL-EUR-1
+    Color: Black
+    Year: 2006
+    Description:
+      This is the Wii console. It exists in different colors but they seem to be
+      the same hardware otherwise. It is unclear whether it was revised for
+      multiple revisions or whether they differ according to the country-code.
+      No differences have been discovered and it seems safe to assume that they
+      are all the same.
+    Additional Numbers:
+      >ABS+PMMA<
+
+  RVL-002
+    Product: Wii Console Power Supply
+    Label: Wii Power Supply
+    Model: RVL-002 (EUR)
+    Revision: C/RVL-A-AD-EUR
+    Color: Grey
+    Year: 2006
+    Description:
+      The main power supply for the Wii Console. The cold-plug differs depending
+      on the country-code. No other differences have been found.
+    Additional Numbers:
+      D9PKU22
+
+  RVL-003
+    Product: Wii Remote
+    Label: Wii
+    Model: RVL-003
+    Revision: RVL(F)-1
+    Color: White
+    Year: 2006
+    Description:
+      This is the first Wii Remote controller that was produced together with
+      the main console. No country-code has been found and only one revision is
+      known.
+      This is the version _without_ the builtin Motion Plus peripheral.
+    Additional Numbers:
+      B1UF123
+      >ABS< f7-4
+      [R] 204NY20600402
+
+  RVL-004
+    Product: Wii Remote Nunchuck Extension
+    Label: <none>
+    Model: RVL-004
+    Revision: <none>
+    Color: White, Black
+    Year: 2006
+    Description:
+      The Nunchuck is an extension controller for the Wii Remote. It is
+      connected with a cable and features 2 buttons and a joystick.
+      No country-codes are known, neither does it have a revision number. Even
+      the ACN code seems to be equal between all devices so there was probably
+      only one type produced and never been revised.
+    Additional Numbers:
+      <none>
+
+  RVL-005
+    Product: Wii Remote Classic Controller Extension
+    <unknown>
+
+  RVL-006
+    Product: Wii Optical Disc
+    <unknown>
+
+  RVL-007
+    Product: Wii Optical Disc Case
+    <unknown>
+
+  RVL-008
+    <unknown>
+
+  RVL-009
+    Product: Wii Cinch A/V Cable
+    Label: <none>
+    Model: RVL-009
+    Revision: <none>
+    Color: Grey
+    Year: 2006
+    Description:
+      Standard connector for the Wii Console to a TV via analog signal. 6 pins
+      on both ends. Simple adapter for A/V-Multi-Out to 3 cable cinch.
+    Additional Numbers:
+      <none>
+
+  RVL-010
+    Product: Wii S-Video S-VHS A/V Cable
+    <unknown>
+
+  RVL-011
+    Product: Wii Component A/V Cable
+    <unknown>
+
+  RVL-012
+    Product: Wii D-Terminal A/V Cable
+    <unknown>
+
+  RVL-013
+    Product: Wii RGB A/V Cable
+    <unknown>
+
+  RVL-014
+    Product: Wii Sensor Bar
+    Label: Wii Sensor Bar
+    Model: RVL-014
+    Revision: <none>
+    Color: Grey/Black
+    Year: 2006
+    Description:
+      Standard sensor bar with cable to connect to the console. The connector
+      features 3 pins, but probably only 2 are used.
+      The sensor bar has LEDs on both sides which are used to send infrared
+      signals to the Wii Remotes for location tracking.
+    Additional Numbers:
+      <none>
+
+  RVL-015
+    Product: Wii USB Ethernet Adapter
+    <unknown>
+
+  RVL-016
+    Product: Wii Sensor Bar Stand
+    Label: <none>
+    Model: RVL-016
+    Revision: <none>
+    Color: Transparent/Grey
+    Year: 2006
+    Description:
+      Stand for Wii Sensor Bar.
+    Additional Numbers:
+      <none>
+
+  RVL-017
+    Product: Wii Console Stand
+    Label: Wii
+    Model: RVL-017
+    Revision: <none>
+    Color: Grey/Black
+    Year: 2006
+    Description:
+      Stand for Wii Console so the Console can stand safely on its side.
+    Additional Numbers:
+      <none>
+
+  RVL-018
+    Product: Wii Remote Wrist Strap
+    Label: <none>
+    Model: RVL-018
+    Revision: <none>
+    Color: Grey
+    Year: 2006
+    Description:
+      Wrist strap for the Wii Remote. Comes in different colors and looks but
+      always has the same model number.
+    Additional Numbers:
+      >ABS< m1-8  (found on white RVL-003)
+      >ABS< H1-7  (found on white RVL-036 early revision)
+      >ABS< t1-9  (found on black RVL-036 early revision)
+      >ABS< m1E-8 (found on cyan RVL-036 late revision)
+
+  RVL-019
+    Product: Wii Console Stand Plate
+    Label: <none>
+    Model: RVL-019
+    Revision: <none>
+    Color: Transparent
+    Year: 2006
+    Description:
+      Stand plate for RVL-017 Wii Mounting.
+    Additional Numbers:
+      >PC< f5-1
+
+  RVL-020
+    Product: Wii SD-Memory Card 512 MB
+    <unknown>
+
+  RVL-021
+    Product: Wii Balance Board
+    <unknown>
+
+  RVL-022
+    Product: Wii Remote Jacket
+    Label: <none>
+    Model: RVL-022
+    Revision: <none>
+    Color: Transparent, Black
+    Year: 2006
+    Description:
+      Jacket for Wii Remotes. Exists in different revisions. One for the
+      classic RVL-003 remote, one for the new RVL-036 remote with gap for the
+      sync-button.
+    Additional Numbers:
+      >VMQ< ma13-6  (without Sync-button gap)
+      >VMQ< ha62-6  (with Sync-button gap)
+
+  RVL-023
+    Product: Wii Zapper
+    <unknown>
+
+  RVL-024
+    Product: Wii Wheel
+    Label: <none>
+    Model: RVL-024
+    Revision: RVL-A-J-EUR
+    Color: White
+    Year: <none>
+    Description:
+      Wheel peripheral for Wii Remotes.
+    Additional Numbers:
+      <none>
+
+  RVL-025
+    Product: Wii Balance Board Foot Extensions
+    <unknown>
+
+  RVL-026
+    Product: Wii Motion Plus Extension
+    Label: <none>
+    Model: RVL-026
+    Revision: <none>
+    Color: White
+    Year: <none>
+    Description:
+      Motion Plus extension for standard Wii Remote.
+    Additional Numbers:
+      C98M201
+
+  RVL-027
+    Product: Wii Remote with Motion Plus Jacket
+    Label: <none>
+    Model: RVL-027
+    Revision: <none>
+    Color: Transparent
+    Year: <none>
+    Description:
+      Like the normal jacket RVL-022 but big enough for Wii Remotes with the
+      Motion Plus extension attached.
+    Additional Numbers:
+      >VMQ< Lma51-1
+
+  RVL-028
+    <unknown>
+
+  RVL-029
+    Product: Wii Speak
+    <unknown>
+
+  RVL-030
+    Product: Wii Lenses Cleaning Disk
+    <unknown>
+
+  RVL-031
+    Product: Wii Lenses Cleaning Liquid
+    <unknown>
+
+  RVL-032
+    Product: Wii Lenses Cleaning Pad
+    <unknown>
+
+  RVL-033
+    Product: Wii SD Memory Card 2GB
+    <unknown>
+
+  RVL-034
+    Product: Wii Cleaning Pad
+    <unknown>
+
+  RVL-035
+    <unknown>
+
+  RVL-036
+    Product: Wii Remote Plus
+    Label: Wii
+    Model: RVL-036
+    Revisions:
+      LMA-RVL-WR/M-C0  (White, early revision)
+      LMB-RVL-WR/F-C0  (Black, early revision)
+      LMA-RVL-WR/Z-C4  (Cyan, late revision)
+    Color: White, Black, Cyan
+    Year: <none>
+    Description:
+      Wii Remote with built-in motion plus extension. Comes in two different
+      revisions. One is mostly the same as the old Wii Remote RVL-003 with a
+      plugged in Motion Plus extension.
+      The late revision has changed a bit. It is more strict about the protocol,
+      advertises a different name and changes some other bits. It seems like it
+      is a whole new revision of the Wii Remote with the Motion Plus sensor
+      really built-in instead of only attached internally. It also changed the
+      Bluetooth chip from Broadcom to CSR, which explains why it differs so
+      much.
+      Probably also comes with different bug-fixes and _may_ contain
+      compatibility fixes for the Wii-U.
+    Additional Numbers:
+      White, early revision:
+        [R] 011WWA100008
+        D8RT510
+        >ABS< M5-1
+      Black, early revision:
+        [R] 204WW21004200
+        D05F210
+        >ABS< f9-3
+      Cyan, late revision:
+        [R] 007WWCUL0716
+        F1DTE40
+        >ABS< M1-2
+
+=== Nintendo Wii U Products ===
+
+  Wii U products have model numbers starting with "WUP". It may stand for
+  "Wii U Project".
+
+  WUP-001
+    Product: Wii U Console
+    Label: Wii U
+    Model: WUP-001(03)  (white, 8GB)
+    Revision: LTA1-WUP-S-EUR-C0  (white, 8GB)
+    Color: White
+    Year: 2012
+    Description:
+      Wii U Console. Available in different colors and with different amount of
+      internal storage. Apart from that, no differences were found.
+    Additional Numbers:
+      CA1-AGGA01
+
+  WUP-002
+    Product: Wii U AC Adapter
+    Label: Wii U AC Adapter
+    Model: WUP-002 (EUR)
+    Revision: WUP-A-ADMM-EUR-C0
+    Color: Grey
+    Year: 2012
+    Description:
+      AC Adapter for main Wii U Console
+    Additional Numbers:
+      MKF913J01
+
+  WUP-003
+    <unknown>
+
+  WUP-004
+    <unknown>
+
+  WUP-005
+    Product: Wii U Pro Controller
+    Label: <none>
+    Model: WUP-005
+    Revision: LTB-WUP-A-RC-EUR-C0
+    Color: Black
+    Year: 2012
+    Description:
+    Additional Numbers:
+      F0TM101
+
+  WUP-006
+    <unknown>
+
+  WUP-007
+    <unknown>
+
+  WUP-008
+    Product: Wii HDMI Cable
+    Label: <none>
+    Model: WUP-008
+    Revision: <none>
+    Color: Grey
+    Year: 2012
+    Description:
+      Wii U HDMI cable for audio/video transmission.
+    Additional Numbers:
+      <none>
+
+  WUP-009
+    <unknown>
+
+  WUP-010
+    Product: Wii U Gamepad
+    Label: Wii U
+    Model: WUP-010 (EUR)
+    Revision: LTA-WUP-A-DH-EUR-C0
+    Color: White
+    Year: 2012
+    Description:
+      Gamepad for Wii U Console.
+    Additional Numbers:
+      BAA1-AA01
+
+  WUP-011
+    Product: Wii U Gamepad AC Adapter
+    Label: AC Adapter
+    Model: WUP-011 (EUR)
+    Revision: WUP-A-ADMM-EUR-P0
+    Color: Grey
+    Year: 2012
+    Description:
+      AC Adapter for Wii U Gamepad.
+    Additional Numbers:
+      MFF906J01
+
+  WUP-012
+    <unknown>
+
+  WUP-013
+    <unknown>
+
+  WUP-014
+    <unknown>
+
+  WUP-015
+    Product: Wii U Gamepad Stylus
+    Label: <none>
+    Model: WUP-015
+    Revision: <none>
+    Color: White
+    Year: 2012
+    Description:
+      Stylus pen found on the back of the Wii U Gamepad.
+    Additional Numbers:
+      t12
+
+  WUP-016
+    <unknown>
+
+  WUP-017
+    <unknown>
+
+  WUP-018
+    Product: Wii U Pro Controller USB Cable
+    Label: <none>
+    Model: WUP-018
+    Revision: <none>
+    Color: Grey
+    Year: 2012
+    Description:
+      USB-Cable for Wii U Pro Controller for charging.
+    Additional Numbers:
+      <none>

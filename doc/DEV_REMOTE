@@ -1,0 +1,131 @@
+= Nintendo Wii Remote Devices =
+
+  The Wii Remote that was shipped with the Wii Console in late 2006 was the
+  first peripheral with a new protocol and behavior. Later, many other mostly
+  compatible devices were produced by Nintendo.
+
+  This file tries to describe the behavior and software internals of all Wii
+  Remote compatible devices. This information was gathered via
+  reverse-engineering so it may contain errors.
+
+  This file applies to:
+    RVL-003: Wii Remote
+    RVL-036: Wii Remote Plus
+    WUP-005: Wii U Pro Controller
+
+== Stuff ==
+
+Devices:
+  00:1E:35:3B:7E:6D: Wii Remote (white)
+  78:A2:A0:DD:F6:8A: Wii Remote Plus (white, early revision)
+  D8:6B:F7:0D:3C:78: Wii Remote Plus (black, early revision)
+  2C:10:C1:B8:84:40: Wii Remote Plus (cyan, late revision)
+  34:AF:2C:18:AC:99: Wii U Pro Controller (black)
+
+Inquiry:
+  $ hcitool inq
+  00:1E:35:3B:7E:6D       clock offset: 0x0aa5    class: 0x002504
+  78:A2:A0:DD:F6:8A       clock offset: 0x2e7c    class: 0x002504
+  D8:6B:F7:0D:3C:78       clock offset: 0x4fbf    class: 0x002504
+  2C:10:C1:B8:84:40       clock offset: 0x67c9    class: 0x000508
+  34:AF:2C:18:AC:99       clock offset: 0x3e97    class: 0x000508
+
+  Class 0x002504:
+    - Major Service Class:
+      - Limited Discoverable Mode
+    - Major Device Class:
+      - Peripheral (mouse, joystick, keyboard, ...)
+    - Minor Device Class:
+      - Joystick
+
+  Class 0x000508:
+    - Major Service Class:
+      - (no flags set)
+    - Major Device Class:
+      - Peripheral (mouse, joystick, keyboard, ...)
+    - Minor Device Class:
+      - Gamepad
+
+$ hcitool info 00:1E:35:3B:7E:6D
+Requesting information ...
+        BD Address:  00:1E:35:3B:7E:6D
+        Device Name: Nintendo RVL-CNT-01
+        LMP Version: 1.2 (0x2) LMP Subversion: 0x229
+        Manufacturer: Broadcom Corporation (15)
+        Features: 0xbc 0x02 0x04 0x38 0x08 0x00 0x00 0x00
+                <encryption> <slot offset> <timing accuracy> <role switch>
+                <sniff mode> <RSSI> <power control> <enhanced iscan>
+                <interlaced iscan> <interlaced pscan> <AFH cap. slave>
+
+$ hcitool info 78:A2:A0:DD:F6:8A
+$ hcitool info D8:6B:F7:0D:3C:78
+Requesting information ...
+        BD Address:  78:A2:A0:DD:F6:8A
+        Device Name: Nintendo RVL-CNT-01
+        LMP Version: 2.0 (0x3) LMP Subversion: 0x31c
+        Manufacturer: Broadcom Corporation (15)
+        Features: 0xbc 0x02 0x04 0x38 0x08 0x00 0x00 0x00
+                <encryption> <slot offset> <timing accuracy> <role switch>
+                <sniff mode> <RSSI> <power control> <enhanced iscan>
+                <interlaced iscan> <interlaced pscan> <AFH cap. slave>
+
+$ hcitool info 2C:10:C1:B8:84:40
+Requesting information ...
+        BD Address:  2C:10:C1:B8:84:40
+        Device Name: Nintendo RVL-CNT-01-TR
+        LMP Version: 2.0 (0x3) LMP Subversion: 0x1d8d
+        Manufacturer: Cambridge Silicon Radio (10)
+        Features: 0xbc 0x02 0x04 0x38 0x08 0x00 0x00 0x00
+                <encryption> <slot offset> <timing accuracy> <role switch>
+                <sniff mode> <RSSI> <power control> <enhanced iscan>
+                <interlaced iscan> <interlaced pscan> <AFH cap. slave>
+
+$ hcitool info 34:AF:2C:18:AC:99
+Requesting information ...
+        BD Address:  34:AF:2C:18:AC:99
+        Device Name: Nintendo RVL-CNT-01-UC
+        LMP Version: 2.0 (0x3) LMP Subversion: 0x1d8d
+        Manufacturer: Cambridge Silicon Radio (10)
+        Features: 0xbc 0x02 0x04 0x38 0x08 0x00 0x00 0x00
+                <encryption> <slot offset> <timing accuracy> <role switch>
+                <sniff mode> <RSSI> <power control> <enhanced iscan>
+                <interlaced iscan> <interlaced pscan> <AFH cap. slave>
+
+
+== Connection Procedure ==
+
+ - Pressing red "sync" button on Wii Remote
+   - 20s in discoverable mode with IAC=0x9e8b00 (LIAC) (not GIAC!)
+ - Pressing red "sync" button on Wii Console
+   - Wii performs BT inquiry with IAC=LIAC only. No GIAC devices are found!
+     - use: hciconfig hci0 iac liac
+ - Wii initiates baseband ACL connection to found devices
+ - No role switch is performed
+   - The Wii allows the device to switch to master
+   - The remotes don't allow any role-switch
+ - reading features/name can be done now:
+   - Wii Console:
+       Features: 0xff 0xff 0x8d 0xfe 0x9b 0xf9 0x00 0x80
+       bdaddr: A4:5C:27:DE:DC:B8 name: 'Wii'
+ - Wii now opens l2cap channel on PSM 1 (SDP)
+   - Must be accepted, otherwise Wii will disconnect
+   - Wii requests MTU: 256 FlushTO: 65535
+ - Wii now performs SDP queries on this new channel:
+   - asks for HID entry handle
+   - then asks for attribute IDs on this handle
+   - then reads all these attribute IDs at once
+   - the whole WiiRemote HID SDP entry must be returned correctly
+ - Wii then closes the SDP l2cap channel
+ - If the HID SDP record was correctly parsed by the Wii, it assumes that the
+   remote device is a valid WiiRemote. No other validation is known to be
+   required. That is, no bdaddr-verification, no device-name comparison, no
+   device-class tests, ...
+ - Wii opens HID control channel l2cap PSM 17/0x11
+   - Must be accepted
+   - Wii requests MTU: 640 FlushTO: 65535
+ - Wii now requests authentication
+   - if no link-key exists, a PIN must be provided by both devices
+   - PIN is the raw BD-Address of the Wii Console (6 bytes, big-endian)
+     - (if connected non-permanently via Wii-Menu, PIN is the address of the Wii
+        Remote instead of the Wii Console)
+ - TBD
