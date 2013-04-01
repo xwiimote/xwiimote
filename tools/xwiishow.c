@@ -36,6 +36,7 @@ enum window_mode {
 
 static struct xwii_iface *iface;
 static unsigned int mode = MODE_ERROR;
+static bool freeze = false;
 
 /* error messages */
 
@@ -678,6 +679,12 @@ static void handle_resize(void)
 
 /* keyboard handling */
 
+static void freeze_toggle(void)
+{
+	freeze = !freeze;
+	print_error("Info: %sreeze screen", freeze ? "F" : "Unf");
+}
+
 static int keyboard(void)
 {
 	int key;
@@ -698,6 +705,9 @@ static int keyboard(void)
 		break;
 	case 'r':
 		rumble_toggle();
+		break;
+	case 'f':
+		freeze_toggle();
 		break;
 	case 'q':
 		return -ECANCELED;
@@ -723,7 +733,7 @@ static int run_iface(struct xwii_iface *iface)
 		} else if (ret) {
 			print_error("Error: Read failed with err:%d", ret);
 			break;
-		} else {
+		} else if (!freeze) {
 			switch (event.type) {
 			case XWII_EVENT_KEY:
 				if (mode != MODE_ERROR)
@@ -815,6 +825,7 @@ int main(int argc, char **argv)
 		printf("\txwiishow /sys/path/to/device: Show given device\n");
 		printf("UI commands:\n");
 		printf("\tq: Quit application\n");
+		printf("\tf: Freeze/Unfreeze screen\n");
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
 		printf("\ti: Toggle IR camera\n");
