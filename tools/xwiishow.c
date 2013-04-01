@@ -45,9 +45,9 @@ static void print_error(const char *format, ...)
 	va_list list;
 
 	va_start(list, format);
+	mvprintw(23, 22, "                                                           ");
 	move(23, 22);
 	vw_printw(stdscr, format, list);
-	printw("        ");
 	va_end(list);
 }
 
