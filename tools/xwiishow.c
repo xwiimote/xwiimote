@@ -660,16 +660,18 @@ static void handle_resize(void)
 	if (LINES < 24 || COLS < 80) {
 		mode = MODE_ERROR;
 		erase();
-		mvprintw(0, 0, "Error: Screen is too small");
+		mvprintw(0, 0, "Error: Screen smaller than 80x24; no view");
 	} else if (LINES < 40 || COLS < 160) {
 		mode = MODE_NORMAL;
 		erase();
 		setup_window();
+		print_error("Info: Screen smaller than 160x40; limited view");
 	} else {
 		mode = MODE_EXTENDED;
 		erase();
 		setup_ext_window();
 		setup_window();
+		print_error("Info: Screen initialized for extended view");
 	}
 }
 
