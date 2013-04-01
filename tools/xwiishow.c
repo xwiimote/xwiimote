@@ -286,7 +286,7 @@ static int run_iface(struct xwii_iface *iface)
 			nanosleep(&(struct timespec)
 				{.tv_sec = 0, .tv_nsec = 5000000 }, NULL);
 		} else if (ret) {
-			print_error("Error: Read failed with err:%d\n", ret);
+			print_error("Error: Read failed with err:%d", ret);
 			break;
 		} else {
 			switch (event.type) {
