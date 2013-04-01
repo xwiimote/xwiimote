@@ -6,18 +6,11 @@
 
 /*
  * Interactive Wiimote Testing Tool
- * If you run this tool without arguments, then it lists all currently connected
- * wiimotes and exits.
+ * If you run this tool without arguments, then it shows usage information. If
+ * you pass "list" as first argument, it lists all connected Wii Remotes.
  * You need to pass one path as argument and the given wiimote is opened and
  * printed to the screen. When wiimote events are received, then the screen is
- * updated correspondingly. You can use the keyboard to control the wiimote:
- *    q: quit the application
- *    a: toggle accelerometer
- *    r: toggle rumble
- *
- * Example:
- *  ./xwiishow /sys/bus/hid/devices/<device>
- * This will opened the given wiimote device and print it to the screen.
+ * updated correspondingly. You can use the keyboard to control the wiimote.
  */
 
 #include <errno.h>
@@ -319,7 +312,7 @@ int main(int argc, char **argv)
 		printf("\tq: Quit application\n");
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
-		printf("\ti: Toggle IR\n");
+		printf("\ti: Toggle IR camera\n");
 		ret = -1;
 	} else if (!strcmp(argv[1], "list")) {
 		printf("Listing connected Wii Remote devices:\n");
