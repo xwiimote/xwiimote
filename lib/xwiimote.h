@@ -1,6 +1,6 @@
 /*
  * XWiimote - lib
- * Written 2010, 2011, 2012 by David Herrmann
+ * Written 2010-2013 by David Herrmann <dh.herrmann@gmail.com>
  * Dedicated to the Public Domain
  */
 
@@ -32,12 +32,18 @@ extern "C" {
 #define XWII_ID_VENDOR		0x057e
 #define XWII_ID_PRODUCT		0x0306
 
-#define XWII__NAME		"Nintendo Wii Remote"
-#define XWII_NAME_CORE		XWII__NAME
-#define XWII_NAME_ACCEL		XWII__NAME " Accelerometer"
-#define XWII_NAME_IR		XWII__NAME " IR"
-#define XWII_NAME_MP		XWII__NAME " Motion+"
-#define XWII_NAME_EXT		XWII__NAME " Extension"
+#define XWII__NAME			"Nintendo Wii Remote"
+#define XWII_NAME_CORE			XWII__NAME
+#define XWII_NAME_ACCEL			XWII__NAME " Accelerometer"
+#define XWII_NAME_IR			XWII__NAME " IR"
+#define XWII_NAME_MP			XWII__NAME " Motion+"
+#define XWII_NAME_EXT			XWII__NAME " Extension"
+
+#define XWII_NAME_MOTION_PLUS		XWII__NAME " Motion Plus"
+#define XWII_NAME_NUNCHUK		XWII__NAME " Nunchuk"
+#define XWII_NAME_CLASSIC_CONTROLLER	XWII__NAME " Classic Controller"
+#define XWII_NAME_BALANCE_BOARD		XWII__NAME " Balance Board"
+#define XWII_NAME_PRO_CONTROLLER	XWII__NAME " Pro Controller"
 
 /*
  * Event reader
@@ -45,13 +51,25 @@ extern "C" {
  * new events to the caller when receiving a sync-event.
  */
 
-#define XWII_IFACE_CORE		0x000001	/* core interface */
-#define XWII_IFACE_ACCEL	0x000002	/* accelerometer interface */
-#define XWII_IFACE_IR		0x000004	/* ir interface */
-#define XWII_IFACE_MP		0x000008	/* motion+ interface */
-#define XWII_IFACE_EXT		0x000010	/* extension interface */
-#define XWII_IFACE_ALL		0x00ffff	/* all interfaces */
-#define XWII_IFACE_WRITABLE	0x010000	/* open iface writable */
+/* static base interfaces */
+#define XWII_IFACE_CORE			0x000001 /* core interface */
+#define XWII_IFACE_ACCEL		0x000002 /* accelerometer interface */
+#define XWII_IFACE_IR			0x000004 /* ir interface */
+
+/* old deprecated interfaces */
+#define XWII_IFACE_MP			0x000008 /* motion+ interface */
+#define XWII_IFACE_EXT			0x000010 /* extension interface */
+
+/* hotpluggable extension interfaces */
+#define XWII_IFACE_MOTION_PLUS		0x000100 /* motion plus extension */
+#define XWII_IFACE_NUNCHUK		0x000200 /* nunchuk extension */
+#define XWII_IFACE_CLASSIC_CONTROLLER	0x000400 /* classic controller ext */
+#define XWII_IFACE_BALANCE_BOARD	0x000800 /* balance board extension */
+#define XWII_IFACE_PRO_CONTROLLER	0x001000 /* pro controller extension */
+
+/* flags */
+#define XWII_IFACE_ALL			0x00ffff /* all interfaces */
+#define XWII_IFACE_WRITABLE		0x010000 /* open iface writable */
 
 enum xwii_event_types {
 	XWII_EVENT_KEY,		/* key event */

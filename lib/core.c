@@ -1,12 +1,13 @@
 /*
  * XWiimote - lib
- * Written 2010, 2011, 2012 by David Herrmann
+ * Written 2010-2013 by David Herrmann <dh.herrmann@gmail.com>
  * Dedicated to the Public Domain
  */
 
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <libudev.h>
 #include <linux/input.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -14,45 +15,178 @@
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include "internal.h"
 #include "xwiimote.h"
 
+/* interfaces */
+enum xwii_if_base_idx {
+	/* base interfaces */
+	XWII_IF_CORE,
+	XWII_IF_ACCEL,
+	XWII_IF_IR,
+
+	/* extension interfaces */
+	XWII_IF_MOTION_PLUS,
+	XWII_IF_NUNCHUK,
+	XWII_IF_CLASSIC_CONTROLLER,
+	XWII_IF_BALANCE_BOARD,
+	XWII_IF_PRO_CONTROLLER,
+
+	XWII_IF_NUM,
+};
+
+/* event interface */
+struct xwii_if {
+	/* device node as /dev/input/eventX or NULL */
+	char *node;
+	/* open file or -1 */
+	int fd;
+};
+
+/* main device interface */
 struct xwii_iface {
+	/* reference count */
 	size_t ref;
-	char *syspath;
+	/* epoll file descriptor */
 	int efd;
-	int rumble_id;
+	/* udev context */
+	struct udev *udev;
+	/* main udev device */
+	struct udev_device *dev;
 
+	/* bitmask of open interfaces */
 	unsigned int ifaces;
-	int if_core;
-	int if_accel;
-	int if_ir;
-	int if_mp;
-	int if_ext;
+	/* interfaces */
+	struct xwii_if ifs[XWII_IF_NUM];
 
+	/* rumble-id for base-core interface force-feedback or -1 */
+	int rumble_id;
+	/* accelerometer data cache */
 	struct xwii_event_abs accel_cache;
+	/* IR data cache */
 	struct xwii_event_abs ir_cache[4];
 };
 
+/* table to convert interface to name */
+static const char *if_to_name_table[] = {
+	[XWII_IF_CORE] = XWII_NAME_CORE,
+	[XWII_IF_ACCEL] = XWII_NAME_ACCEL,
+	[XWII_IF_IR] = XWII_NAME_IR,
+	[XWII_IF_MOTION_PLUS] = XWII_NAME_MOTION_PLUS,
+	[XWII_IF_NUNCHUK] = XWII_NAME_NUNCHUK,
+	[XWII_IF_CLASSIC_CONTROLLER] = XWII_NAME_CLASSIC_CONTROLLER,
+	[XWII_IF_BALANCE_BOARD] = XWII_NAME_BALANCE_BOARD,
+	[XWII_IF_PRO_CONTROLLER] = XWII_NAME_PRO_CONTROLLER,
+	[XWII_IF_NUM] = NULL,
+};
+
+/* convert name to interface or -1 */
+static int name_to_if(const char *name)
+{
+	unsigned int i;
+
+	for (i = 0; i < XWII_IF_NUM; ++i)
+		if (!strcmp(name, if_to_name_table[i]))
+			return i;
+
+	return -1;
+}
+
+/*
+ * Scan the device \dev for child input devices and update our device-node
+ * cache with the new information. This is called during device setup to
+ * find all /dev/input/eventX nodes for all currently available interfaces.
+ */
+static int xwii_iface_read_nodes(struct xwii_iface *dev)
+{
+	struct udev_enumerate *e;
+	struct udev_list_entry *list;
+	struct udev_device *d;
+	const char *name, *node;
+	char *n;
+	int ret, prev_if, tif;
+
+	e = udev_enumerate_new(dev->udev);
+	if (!e)
+		return -ENOMEM;
+
+	ret = udev_enumerate_add_match_subsystem(e, "input");
+	ret += udev_enumerate_add_match_parent(e, dev->dev);
+	if (ret) {
+		udev_enumerate_unref(e);
+		return -ENOMEM;
+	}
+
+	ret = udev_enumerate_scan_devices(e);
+	if (ret) {
+		udev_enumerate_unref(e);
+		return ret;
+	}
+
+	/* The returned list is sorted. So we first get an inputXY entry,
+	 * possibly followed by the inputXY/eventXY entry. We remember the type
+	 * of a found inputXY entry, and check the next list-entry, whether
+	 * it's an eventXY entry. If it is, we save the node, otherwise, it's
+	 * skipped. */
+	prev_if = -1;
+	for (list = udev_enumerate_get_list_entry(e);
+	     list;
+	     list = udev_list_entry_get_next(list), udev_device_unref(d)) {
+
+		tif = prev_if;
+		prev_if = -1;
+
+		name = udev_list_entry_get_name(list);
+		d = udev_device_new_from_syspath(dev->udev, name);
+		if (!d)
+			continue;
+
+		name = udev_device_get_sysname(d);
+		if (!strncmp(name, "input", 5)) {
+			name = udev_device_get_sysattr_value(d, "name");
+			if (!name)
+				continue;
+
+			tif = name_to_if(name);
+			if (tif >= 0) {
+				/* skip duplicates */
+				if (dev->ifs[tif].node)
+					continue;
+				prev_if = tif;
+			}
+		} else if (!strncmp(name, "event", 5)) {
+			if (tif < 0)
+				continue;
+			node = udev_device_get_devnode(d);
+			if (!node)
+				continue;
+			n = strdup(node);
+			if (!n)
+				continue;
+			dev->ifs[tif].node = n;
+		}
+	}
+
+	udev_enumerate_unref(e);
+
+	return 0;
+}
+
 /*
  * Create new interface structure
- * This does not validate \syspath. \syspath is first opened when calling
- * xwii_iface_open(). It must point to the base-directory in sysfs of the
- * xwiimote HID device. This is most often:
- *	/sys/bus/hid/devices/<device>
- * On success 0 is returned and the new device is stored in \dev. On failure,
- * \dev is not touched and a negative error is returned.
+ * This creates a new interface for a single Wii Remote device. \syspath must
+ * point to the base-directory of the device. It can normally be found as:
+ *   /sys/bus/hid/devices/<device>
+ * The device is validated and 0 is returned on success. On failure, a negative
+ * error code is returned.
+ * A pointer to the new object is stored in \dev. \dev is left untouched on
+ * failure.
  * Initial refcount is 1 so you need to call *_unref() to free the device.
- *
- * Internally we use multiple file-descriptors for all the event devices of each
- * Wii Remote. However, externally we want only one fd for the application so we
- * use epoll to multiplex between all the internal fds. Note that you can poll
- * on epoll-fds like any other fd so the user won't notice.
  */
 int xwii_iface_new(struct xwii_iface **dev, const char *syspath)
 {
 	struct xwii_iface *d;
-	int ret;
+	const char *driver, *subs;
+	int ret, i;
 
 	if (!dev || !syspath)
 		return -EINVAL;
@@ -63,31 +197,51 @@ int xwii_iface_new(struct xwii_iface **dev, const char *syspath)
 
 	memset(d, 0, sizeof(*d));
 	d->ref = 1;
-	d->if_core = -1;
-	d->if_accel = -1;
-	d->if_ir = -1;
-	d->if_mp = -1;
-	d->if_ext = -1;
 	d->rumble_id = -1;
 
-	d->syspath = strdup(syspath);
-	if (!d->syspath) {
-		ret= -ENOMEM;
-		goto err;
-	}
+	for (i = 0; i < XWII_IF_NUM; ++i)
+		d->ifs[i].fd = -1;
 
 	d->efd = epoll_create1(EPOLL_CLOEXEC);
 	if (d->efd < 0) {
 		ret = -EFAULT;
-		goto err_path;
+		goto err_free;
 	}
+
+	d->udev = udev_new();
+	if (!d->udev) {
+		ret = -ENOMEM;
+		goto err_efd;
+	}
+
+	d->dev = udev_device_new_from_syspath(d->udev, syspath);
+	if (!d->dev) {
+		ret = -ENODEV;
+		goto err_udev;
+	}
+
+	driver = udev_device_get_driver(d->dev);
+	subs = udev_device_get_subsystem(d->dev);
+	if (!driver || strcmp(driver, "wiimote") ||
+	    !subs || strcmp(subs, "hid")) {
+		ret = -ENODEV;
+		goto err_dev;
+	}
+
+	ret = xwii_iface_read_nodes(d);
+	if (ret)
+		goto err_dev;
 
 	*dev = d;
 	return 0;
 
-err_path:
-	free(d->syspath);
-err:
+err_dev:
+	udev_device_unref(d->dev);
+err_udev:
+	udev_unref(d->udev);
+err_efd:
+	close(d->efd);
+err_free:
 	free(d);
 	return ret;
 }
@@ -102,15 +256,19 @@ void xwii_iface_ref(struct xwii_iface *dev)
 
 void xwii_iface_unref(struct xwii_iface *dev)
 {
-	if (!dev || !dev->ref)
-		return;
+	unsigned int i;
 
-	if (--dev->ref)
+	if (!dev || !dev->ref || --dev->ref)
 		return;
 
 	xwii_iface_close(dev, XWII_IFACE_ALL);
+
+	for (i = 0; i < XWII_IF_NUM; ++i)
+		free(dev->ifs[i].node);
+
+	udev_device_unref(dev->dev);
+	udev_unref(dev->udev);
 	close(dev->efd);
-	free(dev->syspath);
 	free(dev);
 }
 
@@ -122,48 +280,24 @@ int xwii_iface_get_fd(struct xwii_iface *dev)
 	return dev->efd;
 }
 
-/* maps interface ID to interface name */
-static const char *id2name_map[] = {
-	[XWII_IFACE_CORE] = XWII_NAME_CORE,
-	[XWII_IFACE_ACCEL] = XWII_NAME_ACCEL,
-	[XWII_IFACE_IR] = XWII_NAME_IR,
-	[XWII_IFACE_MP] = XWII_NAME_MP,
-	[XWII_IFACE_EXT] = XWII_NAME_EXT,
-};
-
-/*
- * Opens an event interface and checks whether it is of the right type.
- * \path: absolute path to event interface (eg., /dev/input/event5)
- * \type: type of event interface (eg., XWII_IFACE_CORE)
- * \wr: Open file as writable
- * Returns positive fd on success or negative error on error.
- */
-static int open_ev(const char *path, unsigned int type, bool wr)
+static int xwii_iface_open_if(struct xwii_iface *dev, unsigned int tif,
+			      bool wr)
 {
-	uint16_t id[4];
 	char name[256];
-	int ret, fd, mod;
+	struct epoll_event ep;
+	unsigned int flags;
+	int fd;
 
-	if (wr)
-		mod = O_RDWR;
-	else
-		mod = O_RDONLY;
+	if (dev->ifs[tif].fd >= 0)
+		return 0;
+	if (!dev->ifs[tif].node)
+		return -ENODEV;
 
-	ret = open(path, mod | O_NONBLOCK | O_CLOEXEC);
-	if (ret < 0)
+	flags = O_NONBLOCK | O_CLOEXEC;
+	flags |= wr ? O_RDWR : O_RDONLY;
+	fd = open(dev->ifs[tif].node, flags);
+	if (fd < 0)
 		return -errno;
-	fd = ret;
-
-	if (ioctl(fd, EVIOCGID, id)) {
-		close(fd);
-		return -errno;
-	}
-
-	if (id[ID_BUS] != XWII_ID_BUS || id[ID_VENDOR] != XWII_ID_VENDOR ||
-					id[ID_PRODUCT] != XWII_ID_PRODUCT) {
-		close(fd);
-		return -EINVAL;
-	}
 
 	if (ioctl(fd, EVIOCGNAME(sizeof(name)), name) < 0) {
 		close(fd);
@@ -171,90 +305,28 @@ static int open_ev(const char *path, unsigned int type, bool wr)
 	}
 
 	name[sizeof(name) - 1] = 0;
-	if (strcmp(id2name_map[type], name)) {
+	if (strcmp(if_to_name_table[tif], name)) {
 		close(fd);
-		return -EINVAL;
+		return -ENODEV;
 	}
-
-	return fd;
-}
-
-/*
- * Search in \list for a matching entry of \iface.
- * This allocates a new string containig the path to the event device:
- *	/dev/input/eventX
- * It returns NULL if \list does not contain a matching entry or on memory
- * allocation failure.
- * You must free the returned buffer with free()!
- */
-static char *find_event(struct sfs_input_dev *list, unsigned int iface)
-{
-	char *res;
-	static const char prefix[] = "/dev/input/";
-	static const size_t plen = sizeof(prefix) - 1;
-	size_t len, size;
-
-	while (list) {
-		if (list->name && !strcmp(list->name, id2name_map[iface]))
-			break;
-		list = list->next;
-	}
-
-	if (!list || !list->event)
-		return NULL;
-
-	len = strlen(list->event);
-	size = plen + len;
-	res = malloc(size + 1);
-	if (!res)
-		return NULL;
-
-	res[size] = 0;
-	memcpy(res, prefix, plen);
-	memcpy(&res[plen], list->event, len);
-	return res;
-}
-
-/*
- * Open interface \iface.
- * Opens the iface always in readable mode and if \wr is true also in writable
- * mode. \list is used to find the related event interface.
- * Returns <0 on error. Otherwise returns the open FD.
- */
-static int open_iface(struct xwii_iface *dev, unsigned int iface,
-					bool wr, struct sfs_input_dev *list)
-{
-	char *path;
-	int ret;
-	struct epoll_event ep;
-
-	path = find_event(list, iface);
-	if (!path)
-		return -ENOENT;
-
-	ret = open_ev(path, iface, wr);
-	free(path);
-
-	if (ret < 0)
-		return ret;
 
 	memset(&ep, 0, sizeof(ep));
 	ep.events = EPOLLIN;
 	ep.data.ptr = dev;
-	if (epoll_ctl(dev->efd, EPOLL_CTL_ADD, ret, &ep) < 0) {
-		close(ret);
-		return -EFAULT;
+	if (epoll_ctl(dev->efd, EPOLL_CTL_ADD, fd, &ep) < 0) {
+		close(fd);
+		return -errno;
 	}
 
-	dev->ifaces |= iface;
-	return ret;
+	dev->ifs[tif].fd = fd;
+	return 0;
 }
 
 /*
  * Upload the generic rumble event to the device. This may later be used for
  * force-feedback effects. The event id is safed for later use.
  */
-static void upload_rumble(struct xwii_iface *dev)
+static void xwii_iface_upload_rumble(struct xwii_iface *dev)
 {
 	struct ff_effect effect = {
 		.type = FF_RUMBLE,
@@ -264,132 +336,98 @@ static void upload_rumble(struct xwii_iface *dev)
 		.replay.delay = 0,
 	};
 
-	if (ioctl(dev->if_core, EVIOCSFF, &effect) != -1)
+	if (ioctl(dev->ifs[XWII_IF_CORE].fd, EVIOCSFF, &effect) != -1)
 		dev->rumble_id = effect.id;
 }
 
-/*
- * Opens the interfaces that are specified by \ifaces.
- * If an interface is already opened, it is not touched. If \ifaces contains
- * XWII_IFACE_WRITABLE, then the interfaces are also opened for writing. But
- * if an interface is already opened, it is not reopened in write-mode so you
- * need to close them first.
- *
- * If one of the ifaces cannot be opened, a negative error code is returned.
- * Some of the interfaces may be opened successfully, though. So if you need to
- * know which interfaces failed, check xwii_iface_opened() after calling this.
- * This will give you a list of interfaces that were opened before one interface
- * failed. The order of opening is equal to the ascending order of the absolute
- * values of the iface-flags. XWII_IFACE_CORE first, then XWII_IFACE_ACCEL and
- * so on.
- * Returns 0 on success.
- */
 int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 {
 	bool wr;
-	int ret = 0;
-	struct sfs_input_dev *list;
+	int ret;
 
 	if (!dev)
 		return -EINVAL;
 
 	wr = ifaces & XWII_IFACE_WRITABLE;
-
-	/* remove invalid and already opened ifaces */
-	ifaces &= ~dev->ifaces;
 	ifaces &= XWII_IFACE_ALL;
-
+	ifaces &= ~dev->ifaces;
 	if (!ifaces)
 		return 0;
 
-	/* retrieve event file names */
-	ret = sfs_input_list(dev->syspath, &list);
-	if (ret)
-		return ret;
-
 	if (ifaces & XWII_IFACE_CORE) {
-		ret = open_iface(dev, XWII_IFACE_CORE, wr, list);
-		if (ret < 0)
-			goto err_sys;
-		dev->if_core = ret;
-		ret = 0;
-		if (wr)
-			upload_rumble(dev);
-	}
-	if (ifaces & XWII_IFACE_ACCEL) {
-		ret = open_iface(dev, XWII_IFACE_ACCEL, wr, list);
-		if (ret < 0)
-			goto err_sys;
-		dev->if_accel = ret;
-		ret = 0;
-	}
-	if (ifaces & XWII_IFACE_IR) {
-		ret = open_iface(dev, XWII_IFACE_IR, wr, list);
-		if (ret < 0)
-			goto err_sys;
-		dev->if_ir = ret;
-		ret = 0;
-	}
-	if (ifaces & XWII_IFACE_MP) {
-		ret = open_iface(dev, XWII_IFACE_MP, wr, list);
-		if (ret < 0)
-			goto err_sys;
-		dev->if_mp = ret;
-		ret = 0;
-	}
-	if (ifaces & XWII_IFACE_EXT) {
-		ret = open_iface(dev, XWII_IFACE_EXT, wr, list);
-		if (ret < 0)
-			goto err_sys;
-		dev->if_ext = ret;
-		ret = 0;
+		ret = xwii_iface_open_if(dev, XWII_IF_CORE, wr);
+		if (ret)
+			goto err_out;
+		dev->ifaces |= XWII_IFACE_CORE;
+		xwii_iface_upload_rumble(dev);
 	}
 
-err_sys:
-	sfs_input_unref(list);
+	if (ifaces & XWII_IFACE_ACCEL) {
+		ret = xwii_iface_open_if(dev, XWII_IF_ACCEL, wr);
+		if (ret)
+			goto err_out;
+		dev->ifaces |= XWII_IFACE_ACCEL;
+	}
+
+	if (ifaces & XWII_IFACE_IR) {
+		ret = xwii_iface_open_if(dev, XWII_IF_IR, wr);
+		if (ret)
+			goto err_out;
+		dev->ifaces |= XWII_IFACE_IR;
+	}
+
+	return 0;
+
+err_out:
 	return ret;
 }
 
-/* closes the interfaces given in \ifaces */
+static void xwii_iface_close_if(struct xwii_iface *dev, unsigned int tif)
+{
+	if (dev->ifs[tif].fd < 0)
+		return;
+
+	epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->ifs[tif].fd, NULL);
+	close(dev->ifs[tif].fd);
+	dev->ifs[tif].fd = -1;
+}
+
 void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces)
 {
-	if (!dev || !ifaces)
+	if (!dev)
 		return;
 
 	ifaces &= XWII_IFACE_ALL;
+	if (!ifaces)
+		return;
 
-	if (ifaces & XWII_IFACE_CORE && dev->if_core != -1) {
-		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_core, NULL);
-		close(dev->if_core);
-		dev->if_core = -1;
+	if (ifaces & XWII_IFACE_CORE) {
+		xwii_iface_close_if(dev, XWII_IF_CORE);
+		dev->rumble_id = -1;
 	}
-	if (ifaces & XWII_IFACE_ACCEL && dev->if_accel != -1) {
-		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_accel, NULL);
-		close(dev->if_accel);
-		dev->if_accel = -1;
-	}
-	if (ifaces & XWII_IFACE_IR && dev->if_ir != -1) {
-		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_ir, NULL);
-		close(dev->if_ir);
-		dev->if_ir = -1;
-	}
-	if (ifaces & XWII_IFACE_MP && dev->if_mp != -1) {
-		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_mp, NULL);
-		close(dev->if_mp);
-		dev->if_mp = -1;
-	}
-	if (ifaces & XWII_IFACE_EXT && dev->if_ext != -1) {
-		epoll_ctl(dev->efd, EPOLL_CTL_DEL, dev->if_ext, NULL);
-		close(dev->if_ext);
-		dev->if_ext = -1;
-	}
+	if (ifaces & XWII_IFACE_ACCEL)
+		xwii_iface_close_if(dev, XWII_IF_ACCEL);
+	if (ifaces & XWII_IFACE_IR)
+		xwii_iface_close_if(dev, XWII_IF_IR);
+	if (ifaces & XWII_IFACE_MOTION_PLUS)
+		xwii_iface_close_if(dev, XWII_IF_MOTION_PLUS);
+	if (ifaces & XWII_IFACE_NUNCHUK)
+		xwii_iface_close_if(dev, XWII_IF_NUNCHUK);
+	if (ifaces & XWII_IFACE_CLASSIC_CONTROLLER)
+		xwii_iface_close_if(dev, XWII_IF_CLASSIC_CONTROLLER);
+	if (ifaces & XWII_IFACE_BALANCE_BOARD)
+		xwii_iface_close_if(dev, XWII_IF_BALANCE_BOARD);
+	if (ifaces & XWII_IFACE_PRO_CONTROLLER)
+		xwii_iface_close_if(dev, XWII_IF_PRO_CONTROLLER);
 
 	dev->ifaces &= ~ifaces;
 }
 
-/* returns bitmap of opened interfaces */
 unsigned int xwii_iface_opened(struct xwii_iface *dev)
 {
+	if (!dev)
+		return 0;
+
 	return dev->ifaces;
 }
 
@@ -401,27 +439,28 @@ static int read_event(int fd, struct input_event *ev)
 	if (ret < 0)
 		return -errno;
 	else if (ret == 0)
-		return 0;
+		return -EAGAIN;
 	else if (ret != sizeof(*ev))
 		return -EIO;
 	else
-		return 1;
+		return 0;
 }
 
 static int read_core(struct xwii_iface *dev, struct xwii_event *ev)
 {
-	int ret;
+	int ret, fd;
 	struct input_event input;
 	unsigned int key;
 
-	if (dev->if_core == -1)
+	fd = dev->ifs[XWII_IF_CORE].fd;
+	if (fd < 0)
 		return -EAGAIN;
 
 try_again:
-	ret = read_event(dev->if_core, &input);
+	ret = read_event(fd, &input);
 	if (ret == -EAGAIN) {
 		return -EAGAIN;
-	} else if (ret <= 0) {
+	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_CORE);
 		return -ENODEV;
 	}
@@ -480,17 +519,18 @@ try_again:
 
 static int read_accel(struct xwii_iface *dev, struct xwii_event *ev)
 {
-	int ret;
+	int ret, fd;
 	struct input_event input;
 
-	if (dev->if_accel == -1)
+	fd = dev->ifs[XWII_IF_ACCEL].fd;
+	if (fd < 0)
 		return -EAGAIN;
 
 try_again:
-	ret = read_event(dev->if_accel, &input);
+	ret = read_event(fd, &input);
 	if (ret == -EAGAIN) {
 		return -EAGAIN;
-	} else if (ret <= 0) {
+	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_ACCEL);
 		return -ENODEV;
 	}
@@ -518,17 +558,18 @@ try_again:
 
 static int read_ir(struct xwii_iface *dev, struct xwii_event *ev)
 {
-	int ret;
+	int ret, fd;
 	struct input_event input;
 
-	if (dev->if_ir == -1)
+	fd = dev->ifs[XWII_IF_IR].fd;
+	if (fd < 0)
 		return -EAGAIN;
 
 try_again:
-	ret = read_event(dev->if_ir, &input);
+	ret = read_event(fd, &input);
 	if (ret == -EAGAIN) {
 		return -EAGAIN;
-	} else if (ret <= 0) {
+	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_IR);
 		return -ENODEV;
 	}
@@ -636,15 +677,18 @@ int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev)
 int xwii_iface_rumble(struct xwii_iface *dev, bool on)
 {
 	struct input_event ev;
-	int ret;
+	int ret, fd;
 
-	if (dev->if_core == -1 || dev->rumble_id == -1)
+	if (!dev)
 		return -EINVAL;
+	fd = dev->ifs[XWII_IF_CORE].fd;
+	if (fd < 0 || dev->rumble_id < 0)
+		return -ENODEV;
 
 	ev.type = EV_FF;
 	ev.code = dev->rumble_id;
 	ev.value = on;
-	ret = write(dev->if_core, &ev, sizeof(ev));
+	ret = write(fd, &ev, sizeof(ev));
 
 	if (ret == -1)
 		return -errno;

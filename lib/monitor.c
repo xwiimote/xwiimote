@@ -1,6 +1,6 @@
 /*
  * XWiimote - lib
- * Written 2010, 2011 by David Herrmann
+ * Written 2010-2013 by David Herrmann <dh.herrmann@gmail.com>
  * Dedicated to the Public Domain
  */
 
