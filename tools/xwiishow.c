@@ -451,6 +451,7 @@ static void accel_clear(void)
 	ev.v.abs[0].x = 0;
 	ev.v.abs[0].y = 0;
 	ev.v.abs[0].z = 0;
+	accel_show_ext(&ev);
 	accel_show(&ev);
 }
 
