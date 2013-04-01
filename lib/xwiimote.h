@@ -115,6 +115,11 @@ struct xwii_event {
 	} v;
 };
 
+static inline bool xwii_event_ir_is_valid(const struct xwii_event_abs *abs)
+{
+	return abs->x != 1023 || abs->y != 1023;
+}
+
 struct xwii_iface;
 
 int xwii_iface_new(struct xwii_iface **dev, const char *syspath);
