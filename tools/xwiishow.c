@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <math.h>
 #include <ncurses.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -104,6 +105,337 @@ static void key_show(const struct xwii_event *event)
 }
 
 /* accelerometer events */
+
+static void accel_show_ext_x(double val)
+{
+	if (val < -10)
+		mvprintw(6, 81, "<=========##          ");
+	else if (val < -9)
+		mvprintw(6, 81, " <========##          ");
+	else if (val < -8)
+		mvprintw(6, 81, "  <=======##          ");
+	else if (val < -7)
+		mvprintw(6, 81, "   <======##          ");
+	else if (val < -6)
+		mvprintw(6, 81, "    <=====##          ");
+	else if (val < -5)
+		mvprintw(6, 81, "     <====##          ");
+	else if (val < -4)
+		mvprintw(6, 81, "      <===##          ");
+	else if (val < -3)
+		mvprintw(6, 81, "       <==##          ");
+	else if (val < -2)
+		mvprintw(6, 81, "        <=##          ");
+	else if (val < -0.3)
+		mvprintw(6, 81, "         <##          ");
+	else if (val < 0.3)
+		mvprintw(6, 81, "          ##          ");
+	else if (val < 2)
+		mvprintw(6, 81, "          ##>         ");
+	else if (val < 3)
+		mvprintw(6, 81, "          ##=>        ");
+	else if (val < 4)
+		mvprintw(6, 81, "          ##==>       ");
+	else if (val < 5)
+		mvprintw(6, 81, "          ##===>      ");
+	else if (val < 6)
+		mvprintw(6, 81, "          ##====>     ");
+	else if (val < 7)
+		mvprintw(6, 81, "          ##=====>    ");
+	else if (val < 8)
+		mvprintw(6, 81, "          ##======>   ");
+	else if (val < 9)
+		mvprintw(6, 81, "          ##=======>  ");
+	else if (val < 10)
+		mvprintw(6, 81, "          ##========> ");
+	else
+		mvprintw(6, 81, "          ##=========>");
+}
+
+static void accel_show_ext_y(double val)
+{
+
+	if (val > 5) {
+		mvprintw(1,  93, "   __.");
+		mvprintw(2,  93, "   //|");
+		mvprintw(3,  93, "  // ");
+		mvprintw(4,  93, " // ");
+		mvprintw(5,  93, "// ");
+		mvprintw(7,  86, "     ");
+		mvprintw(8,  86, "     ");
+		mvprintw(9,  86, "    ");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > 4) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "  __. ");
+		mvprintw(3,  93, "  //|");
+		mvprintw(4,  93, " // ");
+		mvprintw(5,  93, "// ");
+		mvprintw(7,  86, "     ");
+		mvprintw(8,  86, "     ");
+		mvprintw(9,  86, "    ");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > 3) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, " __. ");
+		mvprintw(4,  93, " //|");
+		mvprintw(5,  93, "// ");
+		mvprintw(7,  86, "     ");
+		mvprintw(8,  86, "     ");
+		mvprintw(9,  86, "    ");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > 2) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, "     ");
+		mvprintw(4,  93, "__. ");
+		mvprintw(5,  93, "//|");
+		mvprintw(7,  86, "     ");
+		mvprintw(8,  86, "     ");
+		mvprintw(9,  86, "    ");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > 0.3) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, "     ");
+		mvprintw(4,  93, "    ");
+		mvprintw(5,  93, "-. ");
+		mvprintw(7,  86, "     ");
+		mvprintw(8,  86, "     ");
+		mvprintw(9,  86, "    ");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > -0.3) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, "     ");
+		mvprintw(4,  93, "    ");
+		mvprintw(5,  93, "   ");
+		mvprintw(7,  86, "     ");
+		mvprintw(8,  86, "     ");
+		mvprintw(9,  86, "    ");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > -2) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, "     ");
+		mvprintw(4,  93, "    ");
+		mvprintw(5,  93, "   ");
+		mvprintw(7,  86, "    *");
+		mvprintw(8,  86, "     ");
+		mvprintw(9,  86, "    ");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > -3) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, "     ");
+		mvprintw(4,  93, "    ");
+		mvprintw(5,  93, "   ");
+		mvprintw(7,  86, "   |//");
+		mvprintw(8,  86, "   *-");
+		mvprintw(9,  86, "    ");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > -4) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, "     ");
+		mvprintw(4,  93, "    ");
+		mvprintw(5,  93, "   ");
+		mvprintw(7,  86, "    //");
+		mvprintw(8,  86, "  |//");
+		mvprintw(9,  86, "  *-");
+		mvprintw(10, 86, "   ");
+		mvprintw(11, 86, "  ");
+	} else if (val > -5) {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, "     ");
+		mvprintw(4,  93, "    ");
+		mvprintw(5,  93, "   ");
+		mvprintw(7,  86, "    //");
+		mvprintw(8,  86, "   //");
+		mvprintw(9,  86, " |//");
+		mvprintw(10, 86, " *-");
+		mvprintw(11, 86, "  ");
+	} else {
+		mvprintw(1,  93, "      ");
+		mvprintw(2,  93, "      ");
+		mvprintw(3,  93, "     ");
+		mvprintw(4,  93, "    ");
+		mvprintw(5,  93, "   ");
+		mvprintw(7,  86, "    //");
+		mvprintw(8,  86, "   //");
+		mvprintw(9,  86, "  //");
+		mvprintw(10, 86, "|//");
+		mvprintw(11, 86, "*-");
+	}
+}
+
+static void accel_show_ext_z(double val)
+{
+	if (val < -5) {
+		mvprintw(1, 91, "/\\");
+		mvprintw(2, 91, "||");
+		mvprintw(3, 91, "||");
+		mvprintw(4, 91, "||");
+		mvprintw(5, 91, "||");
+		mvprintw(7,  91, "  ");
+		mvprintw(8,  91, "  ");
+		mvprintw(9,  91, "  ");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < -4) {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "/\\");
+		mvprintw(3, 91, "||");
+		mvprintw(4, 91, "||");
+		mvprintw(5, 91, "||");
+		mvprintw(7,  91, "  ");
+		mvprintw(8,  91, "  ");
+		mvprintw(9,  91, "  ");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < -3) {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "/\\");
+		mvprintw(4, 91, "||");
+		mvprintw(5, 91, "||");
+		mvprintw(7,  91, "  ");
+		mvprintw(8,  91, "  ");
+		mvprintw(9,  91, "  ");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < -2) {
+		mvprintw(5, 91, "  ");
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "  ");
+		mvprintw(4, 91, "/\\");
+		mvprintw(5, 91, "||");
+		mvprintw(7,  91, "  ");
+		mvprintw(8,  91, "  ");
+		mvprintw(9,  91, "  ");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < -0.3) {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "  ");
+		mvprintw(4, 91, "  ");
+		mvprintw(5, 91, "/\\");
+		mvprintw(7,  91, "  ");
+		mvprintw(8,  91, "  ");
+		mvprintw(9,  91, "  ");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < 0.3) {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "  ");
+		mvprintw(4, 91, "  ");
+		mvprintw(5, 91, "  ");
+		mvprintw(7,  91, "  ");
+		mvprintw(8,  91, "  ");
+		mvprintw(9,  91, "  ");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < 2) {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "  ");
+		mvprintw(4, 91, "  ");
+		mvprintw(5, 91, "  ");
+		mvprintw(7,  91, "\\/");
+		mvprintw(8,  91, "  ");
+		mvprintw(9,  91, "  ");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < 3) {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "  ");
+		mvprintw(4, 91, "  ");
+		mvprintw(5, 91, "  ");
+		mvprintw(7,  91, "||");
+		mvprintw(8,  91, "\\/");
+		mvprintw(9,  91, "  ");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < 4) {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "  ");
+		mvprintw(4, 91, "  ");
+		mvprintw(5, 91, "  ");
+		mvprintw(7,  91, "||");
+		mvprintw(8,  91, "||");
+		mvprintw(9,  91, "\\/");
+		mvprintw(10, 91, "  ");
+		mvprintw(11, 91, "  ");
+	} else if (val < 5) {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "  ");
+		mvprintw(4, 91, "  ");
+		mvprintw(5, 91, "  ");
+		mvprintw(7,  91, "||");
+		mvprintw(8,  91, "||");
+		mvprintw(9,  91, "||");
+		mvprintw(10, 91, "\\/");
+		mvprintw(11, 91, "  ");
+	} else {
+		mvprintw(1, 91, "  ");
+		mvprintw(2, 91, "  ");
+		mvprintw(3, 91, "  ");
+		mvprintw(4, 91, "  ");
+		mvprintw(5, 91, "  ");
+		mvprintw(7,  91, "||");
+		mvprintw(8,  91, "||");
+		mvprintw(9,  91, "||");
+		mvprintw(10, 91, "||");
+		mvprintw(11, 91, "\\/");
+	}
+}
+
+static void accel_show_ext(const struct xwii_event *event)
+{
+	double val;
+
+	/* pow(val, 1/4) for smoother interpolation around the origin */
+
+	val = event->v.abs[0].x;
+	val /= 512;
+	if (val >= 0)
+		val = 10 * pow(val, 0.25);
+	else
+		val = -10 * pow(-val, 0.25);
+	accel_show_ext_x(val);
+
+	val = event->v.abs[0].z;
+	val /= 512;
+	if (val >= 0)
+		val = 5 * pow(val, 0.25);
+	else
+		val = -5 * pow(-val, 0.25);
+	accel_show_ext_z(val);
+
+	val = event->v.abs[0].y;
+	val /= 512;
+	if (val >= 0)
+		val = 5 * pow(val, 0.25);
+	else
+		val = -5 * pow(-val, 0.25);
+	accel_show_ext_y(val);
+}
 
 static void accel_show(const struct xwii_event *event)
 {
@@ -224,19 +556,41 @@ static void setup_window(void)
 	mvprintw(i++, 0, "+-----------------+ |");
 }
 
+static void setup_ext_window(void)
+{
+	size_t i;
+
+	i = 0;
+	/* 160x40 Box */
+	mvprintw(i++, 80, " +---------------------+-------------------------------------------------------+");
+	mvprintw(i++, 80, "                       |                                                       |");
+	mvprintw(i++, 80, "                    Z  |                                                       |");
+	mvprintw(i++, 80, "                       |                                                       |");
+	mvprintw(i++, 80, "                       |                                                       |");
+	mvprintw(i++, 80, "                       |                                                       |");
+	mvprintw(i++, 80, "           ##          |                                                       |");
+	mvprintw(i++, 80, " X                     |                                                       |");
+	mvprintw(i++, 80, "                       |                                                       |");
+	mvprintw(i++, 80, "                       |                                                       |");
+	mvprintw(i++, 80, "                       |                                                       |");
+	mvprintw(i++, 80, "              Y        |                                                       |");
+	mvprintw(i++, 80, " +---------------------+-------------------------------------------------------+");
+}
+
 static void handle_resize(void)
 {
 	if (LINES < 24 || COLS < 80) {
 		mode = MODE_ERROR;
 		erase();
 		mvprintw(0, 0, "Error: Screen is too small");
-	} else if (LINES < 40 || COLS < 200) {
+	} else if (LINES < 40 || COLS < 160) {
 		mode = MODE_NORMAL;
 		erase();
 		setup_window();
 	} else {
 		mode = MODE_EXTENDED;
 		erase();
+		setup_ext_window();
 		setup_window();
 	}
 }
@@ -294,6 +648,8 @@ static int run_iface(struct xwii_iface *iface)
 				key_show(&event);
 				break;
 			case XWII_EVENT_ACCEL:
+				if (mode == MODE_EXTENDED)
+					accel_show_ext(&event);
 				accel_show(&event);
 				break;
 			case XWII_EVENT_IR:

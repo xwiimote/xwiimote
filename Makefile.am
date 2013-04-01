@@ -57,7 +57,8 @@ libxwiimote_la_LDFLAGS = \
 xwiishow_SOURCES = \
 	tools/xwiishow.c
 xwiishow_LDADD = \
-	libxwiimote.la
+	libxwiimote.la \
+	-lm
 xwiishow_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-lncurses
