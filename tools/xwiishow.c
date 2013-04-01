@@ -94,24 +94,24 @@ static void show_key_event(const struct xwii_event *event)
 
 static void show_accel_event(const struct xwii_event *event)
 {
-	mvprintw(1, 48, "%5" PRId32, event->v.abs[0].x);
-	mvprintw(2, 48, "%5" PRId32, event->v.abs[0].y);
-	mvprintw(3, 48, "%5" PRId32, event->v.abs[0].z);
+	mvprintw(1, 39, "%5" PRId32, event->v.abs[0].x);
+	mvprintw(1, 48, "%5" PRId32, event->v.abs[0].y);
+	mvprintw(1, 57, "%5" PRId32, event->v.abs[0].z);
 }
 
 static void show_ir_event(const struct xwii_event *event)
 {
-	mvprintw(5, 29, "%5" PRId32, event->v.abs[0].x);
-	mvprintw(6, 29, "%5" PRId32, event->v.abs[0].y);
+	mvprintw(3, 27, "%04" PRId32, event->v.abs[0].x);
+	mvprintw(3, 32, "%04" PRId32, event->v.abs[0].y);
 
-	mvprintw(5, 56, "%5" PRId32, event->v.abs[1].x);
-	mvprintw(6, 56, "%5" PRId32, event->v.abs[1].y);
+	mvprintw(3, 41, "%04" PRId32, event->v.abs[1].x);
+	mvprintw(3, 46, "%04" PRId32, event->v.abs[1].y);
 
-	mvprintw(8, 29, "%5" PRId32, event->v.abs[2].x);
-	mvprintw(9, 29, "%5" PRId32, event->v.abs[2].y);
+	mvprintw(3, 55, "%04" PRId32, event->v.abs[2].x);
+	mvprintw(3, 60, "%04" PRId32, event->v.abs[2].y);
 
-	mvprintw(8, 56, "%5" PRId32, event->v.abs[3].x);
-	mvprintw(9, 56, "%5" PRId32, event->v.abs[3].y);
+	mvprintw(3, 69, "%04" PRId32, event->v.abs[3].x);
+	mvprintw(3, 74, "%04" PRId32, event->v.abs[3].y);
 }
 
 static void show_rumble(bool on)
@@ -131,16 +131,16 @@ static int setup_window()
 	i = 0;
 	/* 80x24 Box */
 	mvprintw(i++, 0, "+-----------------+ +------+ +-------------------------------------------------+");
-	mvprintw(i++, 0, "|       +-+       | |      |  Accelerometer  x:                                |");
-	mvprintw(i++, 0, "|       | |       | +------+                 y:                                |");
-	mvprintw(i++, 0, "|     +-+ +-+     |                          z:                                |");
+	mvprintw(i++, 0, "|       +-+       | |      |  Accel x:       y:       z:                       |");
+	mvprintw(i++, 0, "|       | |       | +------+ +-------------------------------------------------+");
+	mvprintw(i++, 0, "|     +-+ +-+     | IR #1:     x     #2:     x     #3:     x     #4:     x     |");
 	mvprintw(i++, 0, "|     |     |     | +----------------------------------------------------------+");
-	mvprintw(i++, 0, "|     +-+ +-+     | IR #1 x:                      #2 x:                        |");
-	mvprintw(i++, 0, "|       | |       |       y:                         y:                        |");
+	mvprintw(i++, 0, "|     +-+ +-+     |                                                            |");
+	mvprintw(i++, 0, "|       | |       |                                                            |");
 	mvprintw(i++, 0, "|       +-+       |                                                            |");
-	mvprintw(i++, 0, "|                 |    #3 x:                      #4 x:                        |");
-	mvprintw(i++, 0, "|   +-+     +-+   |       y:                         y:                        |");
-	mvprintw(i++, 0, "|   | |     | |   | +----------------------------------------------------------+");
+	mvprintw(i++, 0, "|                 |                                                            |");
+	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
+	mvprintw(i++, 0, "|   | |     | |   |                                                            |");
 	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
 	mvprintw(i++, 0, "|                 |                                                            |");
 	mvprintw(i++, 0, "| ( ) |     | ( ) |                                                            |");
