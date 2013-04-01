@@ -342,7 +342,7 @@ int main(int argc, char **argv)
 				ret = run_iface(iface);
 				xwii_iface_unref(iface);
 				if (ret) {
-					printw("Program failed; press any key to exit\n");
+					print_error("Program failed; press any key to exit");
 					refresh();
 					timeout(-1);
 					getch();
