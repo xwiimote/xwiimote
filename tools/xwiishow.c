@@ -461,8 +461,10 @@ static void accel_toggle(void)
 	if (xwii_iface_opened(iface) & XWII_IFACE_ACCEL) {
 		xwii_iface_close(iface, XWII_IFACE_ACCEL);
 		accel_clear();
+		print_error("Info: Disable accelerometer");
 	} else {
 		xwii_iface_open(iface, XWII_IFACE_ACCEL);
+		print_error("Info: Enable accelerometer");
 	}
 }
 
@@ -581,8 +583,10 @@ static void ir_toggle(void)
 	if (xwii_iface_opened(iface) & XWII_IFACE_IR) {
 		xwii_iface_close(iface, XWII_IFACE_IR);
 		ir_clear();
+		print_error("Info: Disable IR");
 	} else {
 		xwii_iface_open(iface, XWII_IFACE_IR);
+		print_error("Info: Enable IR");
 	}
 }
 
