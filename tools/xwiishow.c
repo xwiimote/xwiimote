@@ -466,6 +466,63 @@ static void accel_toggle(void)
 
 /* IR events */
 
+static void ir_show_ext(const struct xwii_event *event)
+{
+	double v;
+	uint64_t x[4], y[4], i, j, num;
+	char c;
+
+	mvprintw(1,  106, "                          |                          ");
+	mvprintw(2,  106, "                                                     ");
+	mvprintw(3,  106, "                          |                          ");
+	mvprintw(4,  106, "                                                     ");
+	mvprintw(5,  106, "                          |                          ");
+	mvprintw(6,  106, "- - - - - - - - - - - - - + - - - - - - - - - - - - -");
+	mvprintw(7,  106, "                          |                          ");
+	mvprintw(8,  106, "                                                     ");
+	mvprintw(9,  106, "                          |                          ");
+	mvprintw(10, 106, "                                                     ");
+	mvprintw(11, 106, "                          |                          ");
+
+	for (i = 0; i < 4; ++i) {
+		v = event->v.abs[i].x;
+		v *= 52;
+		v /= 1024;
+		v += 0.5;
+		x[i] = v;
+
+		v = event->v.abs[i].y;
+		v *= 10;
+		v /= 768;
+		v += 0.5;
+		y[i] = v;
+	}
+
+	for (i = 0; i < 4; ++i) {
+		if (event->v.abs[i].x == 1023 && event->v.abs[i].y == 1023)
+			continue;
+
+		num = 0;
+		for (j = 0; j < 4; ++j) {
+			if (x[j] == x[i] && y[j] == y[i])
+				++num;
+		}
+
+		if (num > 1)
+			c = '#';
+		else if (i == 0)
+			c = 'x';
+		else if (i == 1)
+			c = '+';
+		else if (i == 2)
+			c = '*';
+		else
+			c = '-';
+
+		mvprintw(1 + y[i], 106 + x[i], "%c", c);
+	}
+}
+
 static void ir_show(const struct xwii_event *event)
 {
 	mvprintw(3, 27, "%04" PRId32, event->v.abs[0].x);
@@ -485,14 +542,15 @@ static void ir_clear(void)
 {
 	struct xwii_event ev;
 
-	ev.v.abs[0].x = 0;
-	ev.v.abs[0].y = 0;
-	ev.v.abs[1].x = 0;
-	ev.v.abs[1].y = 0;
-	ev.v.abs[2].x = 0;
-	ev.v.abs[2].y = 0;
-	ev.v.abs[3].x = 0;
-	ev.v.abs[3].y = 0;
+	ev.v.abs[0].x = 1023;
+	ev.v.abs[0].y = 1023;
+	ev.v.abs[1].x = 1023;
+	ev.v.abs[1].y = 1023;
+	ev.v.abs[2].x = 1023;
+	ev.v.abs[2].y = 1023;
+	ev.v.abs[3].x = 1023;
+	ev.v.abs[3].y = 1023;
+	ir_show_ext(&ev);
 	ir_show(&ev);
 }
 
@@ -562,19 +620,19 @@ static void setup_ext_window(void)
 
 	i = 0;
 	/* 160x40 Box */
-	mvprintw(i++, 80, " +---------------------+-------------------------------------------------------+");
-	mvprintw(i++, 80, "                       |                                                       |");
-	mvprintw(i++, 80, "                    Z  |                                                       |");
-	mvprintw(i++, 80, "                       |                                                       |");
-	mvprintw(i++, 80, "                       |                                                       |");
-	mvprintw(i++, 80, "                       |                                                       |");
-	mvprintw(i++, 80, "           ##          |                                                       |");
-	mvprintw(i++, 80, " X                     |                                                       |");
-	mvprintw(i++, 80, "                       |                                                       |");
-	mvprintw(i++, 80, "                       |                                                       |");
-	mvprintw(i++, 80, "                       |                                                       |");
-	mvprintw(i++, 80, "              Y        |                                                       |");
-	mvprintw(i++, 80, " +---------------------+-------------------------------------------------------+");
+	mvprintw(i++, 80, " +---------------------+ +--------------------------+--------------------------+");
+	mvprintw(i++, 80, "                       | |                          |                          |");
+	mvprintw(i++, 80, "                    Z  | |                                                     |");
+	mvprintw(i++, 80, "                       | |                          |                          |");
+	mvprintw(i++, 80, "                       | |                                                     |");
+	mvprintw(i++, 80, "                       | |                          |                          |");
+	mvprintw(i++, 80, "           ##          | +- - - - - - - - - - - - - + - - - - - - - - - - - - -+");
+	mvprintw(i++, 80, " X                     | |                          |                          |");
+	mvprintw(i++, 80, "                       | |                                                     |");
+	mvprintw(i++, 80, "                       | |                          |                          |");
+	mvprintw(i++, 80, "                       | |                                                     |");
+	mvprintw(i++, 80, "              Y        | |                          |                          |");
+	mvprintw(i++, 80, " +---------------------+ +--------------------------+--------------------------+");
 }
 
 static void handle_resize(void)
@@ -655,6 +713,8 @@ static int run_iface(struct xwii_iface *iface)
 					accel_show(&event);
 				break;
 			case XWII_EVENT_IR:
+				if (mode == MODE_EXTENDED)
+					ir_show_ext(&event);
 				if (mode != MODE_ERROR)
 					ir_show(&event);
 				break;
