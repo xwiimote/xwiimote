@@ -163,15 +163,17 @@ static struct udev_device *next_enum(struct xwii_monitor *monitor)
 
 static char *make_device(struct udev_device *dev)
 {
-	const char *tmp;
+	const char *tmp, *driver, *subs;
 	char *ret = NULL;
 
 	tmp = udev_device_get_action(dev);
 	if (tmp && strcmp(tmp, "add"))
 		goto out;
 
-	tmp = udev_device_get_property_value(dev, "HID_ID");
-	if (!tmp || strcmp(tmp, "0005:0000057E:00000306"))
+	driver = udev_device_get_driver(dev);
+	subs = udev_device_get_subsystem(dev);
+	if (!driver || strcmp(driver, "wiimote") ||
+	    !subs || strcmp(subs, "hid"))
 		goto out;
 
 	tmp = udev_device_get_syspath(dev);
