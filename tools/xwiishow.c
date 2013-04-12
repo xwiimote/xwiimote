@@ -105,6 +105,37 @@ static void key_show(const struct xwii_event *event)
 	}
 }
 
+static void key_clear(void)
+{
+	struct xwii_event ev;
+	unsigned int i;
+
+	ev.type = XWII_EVENT_KEY;
+	for (i = 0; i < XWII_KEY_NUM; ++i) {
+		ev.v.key.code = 0;
+		ev.v.key.state = 0;
+		key_show(&ev);
+	}
+}
+
+static void key_toggle(void)
+{
+	int ret;
+
+	if (xwii_iface_opened(iface) & XWII_IFACE_CORE) {
+		xwii_iface_close(iface, XWII_IFACE_CORE);
+		key_clear();
+		print_error("Info: Disable key events");
+	} else {
+		ret = xwii_iface_open(iface, XWII_IFACE_CORE |
+					     XWII_IFACE_WRITABLE);
+		if (ret)
+			print_error("Error: Cannot enable key events: %d", ret);
+		else
+			print_error("Info: Enable key events");
+	}
+}
+
 /* accelerometer events */
 
 static void accel_show_ext_x(double val)
@@ -701,6 +732,9 @@ static int keyboard(void)
 	case KEY_RESIZE:
 		handle_resize();
 		break;
+	case 'k':
+		key_toggle();
+		break;
 	case 'a':
 		accel_toggle();
 		break;
@@ -726,6 +760,7 @@ static int run_iface(struct xwii_iface *iface)
 	int ret = 0;
 
 	handle_resize();
+	key_clear();
 	accel_clear();
 	ir_clear();
 
@@ -830,6 +865,7 @@ int main(int argc, char **argv)
 		printf("UI commands:\n");
 		printf("\tq: Quit application\n");
 		printf("\tf: Freeze/Unfreeze screen\n");
+		printf("\tk: Toggle key events\n");
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
 		printf("\ti: Toggle IR camera\n");
@@ -848,27 +884,28 @@ int main(int argc, char **argv)
 			printf("Cannot create xwii_iface '%s' err:%d\n",
 								argv[1], ret);
 		} else {
+
+			initscr();
+			curs_set(0);
+			raw();
+			noecho();
+			timeout(0);
+
 			ret = xwii_iface_open(iface, XWII_IFACE_CORE |
-							XWII_IFACE_WRITABLE);
+						     XWII_IFACE_WRITABLE);
+			if (ret)
+				print_error("Error: Cannot open key iface: %d",
+					    ret);
+
+			ret = run_iface(iface);
+			xwii_iface_unref(iface);
 			if (ret) {
-				printf("Cannot open core iface '%s' err:%d\n",
-								argv[1], ret);
-			} else {
-				initscr();
-				curs_set(0);
-				raw();
-				noecho();
-				timeout(0);
-				ret = run_iface(iface);
-				xwii_iface_unref(iface);
-				if (ret) {
-					print_error("Program failed; press any key to exit");
-					refresh();
-					timeout(-1);
-					getch();
-				}
-				endwin();
+				print_error("Program failed; press any key to exit");
+				refresh();
+				timeout(-1);
+				getch();
 			}
+			endwin();
 		}
 	}
 
