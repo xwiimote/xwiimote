@@ -64,6 +64,8 @@ struct xwii_iface {
 	struct xwii_event_abs accel_cache;
 	/* IR data cache */
 	struct xwii_event_abs ir_cache[4];
+	/* balance board weight cache */
+	struct xwii_event_abs bboard_cache[4];
 };
 
 /* table to convert interface to name */
@@ -376,6 +378,13 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 		dev->ifaces |= XWII_IFACE_IR;
 	}
 
+	if (ifaces & XWII_IFACE_BALANCE_BOARD) {
+		ret = xwii_iface_open_if(dev, XWII_IF_BALANCE_BOARD, wr);
+		if (ret)
+			goto err_out;
+		dev->ifaces |= XWII_IFACE_BALANCE_BOARD;
+	}
+
 	return 0;
 
 err_out:
@@ -605,6 +614,48 @@ try_again:
 	goto try_again;
 }
 
+static int read_bboard(struct xwii_iface *dev, struct xwii_event *ev)
+{
+	int ret, fd;
+	struct input_event input;
+
+	fd = dev->ifs[XWII_IF_BALANCE_BOARD].fd;
+	if (fd < 0)
+		return -EAGAIN;
+
+try_again:
+	ret = read_event(fd, &input);
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret < 0) {
+		xwii_iface_close(dev, XWII_IFACE_BALANCE_BOARD);
+		return -ENODEV;
+	}
+
+	if (input.type == EV_SYN) {
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		memcpy(&ev->v.abs, dev->bboard_cache,
+		       sizeof(dev->bboard_cache));
+		ev->type = XWII_EVENT_BALANCE_BOARD;
+		return 0;
+	}
+
+	if (input.type != EV_ABS)
+		goto try_again;
+
+	if (input.code == ABS_HAT0X)
+		dev->bboard_cache[0].x = input.value;
+	else if (input.code == ABS_HAT0Y)
+		dev->bboard_cache[1].x = input.value;
+	else if (input.code == ABS_HAT1X)
+		dev->bboard_cache[2].x = input.value;
+	else if (input.code == ABS_HAT1Y)
+		dev->bboard_cache[3].x = input.value;
+
+	goto try_again;
+}
+
 /*
  * Read new event from any opened interface of \dev.
  * Returns -EAGAIN if no new event can be read.
@@ -631,6 +682,9 @@ static int read_iface(struct xwii_iface *dev, struct xwii_event *ev)
 	if (ret != -EAGAIN)
 		return ret;
 	ret = read_ir(dev, ev);
+	if (ret != -EAGAIN)
+		return ret;
+	ret = read_bboard(dev, ev);
 	if (ret != -EAGAIN)
 		return ret;
 
