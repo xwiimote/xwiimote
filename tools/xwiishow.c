@@ -621,6 +621,47 @@ static void ir_toggle(void)
 	}
 }
 
+/* balance board */
+
+static void bboard_show_ext(const struct xwii_event *event)
+{
+	uint16_t w, x, y, z;
+
+	w = event->v.abs[0].x;
+	x = event->v.abs[1].x;
+	y = event->v.abs[2].x;
+	z = event->v.abs[3].x;
+
+	mvprintw(17, 85, " %5d", y);
+	mvprintw(17, 96, " %5d", w);
+	mvprintw(20, 85, " %5d", z);
+	mvprintw(20, 96, " %5d", x);
+	mvprintw(13, 86, " %5d", w + x + y + z);
+}
+
+static void bboard_clear(void)
+{
+	struct xwii_event ev;
+
+	ev.v.abs[0].x = 0;
+	ev.v.abs[1].x = 0;
+	ev.v.abs[2].x = 0;
+	ev.v.abs[3].x = 0;
+	bboard_show_ext(&ev);
+}
+
+static void bboard_toggle(void)
+{
+	if (xwii_iface_opened(iface) & XWII_IFACE_BALANCE_BOARD) {
+		xwii_iface_close(iface, XWII_IFACE_BALANCE_BOARD);
+		bboard_clear();
+		print_error("Info: Disable Balance Board");
+	} else {
+		xwii_iface_open(iface, XWII_IFACE_BALANCE_BOARD);
+		print_error("Info: Enable Balance Board");
+	}
+}
+
 /* rumble events */
 
 static void rumble_show(bool on)
@@ -645,7 +686,7 @@ static void setup_window(void)
 
 	i = 0;
 	/* 80x24 Box */
-	mvprintw(i++, 0, "+-----------------+ +------+ +-------------------------------------------------+");
+	mvprintw(i++, 0, "+- Keys ----------+ +------+ +-------------------------------------------------+");
 	mvprintw(i++, 0, "|       +-+       | |      |  Accel x:       y:       z:                       |");
 	mvprintw(i++, 0, "|       | |       | +------+ +-------------------------------------------------+");
 	mvprintw(i++, 0, "|     +-+ +-+     | IR #1:     x     #2:     x     #3:     x     #4:     x     |");
@@ -677,7 +718,7 @@ static void setup_ext_window(void)
 
 	i = 0;
 	/* 160x40 Box */
-	mvprintw(i++, 80, " +---------------------+ +--------------------------+--------------------------+");
+	mvprintw(i++, 80, " +- Accel -------------+ +- IR ---------------------+--------------------------+");
 	mvprintw(i++, 80, "                       | |                          |                          |");
 	mvprintw(i++, 80, "                    Z  | |                                                     |");
 	mvprintw(i++, 80, "                       | |                          |                          |");
@@ -689,7 +730,17 @@ static void setup_ext_window(void)
 	mvprintw(i++, 80, "                       | |                          |                          |");
 	mvprintw(i++, 80, "                       | |                                                     |");
 	mvprintw(i++, 80, "              Y        | |                          |                          |");
-	mvprintw(i++, 80, " +---------------------+ +--------------------------+--------------------------+");
+	mvprintw(i++, 80, " +- Balance Board -----+ +--------------------------+--------------------------+");
+	mvprintw(i++, 80, "  Sum:                 |");
+	mvprintw(i++, 80, "                       |");
+	mvprintw(i++, 80, "            |          |");
+	mvprintw(i++, 80, "            |          |");
+	mvprintw(i++, 80, "  #1:        #2:       |");
+	mvprintw(i++, 80, "            |          |");
+	mvprintw(i++, 80, "            |          |");
+	mvprintw(i++, 80, "  #3:        #4:       |");
+	mvprintw(i++, 80, "                       |");
+	mvprintw(i++, 80, " +---------------------+");
 }
 
 static void handle_resize(void)
@@ -741,6 +792,9 @@ static int keyboard(void)
 	case 'i':
 		ir_toggle();
 		break;
+	case 'b':
+		bboard_toggle();
+		break;
 	case 'r':
 		rumble_toggle();
 		break;
@@ -763,6 +817,7 @@ static int run_iface(struct xwii_iface *iface)
 	key_clear();
 	accel_clear();
 	ir_clear();
+	bboard_clear();
 
 	while (true) {
 		ret = xwii_iface_poll(iface, &event);
@@ -789,6 +844,10 @@ static int run_iface(struct xwii_iface *iface)
 					ir_show_ext(&event);
 				if (mode != MODE_ERROR)
 					ir_show(&event);
+				break;
+			case XWII_EVENT_BALANCE_BOARD:
+				if (mode == MODE_EXTENDED)
+					bboard_show_ext(&event);
 				break;
 			}
 		}
@@ -869,6 +928,7 @@ int main(int argc, char **argv)
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
 		printf("\ti: Toggle IR camera\n");
+		printf("\tb: Toggle balance board\n");
 		ret = -1;
 	} else if (!strcmp(argv[1], "list")) {
 		printf("Listing connected Wii Remote devices:\n");
