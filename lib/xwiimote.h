@@ -76,6 +76,7 @@ enum xwii_event_types {
 	XWII_EVENT_ACCEL,	/* accelerometer event */
 	XWII_EVENT_IR,		/* IR event */
 	XWII_EVENT_BALANCE_BOARD,	/* balance-board weight event */
+	XWII_EVENT_MOTION_PLUS,	/* motion plus event */
 	XWII_EVENT_NUM
 };
 
