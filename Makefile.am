@@ -31,9 +31,11 @@ EXTRA_DIST += $(pkgconfig_DATA)
 AM_CFLAGS = \
 	-Wall
 AM_CPPFLAGS = \
+	-include $(top_builddir)/config.h \
 	-I $(srcdir)/lib
 AM_LDFLAGS = \
-	-Wall
+	-Wall \
+	-Wl,--as-needed
 
 if DEBUG
 AM_CFLAGS += -O0 -g
