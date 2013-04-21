@@ -621,6 +621,43 @@ static void ir_toggle(void)
 	}
 }
 
+/* motion plus */
+
+static void mp_show(const struct xwii_event *event)
+{
+	int16_t x, y, z;
+
+	x = event->v.abs[0].x;
+	y = event->v.abs[0].y;
+	z = event->v.abs[0].z;
+
+	mvprintw(5, 25, " %6d", x);
+	mvprintw(5, 35, " %6d", y);
+	mvprintw(5, 45, " %6d", z);
+}
+
+static void mp_clear(void)
+{
+	struct xwii_event ev;
+
+	ev.v.abs[0].x = 0;
+	ev.v.abs[0].y = 0;
+	ev.v.abs[0].z = 0;
+	mp_show(&ev);
+}
+
+static void mp_toggle(void)
+{
+	if (xwii_iface_opened(iface) & XWII_IFACE_MOTION_PLUS) {
+		xwii_iface_close(iface, XWII_IFACE_MOTION_PLUS);
+		mp_clear();
+		print_error("Info: Disable Motion Plus");
+	} else {
+		xwii_iface_open(iface, XWII_IFACE_MOTION_PLUS);
+		print_error("Info: Enable Motion Plus");
+	}
+}
+
 /* balance board */
 
 static void bboard_show_ext(const struct xwii_event *event)
@@ -690,9 +727,9 @@ static void setup_window(void)
 	mvprintw(i++, 0, "|       +-+       | |      |  Accel x:       y:       z:                       |");
 	mvprintw(i++, 0, "|       | |       | +------+ +-------------------------------------------------+");
 	mvprintw(i++, 0, "|     +-+ +-+     | IR #1:     x     #2:     x     #3:     x     #4:     x     |");
-	mvprintw(i++, 0, "|     |     |     | +----------------------------------------------------------+");
-	mvprintw(i++, 0, "|     +-+ +-+     |                                                            |");
-	mvprintw(i++, 0, "|       | |       |                                                            |");
+	mvprintw(i++, 0, "|     |     |     | +--------------------------------+-------------------------+");
+	mvprintw(i++, 0, "|     +-+ +-+     | MP x:        y:        z:        |                         |");
+	mvprintw(i++, 0, "|       | |       | +--------------------------------+-------------------------+");
 	mvprintw(i++, 0, "|       +-+       |                                                            |");
 	mvprintw(i++, 0, "|                 |                                                            |");
 	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
@@ -792,6 +829,9 @@ static int keyboard(void)
 	case 'i':
 		ir_toggle();
 		break;
+	case 'm':
+		mp_toggle();
+		break;
 	case 'b':
 		bboard_toggle();
 		break;
@@ -817,6 +857,7 @@ static int run_iface(struct xwii_iface *iface)
 	key_clear();
 	accel_clear();
 	ir_clear();
+	mp_clear();
 	bboard_clear();
 
 	while (true) {
@@ -844,6 +885,10 @@ static int run_iface(struct xwii_iface *iface)
 					ir_show_ext(&event);
 				if (mode != MODE_ERROR)
 					ir_show(&event);
+				break;
+			case XWII_EVENT_MOTION_PLUS:
+				if (mode != MODE_ERROR)
+					mp_show(&event);
 				break;
 			case XWII_EVENT_BALANCE_BOARD:
 				if (mode == MODE_EXTENDED)
@@ -928,6 +973,7 @@ int main(int argc, char **argv)
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
 		printf("\ti: Toggle IR camera\n");
+		printf("\tm: Toggle motion plus\n");
 		printf("\tb: Toggle balance board\n");
 		ret = -1;
 	} else if (!strcmp(argv[1], "list")) {
