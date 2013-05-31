@@ -468,6 +468,38 @@ static void accel_toggle(void)
 	}
 }
 
+/* MP Events */
+
+static void mp_show(const struct xwii_event *event)
+{
+    //fprintf(stderr,"%s:%i: event.type=%i, x,y,z=%i,%i,%i\n",__FUNCTION__,__LINE__,event->type,event->v.abs[0].x,event->v.abs[0].y,event->v.abs[0].z);
+	mvprintw(3, 39, "%5" PRId32, event->v.abs[0].x/100);
+	mvprintw(3, 48, "%5" PRId32, event->v.abs[0].y/100);
+	mvprintw(3, 57, "%5" PRId32, event->v.abs[0].z/100);
+}
+
+static void mp_clear(void)
+{
+	struct xwii_event ev;
+
+	ev.v.abs[0].x = 0;
+	ev.v.abs[0].y = 0;
+	ev.v.abs[0].z = 0;
+	mp_show(&ev);
+}
+
+static void mp_toggle(void)
+{
+	if (xwii_iface_opened(iface) & XWII_IFACE_MOTION_PLUS) {
+		xwii_iface_close(iface, XWII_IFACE_MOTION_PLUS);
+		mp_clear();
+		print_error("Info: Disable motion plus");
+	} else {
+		xwii_iface_open(iface, XWII_IFACE_MOTION_PLUS);
+		print_error("Info: Enable motion plus");
+	}
+}
+
 /* IR events */
 
 static void ir_show_ext(const struct xwii_event *event)
@@ -530,35 +562,35 @@ static void ir_show_ext(const struct xwii_event *event)
 static void ir_show(const struct xwii_event *event)
 {
 	if (xwii_event_ir_is_valid(&event->v.abs[0])) {
-		mvprintw(3, 27, "%04" PRId32, event->v.abs[0].x);
-		mvprintw(3, 32, "%04" PRId32, event->v.abs[0].y);
+		mvprintw(5, 27, "%04" PRId32, event->v.abs[0].x);
+		mvprintw(5, 32, "%04" PRId32, event->v.abs[0].y);
 	} else {
-		mvprintw(3, 27, "N/A ");
-		mvprintw(3, 32, " N/A");
+		mvprintw(5, 27, "N/A ");
+		mvprintw(5, 32, " N/A");
 	}
 
 	if (xwii_event_ir_is_valid(&event->v.abs[1])) {
-		mvprintw(3, 41, "%04" PRId32, event->v.abs[1].x);
-		mvprintw(3, 46, "%04" PRId32, event->v.abs[1].y);
+		mvprintw(5, 41, "%04" PRId32, event->v.abs[1].x);
+		mvprintw(5, 46, "%04" PRId32, event->v.abs[1].y);
 	} else {
-		mvprintw(3, 41, "N/A ");
-		mvprintw(3, 46, " N/A");
+		mvprintw(5, 41, "N/A ");
+		mvprintw(5, 46, " N/A");
 	}
 
 	if (xwii_event_ir_is_valid(&event->v.abs[2])) {
-		mvprintw(3, 55, "%04" PRId32, event->v.abs[2].x);
-		mvprintw(3, 60, "%04" PRId32, event->v.abs[2].y);
+		mvprintw(5, 55, "%04" PRId32, event->v.abs[2].x);
+		mvprintw(5, 60, "%04" PRId32, event->v.abs[2].y);
 	} else {
-		mvprintw(3, 55, "N/A ");
-		mvprintw(3, 60, " N/A");
+		mvprintw(5, 55, "N/A ");
+		mvprintw(5, 60, " N/A");
 	}
 
 	if (xwii_event_ir_is_valid(&event->v.abs[3])) {
-		mvprintw(3, 69, "%04" PRId32, event->v.abs[3].x);
-		mvprintw(3, 74, "%04" PRId32, event->v.abs[3].y);
+		mvprintw(5, 69, "%04" PRId32, event->v.abs[3].x);
+		mvprintw(5, 74, "%04" PRId32, event->v.abs[3].y);
 	} else {
-		mvprintw(3, 69, "N/A ");
-		mvprintw(3, 74, " N/A");
+		mvprintw(5, 69, "N/A ");
+		mvprintw(5, 74, " N/A");
 	}
 }
 
@@ -617,10 +649,10 @@ static void setup_window(void)
 	mvprintw(i++, 0, "+-----------------+ +------+ +-------------------------------------------------+");
 	mvprintw(i++, 0, "|       +-+       | |      |  Accel x:       y:       z:                       |");
 	mvprintw(i++, 0, "|       | |       | +------+ +-------------------------------------------------+");
-	mvprintw(i++, 0, "|     +-+ +-+     | IR #1:     x     #2:     x     #3:     x     #4:     x     |");
+	mvprintw(i++, 0, "|     +-+ +-+     | | Motion Plus   x:       y:       z:                       |");
 	mvprintw(i++, 0, "|     |     |     | +----------------------------------------------------------+");
-	mvprintw(i++, 0, "|     +-+ +-+     |                                                            |");
-	mvprintw(i++, 0, "|       | |       |                                                            |");
+	mvprintw(i++, 0, "|     +-+ +-+     | IR #1:     x     #2:     x     #3:     x     #4:     x     |");
+	mvprintw(i++, 0, "|       | |       | +----------------------------------------------------------+");
 	mvprintw(i++, 0, "|       +-+       |                                                            |");
 	mvprintw(i++, 0, "|                 |                                                            |");
 	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
@@ -704,6 +736,9 @@ static int keyboard(void)
 	case 'a':
 		accel_toggle();
 		break;
+	case 'm':
+		mp_toggle();
+		break;
 	case 'i':
 		ir_toggle();
 		break;
@@ -727,6 +762,7 @@ static int run_iface(struct xwii_iface *iface)
 
 	handle_resize();
 	accel_clear();
+	mp_clear();
 	ir_clear();
 
 	while (true) {
@@ -748,6 +784,10 @@ static int run_iface(struct xwii_iface *iface)
 					accel_show_ext(&event);
 				if (mode != MODE_ERROR)
 					accel_show(&event);
+				break;
+			case XWII_EVENT_MP:
+				if (mode != MODE_ERROR)
+					mp_show(&event);
 				break;
 			case XWII_EVENT_IR:
 				if (mode == MODE_EXTENDED)
@@ -832,6 +872,7 @@ int main(int argc, char **argv)
 		printf("\tf: Freeze/Unfreeze screen\n");
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
+		printf("\tm: Toggle motion plus\n");
 		printf("\ti: Toggle IR camera\n");
 		ret = -1;
 	} else if (!strcmp(argv[1], "list")) {

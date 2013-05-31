@@ -64,6 +64,8 @@ struct xwii_iface {
 	struct xwii_event_abs accel_cache;
 	/* IR data cache */
 	struct xwii_event_abs ir_cache[4];
+	/* MP data cache */
+	struct xwii_event_abs mp_cache;
 };
 
 /* table to convert interface to name */
@@ -376,6 +378,14 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 		dev->ifaces |= XWII_IFACE_IR;
 	}
 
+	if (ifaces & XWII_IFACE_MOTION_PLUS) {
+		ret = xwii_iface_open_if(dev, XWII_IF_MOTION_PLUS, wr);
+        //fprintf(stderr, "Info: %s: %i: in function %s: ret of xwii_iface_open_if: %i\n", __FILE__, __LINE__, __FUNCTION__, ret);
+		if (ret)
+			goto err_out;
+		dev->ifaces |= XWII_IFACE_MOTION_PLUS;
+	}
+
 	return 0;
 
 err_out:
@@ -605,6 +615,43 @@ try_again:
 	goto try_again;
 }
 
+static int read_mp(struct xwii_iface *dev, struct xwii_event *ev)
+{
+	int ret, fd;
+	struct input_event input;
+	fd = dev->ifs[XWII_IF_MOTION_PLUS].fd;
+	if (fd < 0)
+		return -EAGAIN;
+try_again:
+	ret = read_event(fd, &input);
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret < 0) {
+		xwii_iface_close(dev, XWII_IFACE_MOTION_PLUS);
+		return -ENODEV;
+	}
+
+	if (input.type == EV_SYN) {
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		memcpy(ev->v.abs, &dev->mp_cache, sizeof(dev->mp_cache));
+		ev->type = XWII_EVENT_MP;
+		return 0;
+	}
+
+	if (input.type != EV_ABS)
+		goto try_again;
+
+	if (input.code == ABS_RX)
+		dev->mp_cache.x = input.value;
+	else if (input.code == ABS_RY)
+		dev->mp_cache.y = input.value;
+	else if (input.code == ABS_RZ)
+		dev->mp_cache.z = input.value;
+
+	goto try_again;
+}
+
 /*
  * Read new event from any opened interface of \dev.
  * Returns -EAGAIN if no new event can be read.
@@ -631,6 +678,9 @@ static int read_iface(struct xwii_iface *dev, struct xwii_event *ev)
 	if (ret != -EAGAIN)
 		return ret;
 	ret = read_ir(dev, ev);
+	if (ret != -EAGAIN)
+		return ret;
+	ret = read_mp(dev, ev);
 	if (ret != -EAGAIN)
 		return ret;
 
