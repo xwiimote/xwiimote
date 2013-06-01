@@ -10,6 +10,7 @@
 #include <libudev.h>
 #include <linux/input.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/epoll.h>
@@ -57,6 +58,14 @@ struct xwii_iface {
 	unsigned int ifaces;
 	/* interfaces */
 	struct xwii_if ifs[XWII_IF_NUM];
+	/* device type attribute */
+	char *devtype_attr;
+	/* extension attribute */
+	char *extension_attr;
+	/* battery capacity attribute */
+	char *battery_attr;
+	/* led brightness attributes */
+	char *led_attrs[4];
 
 	/* rumble-id for base-core interface force-feedback or -1 */
 	int rumble_id;
@@ -101,21 +110,24 @@ static int name_to_if(const char *name)
  * Scan the device \dev for child input devices and update our device-node
  * cache with the new information. This is called during device setup to
  * find all /dev/input/eventX nodes for all currently available interfaces.
+ * We also cache attribute paths for sub-devices like LEDs or batteries.
  */
 static int xwii_iface_read_nodes(struct xwii_iface *dev)
 {
 	struct udev_enumerate *e;
 	struct udev_list_entry *list;
 	struct udev_device *d;
-	const char *name, *node;
+	const char *name, *node, *subs;
 	char *n;
-	int ret, prev_if, tif;
+	int ret, prev_if, tif, len, i;
 
 	e = udev_enumerate_new(dev->udev);
 	if (!e)
 		return -ENOMEM;
 
 	ret = udev_enumerate_add_match_subsystem(e, "input");
+	ret += udev_enumerate_add_match_subsystem(e, "leds");
+	ret += udev_enumerate_add_match_subsystem(e, "power_supply");
 	ret += udev_enumerate_add_match_parent(e, dev->dev);
 	if (ret) {
 		udev_enumerate_unref(e);
@@ -132,7 +144,8 @@ static int xwii_iface_read_nodes(struct xwii_iface *dev)
 	 * possibly followed by the inputXY/eventXY entry. We remember the type
 	 * of a found inputXY entry, and check the next list-entry, whether
 	 * it's an eventXY entry. If it is, we save the node, otherwise, it's
-	 * skipped. */
+	 * skipped.
+	 * For other subsystems we simply cache the attribute paths. */
 	prev_if = -1;
 	for (list = udev_enumerate_get_list_entry(e);
 	     list;
@@ -146,29 +159,59 @@ static int xwii_iface_read_nodes(struct xwii_iface *dev)
 		if (!d)
 			continue;
 
-		name = udev_device_get_sysname(d);
-		if (!strncmp(name, "input", 5)) {
-			name = udev_device_get_sysattr_value(d, "name");
-			if (!name)
+		subs = udev_device_get_subsystem(d);
+		if (!strcmp(subs, "input")) {
+			name = udev_device_get_sysname(d);
+			if (!strncmp(name, "input", 5)) {
+				name = udev_device_get_sysattr_value(d, "name");
+				if (!name)
+					continue;
+
+				tif = name_to_if(name);
+				if (tif >= 0) {
+					/* skip duplicates */
+					if (dev->ifs[tif].node)
+						continue;
+					prev_if = tif;
+				}
+			} else if (!strncmp(name, "event", 5)) {
+				if (tif < 0)
+					continue;
+				node = udev_device_get_devnode(d);
+				if (!node)
+					continue;
+				n = strdup(node);
+				if (!n)
+					continue;
+				dev->ifs[tif].node = n;
+			}
+		} else if (!strcmp(subs, "leds")) {
+			len = strlen(name);
+			if (name[len - 1] == '0')
+				i = 0;
+			else if (name[len - 1] == '1')
+				i = 1;
+			else if (name[len - 1] == '2')
+				i = 2;
+			else if (name[len - 1] == '3')
+				i = 3;
+			else
 				continue;
 
-			tif = name_to_if(name);
-			if (tif >= 0) {
-				/* skip duplicates */
-				if (dev->ifs[tif].node)
-					continue;
-				prev_if = tif;
-			}
-		} else if (!strncmp(name, "event", 5)) {
-			if (tif < 0)
+			if (dev->led_attrs[i])
 				continue;
-			node = udev_device_get_devnode(d);
-			if (!node)
+
+			ret = asprintf(&dev->led_attrs[i], "%s/%s",
+				       name, "brightness");
+			if (ret <= 0)
+				dev->led_attrs[i] = NULL;
+		} else if (!strcmp(subs, "power_supply")) {
+			if (dev->battery_attr)
 				continue;
-			n = strdup(node);
-			if (!n)
-				continue;
-			dev->ifs[tif].node = n;
+			ret = asprintf(&dev->battery_attr, "%s/%s",
+				       name, "capacity");
+			if (ret <= 0)
+				dev->battery_attr = NULL;
 		}
 	}
 
@@ -234,13 +277,28 @@ int xwii_iface_new(struct xwii_iface **dev, const char *syspath)
 		goto err_dev;
 	}
 
+	ret = asprintf(&d->devtype_attr, "%s/%s", syspath, "devtype");
+	if (ret <= 0) {
+		ret = -ENOMEM;
+		goto err_dev;
+	}
+
+	ret = asprintf(&d->extension_attr, "%s/%s", syspath, "extension");
+	if (ret <= 0) {
+		ret = -ENOMEM;
+		goto err_attrs;
+	}
+
 	ret = xwii_iface_read_nodes(d);
 	if (ret)
-		goto err_dev;
+		goto err_attrs;
 
 	*dev = d;
 	return 0;
 
+err_attrs:
+	free(d->extension_attr);
+	free(d->devtype_attr);
 err_dev:
 	udev_device_unref(d->dev);
 err_udev:
@@ -271,6 +329,11 @@ void xwii_iface_unref(struct xwii_iface *dev)
 
 	for (i = 0; i < XWII_IF_NUM; ++i)
 		free(dev->ifs[i].node);
+	for (i = 0; i < 4; ++i)
+		free(dev->led_attrs[i]);
+	free(dev->battery_attr);
+	free(dev->extension_attr);
+	free(dev->devtype_attr);
 
 	udev_device_unref(dev->dev);
 	udev_unref(dev->udev);
@@ -919,4 +982,138 @@ int xwii_iface_rumble(struct xwii_iface *dev, bool on)
 		return -errno;
 	else
 		return 0;
+}
+
+static int read_line(const char *path, char **out)
+{
+	FILE *f;
+	char buf[4096], *line;
+
+	f = fopen(path, "re");
+	if (!f)
+		return -errno;
+
+	if (!fgets(buf, sizeof(buf), f)) {
+		if (ferror(f)) {
+			fclose(f);
+			return errno ? -errno : -EINVAL;
+		}
+		buf[0] = 0;
+	}
+
+	fclose(f);
+
+	line = strdup(buf);
+	if (!line)
+		return -ENOMEM;
+	line[strcspn(line, "\n")] = 0;
+
+	*out = line;
+	return 0;
+}
+
+static int write_string(const char *path, const char *line)
+{
+	FILE *f;
+
+	f = fopen(path, "we");
+	if (!f)
+		return -errno;
+
+	fputs(line, f);
+	fflush(f);
+
+	if (ferror(f)) {
+		fclose(f);
+		return errno ? -errno : -EINVAL;
+	}
+
+	fclose(f);
+	return 0;
+}
+
+static int read_led(const char *path, bool *state)
+{
+	int ret;
+	char *line;
+
+	ret = read_line(path, &line);
+	if (ret)
+		return ret;
+
+	*state = !!atoi(line);
+	free(line);
+
+	return 0;
+}
+
+int xwii_iface_get_led(struct xwii_iface *dev, unsigned int led, bool *state)
+{
+	if (led > XWII_LED4 || led < XWII_LED1)
+		return -EINVAL;
+	if (!dev || !state)
+		return -EINVAL;
+
+	--led;
+	if (!dev->led_attrs[led])
+		return -ENODEV;
+
+	return read_led(dev->led_attrs[led], state);
+}
+
+int xwii_iface_set_led(struct xwii_iface *dev, unsigned int led, bool state)
+{
+	if (!dev || led > XWII_LED4 || led < XWII_LED1)
+		return -EINVAL;
+
+	--led;
+	if (!dev->led_attrs[led])
+		return -ENODEV;
+
+	return write_string(dev->led_attrs[led], state ? "1\n" : "0\n");
+}
+
+static int read_battery(const char *path, uint8_t *capacity)
+{
+	int ret;
+	char *line;
+
+	ret = read_line(path, &line);
+	if (ret)
+		return ret;
+
+	*capacity = atoi(line);
+	free(line);
+
+	return 0;
+}
+
+int xwii_iface_get_battery(struct xwii_iface *dev, uint8_t *capacity)
+{
+	if (!dev || !capacity)
+		return -EINVAL;
+	if (!dev->battery_attr)
+		return -ENODEV;
+
+	return read_battery(dev->battery_attr, capacity);
+}
+
+int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype)
+{
+	if (!dev || !devtype)
+		return -EINVAL;
+	if (!dev->devtype_attr)
+		return -ENODEV;
+
+	return read_line(dev->devtype_attr, devtype);
+}
+
+int xwii_iface_get_extension(struct xwii_iface *dev, char **extension)
+{
+	if (!dev || !extension)
+		return -EINVAL;
+	if (!dev->extension_attr)
+		return -ENODEV;
+
+	return read_line(dev->extension_attr, extension);
 }

@@ -146,6 +146,22 @@ int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev);
 
 int xwii_iface_rumble(struct xwii_iface *dev, bool on);
 
+enum xwii_led {
+	XWII_LED1 = 1,
+	XWII_LED2 = 2,
+	XWII_LED3 = 3,
+	XWII_LED4 = 4,
+};
+
+#define XWII_LED(num) (XWII_LED1 + (num) - 1)
+
+int xwii_iface_get_led(struct xwii_iface *dev, unsigned int led, bool *state);
+int xwii_iface_set_led(struct xwii_iface *dev, unsigned int led, bool state);
+
+int xwii_iface_get_battery(struct xwii_iface *dev, uint8_t *capacity);
+int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype);
+int xwii_iface_get_extension(struct xwii_iface *dev, char **extension);
+
 /* old deprecated functions */
 XWII__DEPRECATED int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
 
