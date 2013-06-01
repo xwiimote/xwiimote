@@ -77,6 +77,8 @@ enum xwii_event_types {
 	XWII_EVENT_IR,		/* IR event */
 	XWII_EVENT_BALANCE_BOARD,	/* balance-board weight event */
 	XWII_EVENT_MOTION_PLUS,	/* motion plus event */
+	XWII_EVENT_PRO_CONTROLLER_KEY,	/* pro controller key event */
+	XWII_EVENT_PRO_CONTROLLER_MOVE,	/* pro controller movement event */
 	XWII_EVENT_NUM
 };
 
@@ -92,6 +94,14 @@ enum xwii_event_keys {
 	XWII_KEY_HOME,
 	XWII_KEY_ONE,
 	XWII_KEY_TWO,
+	XWII_KEY_X,
+	XWII_KEY_Y,
+	XWII_KEY_TL,
+	XWII_KEY_TR,
+	XWII_KEY_ZL,
+	XWII_KEY_ZR,
+	XWII_KEY_THUMBL,
+	XWII_KEY_THUMBR,
 	XWII_KEY_NUM
 };
 

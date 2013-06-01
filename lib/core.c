@@ -68,6 +68,8 @@ struct xwii_iface {
 	struct xwii_event_abs bboard_cache[4];
 	/* motion plus cache */
 	struct xwii_event_abs mp_cache;
+	/* pro controller cache */
+	struct xwii_event_abs pro_cache[2];
 };
 
 /* table to convert interface to name */
@@ -394,6 +396,13 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 		dev->ifaces |= XWII_IFACE_BALANCE_BOARD;
 	}
 
+	if (ifaces & XWII_IFACE_PRO_CONTROLLER) {
+		ret = xwii_iface_open_if(dev, XWII_IF_PRO_CONTROLLER, wr);
+		if (ret)
+			goto err_out;
+		dev->ifaces |= XWII_IFACE_PRO_CONTROLLER;
+	}
+
 	return 0;
 
 err_out:
@@ -705,6 +714,113 @@ try_again:
 	goto try_again;
 }
 
+static int read_pro(struct xwii_iface *dev, struct xwii_event *ev)
+{
+	int ret, fd;
+	struct input_event input;
+	unsigned int key;
+
+	fd = dev->ifs[XWII_IF_PRO_CONTROLLER].fd;
+	if (fd < 0)
+		return -EAGAIN;
+
+try_again:
+	ret = read_event(fd, &input);
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret < 0) {
+		xwii_iface_close(dev, XWII_IFACE_PRO_CONTROLLER);
+		return -ENODEV;
+	}
+
+	if (input.type == EV_KEY) {
+		if (input.value < 0 || input.value > 2)
+			goto try_again;
+
+		switch (input.code) {
+			case BTN_A:
+				key = XWII_KEY_A;
+				break;
+			case BTN_B:
+				key = XWII_KEY_B;
+				break;
+			case BTN_X:
+				key = XWII_KEY_X;
+				break;
+			case BTN_Y:
+				key = XWII_KEY_Y;
+				break;
+			case BTN_START:
+				key = XWII_KEY_PLUS;
+				break;
+			case BTN_SELECT:
+				key = XWII_KEY_MINUS;
+				break;
+			case BTN_MODE:
+				key = XWII_KEY_HOME;
+				break;
+			case KEY_LEFT:
+				key = XWII_KEY_LEFT;
+				break;
+			case KEY_RIGHT:
+				key = XWII_KEY_RIGHT;
+				break;
+			case KEY_UP:
+				key = XWII_KEY_UP;
+				break;
+			case KEY_DOWN:
+				key = XWII_KEY_DOWN;
+				break;
+			case BTN_TL:
+				key = XWII_KEY_TL;
+				break;
+			case BTN_TR:
+				key = XWII_KEY_TR;
+				break;
+			case BTN_TL2:
+				key = XWII_KEY_ZL;
+				break;
+			case BTN_TR2:
+				key = XWII_KEY_ZR;
+				break;
+			case BTN_THUMBL:
+				key = XWII_KEY_THUMBL;
+				break;
+			case BTN_THUMBR:
+				key = XWII_KEY_THUMBR;
+				break;
+			default:
+				goto try_again;
+		}
+
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		ev->type = XWII_EVENT_PRO_CONTROLLER_KEY;
+		ev->v.key.code = key;
+		ev->v.key.state = input.value;
+		return 0;
+	} else if (input.type == EV_ABS) {
+		if (input.code == ABS_HAT0X)
+			dev->pro_cache[0].x = input.value;
+		else if (input.code == ABS_HAT0Y)
+			dev->pro_cache[0].y = input.value;
+		else if (input.code == ABS_HAT1X)
+			dev->pro_cache[1].x = input.value;
+		else if (input.code == ABS_HAT1Y)
+			dev->pro_cache[1].y = input.value;
+	} else if (input.type == EV_SYN) {
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		memcpy(&ev->v.abs, dev->pro_cache,
+		       sizeof(dev->pro_cache));
+		ev->type = XWII_EVENT_PRO_CONTROLLER_MOVE;
+		return 0;
+	} else {
+	}
+
+	goto try_again;
+}
+
 /*
  * Read new event from any opened interface of \dev.
  * Returns -EAGAIN if no new event can be read.
@@ -737,6 +853,9 @@ static int read_iface(struct xwii_iface *dev, struct xwii_event *ev)
 	if (ret != -EAGAIN)
 		return ret;
 	ret = read_bboard(dev, ev);
+	if (ret != -EAGAIN)
+		return ret;
+	ret = read_pro(dev, ev);
 	if (ret != -EAGAIN)
 		return ret;
 
