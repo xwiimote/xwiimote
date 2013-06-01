@@ -112,7 +112,7 @@ static void key_clear(void)
 
 	ev.type = XWII_EVENT_KEY;
 	for (i = 0; i < XWII_KEY_NUM; ++i) {
-		ev.v.key.code = 0;
+		ev.v.key.code = i;
 		ev.v.key.state = 0;
 		key_show(&ev);
 	}
@@ -699,6 +699,259 @@ static void bboard_toggle(void)
 	}
 }
 
+/* pro controller */
+
+static void pro_show_ext(const struct xwii_event *event)
+{
+	uint16_t code = event->v.key.code;
+	int32_t v;
+	bool pressed = event->v.key.state;
+	char *str = NULL;
+
+	if (event->type == XWII_EVENT_PRO_CONTROLLER_MOVE) {
+		v = event->v.abs[0].x;
+		mvprintw(14, 116, "%5d", v);
+		if (v > 1000) {
+			mvprintw(16, 118, "     ");
+			mvprintw(16, 124, "#####");
+		} else if (v > 800) {
+			mvprintw(16, 118, "     ");
+			mvprintw(16, 124, "#### ");
+		} else if (v > 600) {
+			mvprintw(16, 118, "     ");
+			mvprintw(16, 124, "###  ");
+		} else if (v > 400) {
+			mvprintw(16, 118, "     ");
+			mvprintw(16, 124, "##   ");
+		} else if (v > 200) {
+			mvprintw(16, 118, "     ");
+			mvprintw(16, 124, "#    ");
+		} else if (v > -200) {
+			mvprintw(16, 118, "     ");
+			mvprintw(16, 124, "     ");
+		} else if (v > -400) {
+			mvprintw(16, 118, "    #");
+			mvprintw(16, 124, "     ");
+		} else if (v > -600) {
+			mvprintw(16, 118, "   ##");
+			mvprintw(16, 124, "     ");
+		} else if (v > -800) {
+			mvprintw(16, 118, "  ###");
+			mvprintw(16, 124, "     ");
+		} else if (v > -1000) {
+			mvprintw(16, 118, " ####");
+			mvprintw(16, 124, "     ");
+		} else {
+			mvprintw(16, 118, "#####");
+			mvprintw(16, 124, "     ");
+		}
+
+		v = event->v.abs[0].y;
+		mvprintw(14, 125, "%5d", v);
+		if (v > 1000) {
+			mvprintw(14, 123, "#");
+			mvprintw(15, 123, "#");
+			mvprintw(17, 123, " ");
+			mvprintw(18, 123, " ");
+		} else if (v > 200) {
+			mvprintw(14, 123, " ");
+			mvprintw(15, 123, "#");
+			mvprintw(17, 123, " ");
+			mvprintw(18, 123, " ");
+		} else if (v > -200) {
+			mvprintw(14, 123, " ");
+			mvprintw(15, 123, " ");
+			mvprintw(17, 123, " ");
+			mvprintw(18, 123, " ");
+		} else if (v > -1000) {
+			mvprintw(14, 123, " ");
+			mvprintw(15, 123, " ");
+			mvprintw(17, 123, "#");
+			mvprintw(18, 123, " ");
+		} else {
+			mvprintw(14, 123, " ");
+			mvprintw(15, 123, " ");
+			mvprintw(17, 123, "#");
+			mvprintw(18, 123, "#");
+		}
+
+		v = event->v.abs[1].x;
+		mvprintw(14, 134, "%5d", v);
+		if (v > 1000) {
+			mvprintw(16, 136, "     ");
+			mvprintw(16, 142, "#####");
+		} else if (v > 800) {
+			mvprintw(16, 136, "     ");
+			mvprintw(16, 142, "#### ");
+		} else if (v > 600) {
+			mvprintw(16, 136, "     ");
+			mvprintw(16, 142, "###  ");
+		} else if (v > 400) {
+			mvprintw(16, 136, "     ");
+			mvprintw(16, 142, "##   ");
+		} else if (v > 200) {
+			mvprintw(16, 136, "     ");
+			mvprintw(16, 142, "#    ");
+		} else if (v > -200) {
+			mvprintw(16, 136, "     ");
+			mvprintw(16, 142, "     ");
+		} else if (v > -400) {
+			mvprintw(16, 136, "    #");
+			mvprintw(16, 142, "     ");
+		} else if (v > -600) {
+			mvprintw(16, 136, "   ##");
+			mvprintw(16, 142, "     ");
+		} else if (v > -800) {
+			mvprintw(16, 136, "  ###");
+			mvprintw(16, 142, "     ");
+		} else if (v > -1000) {
+			mvprintw(16, 136, " ####");
+			mvprintw(16, 142, "     ");
+		} else {
+			mvprintw(16, 136, "#####");
+			mvprintw(16, 142, "     ");
+		}
+
+		v = event->v.abs[1].y;
+		mvprintw(14, 143, "%5d", v);
+		if (v > 1000) {
+			mvprintw(14, 141, "#");
+			mvprintw(15, 141, "#");
+			mvprintw(17, 141, " ");
+			mvprintw(18, 141, " ");
+		} else if (v > 200) {
+			mvprintw(14, 141, " ");
+			mvprintw(15, 141, "#");
+			mvprintw(17, 141, " ");
+			mvprintw(18, 141, " ");
+		} else if (v > -200) {
+			mvprintw(14, 141, " ");
+			mvprintw(15, 141, " ");
+			mvprintw(17, 141, " ");
+			mvprintw(18, 141, " ");
+		} else if (v > -1000) {
+			mvprintw(14, 141, " ");
+			mvprintw(15, 141, " ");
+			mvprintw(17, 141, "#");
+			mvprintw(18, 141, " ");
+		} else {
+			mvprintw(14, 141, " ");
+			mvprintw(15, 141, " ");
+			mvprintw(17, 141, "#");
+			mvprintw(18, 141, "#");
+		}
+	} else if (event->type == XWII_EVENT_PRO_CONTROLLER_KEY) {
+		if (pressed)
+			str = "X";
+		else
+			str = " ";
+
+		if (code == XWII_KEY_A) {
+			if (pressed)
+				str = "A";
+			mvprintw(20, 156, "%s", str);
+		} else if (code == XWII_KEY_B) {
+			if (pressed)
+				str = "B";
+			mvprintw(21, 154, "%s", str);
+		} else if (code == XWII_KEY_X) {
+			if (pressed)
+				str = "X";
+			mvprintw(19, 154, "%s", str);
+		} else if (code == XWII_KEY_Y) {
+			if (pressed)
+				str = "Y";
+			mvprintw(20, 152, "%s", str);
+		} else if (code == XWII_KEY_PLUS) {
+			if (pressed)
+				str = "+";
+			mvprintw(21, 142, "%s", str);
+		} else if (code == XWII_KEY_MINUS) {
+			if (pressed)
+				str = "-";
+			mvprintw(21, 122, "%s", str);
+		} else if (code == XWII_KEY_HOME) {
+			if (pressed)
+				str = "HOME+";
+			else
+				str = "     ";
+			mvprintw(21, 130, "%s", str);
+		} else if (code == XWII_KEY_LEFT) {
+			mvprintw(18, 108, "%s", str);
+		} else if (code == XWII_KEY_RIGHT) {
+			mvprintw(18, 112, "%s", str);
+		} else if (code == XWII_KEY_UP) {
+			mvprintw(16, 110, "%s", str);
+		} else if (code == XWII_KEY_DOWN) {
+			mvprintw(20, 110, "%s", str);
+		} else if (code == XWII_KEY_TL) {
+			if (pressed)
+				str = "TL";
+			else
+				str = "  ";
+			mvprintw(14, 108, "%s", str);
+		} else if (code == XWII_KEY_TR) {
+			if (pressed)
+				str = "TR";
+			else
+				str = "  ";
+			mvprintw(14, 155, "%s", str);
+		} else if (code == XWII_KEY_ZL) {
+			if (pressed)
+				str = "ZL";
+			else
+				str = "  ";
+			mvprintw(13, 108, "%s", str);
+		} else if (code == XWII_KEY_ZR) {
+			if (pressed)
+				str = "ZR";
+			else
+				str = "  ";
+			mvprintw(13, 155, "%s", str);
+		} else if (code == XWII_KEY_THUMBL) {
+			if (!pressed)
+				str = "+";
+			mvprintw(16, 123, "%s", str);
+		} else if (code == XWII_KEY_THUMBR) {
+			if (!pressed)
+				str = "+";
+			mvprintw(16, 141, "%s", str);
+		}
+	}
+}
+
+static void pro_clear(void)
+{
+	struct xwii_event ev;
+	unsigned int i;
+
+	ev.type = XWII_EVENT_PRO_CONTROLLER_MOVE;
+	ev.v.abs[0].x = 0;
+	ev.v.abs[0].y = 0;
+	ev.v.abs[1].x = 0;
+	ev.v.abs[1].y = 0;
+	pro_show_ext(&ev);
+
+	ev.type = XWII_EVENT_PRO_CONTROLLER_KEY;
+	ev.v.key.state = 0;
+	for (i = 0; i < XWII_KEY_NUM; ++i) {
+		ev.v.key.code = i;
+		pro_show_ext(&ev);
+	}
+}
+
+static void pro_toggle(void)
+{
+	if (xwii_iface_opened(iface) & XWII_IFACE_PRO_CONTROLLER) {
+		xwii_iface_close(iface, XWII_IFACE_PRO_CONTROLLER);
+		pro_clear();
+		print_error("Info: Disable Pro Controller");
+	} else {
+		xwii_iface_open(iface, XWII_IFACE_PRO_CONTROLLER);
+		print_error("Info: Enable Pro Controller");
+	}
+}
+
 /* rumble events */
 
 static void rumble_show(bool on)
@@ -715,7 +968,179 @@ static void rumble_toggle(void)
 	rumble_show(on);
 }
 
+/* LEDs */
+
+static bool led1_state;
+
+static void led1_show(bool on)
+{
+	mvprintw(5, 59, on ? "(#1)" : " -1 ");
+}
+
+static void led1_toggle(void)
+{
+	led1_state = !led1_state;
+	xwii_iface_set_led(iface, XWII_LED(1), led1_state);
+	led1_show(led1_state);
+}
+
+static void led1_refresh(void)
+{
+	int ret;
+
+	ret = xwii_iface_get_led(iface, XWII_LED(1), &led1_state);
+	if (ret)
+		print_error("Error: Cannot read LED state");
+	else
+		led1_show(led1_state);
+}
+
+static bool led2_state;
+
+static void led2_show(bool on)
+{
+	mvprintw(5, 64, on ? "(#2)" : " -2 ");
+}
+
+static void led2_toggle(void)
+{
+	led2_state = !led2_state;
+	xwii_iface_set_led(iface, XWII_LED(2), led2_state);
+	led2_show(led2_state);
+}
+
+static void led2_refresh(void)
+{
+	int ret;
+
+	ret = xwii_iface_get_led(iface, XWII_LED(2), &led2_state);
+	if (ret)
+		print_error("Error: Cannot read LED state");
+	else
+		led2_show(led2_state);
+}
+
+static bool led3_state;
+
+static void led3_show(bool on)
+{
+	mvprintw(5, 69, on ? "(#3)" : " -3 ");
+}
+
+static void led3_toggle(void)
+{
+	led3_state = !led3_state;
+	xwii_iface_set_led(iface, XWII_LED(3), led3_state);
+	led3_show(led3_state);
+}
+
+static void led3_refresh(void)
+{
+	int ret;
+
+	ret = xwii_iface_get_led(iface, XWII_LED(3), &led3_state);
+	if (ret)
+		print_error("Error: Cannot read LED state");
+	else
+		led3_show(led3_state);
+}
+
+static bool led4_state;
+
+static void led4_show(bool on)
+{
+	mvprintw(5, 74, on ? "(#4)" : " -4 ");
+}
+
+static void led4_toggle(void)
+{
+	led4_state = !led4_state;
+	xwii_iface_set_led(iface, XWII_LED(4), led4_state);
+	led4_show(led4_state);
+}
+
+static void led4_refresh(void)
+{
+	int ret;
+
+	ret = xwii_iface_get_led(iface, XWII_LED(4), &led4_state);
+	if (ret)
+		print_error("Error: Cannot read LED state");
+	else
+		led4_show(led4_state);
+}
+
+/* battery status */
+
+static void battery_show(uint8_t capacity)
+{
+	int i;
+
+	mvprintw(7, 29, "%3u%%", capacity);
+
+	mvprintw(7, 35, "          ");
+	for (i = 0; i * 10 < capacity; ++i)
+		mvprintw(7, 35 + i, "#");
+}
+
+static void battery_refresh(void)
+{
+	int ret;
+	uint8_t capacity;
+
+	ret = xwii_iface_get_battery(iface, &capacity);
+	if (ret)
+		print_error("Error: Cannot read battery capacity");
+	else
+		battery_show(capacity);
+}
+
+/* device type */
+
+static void devtype_refresh(void)
+{
+	int ret;
+	char *name;
+
+	ret = xwii_iface_get_devtype(iface, &name);
+	if (ret) {
+		print_error("Error: Cannot read device type");
+	} else {
+		mvprintw(9, 28, "                                                   ");
+		mvprintw(9, 28, "%s", name);
+		free(name);
+	}
+}
+
+/* extension type */
+
+static void extension_refresh(void)
+{
+	int ret;
+	char *name;
+
+	ret = xwii_iface_get_extension(iface, &name);
+	if (ret) {
+		print_error("Error: Cannot read extension type");
+	} else {
+		mvprintw(7, 54, "                      ");
+		mvprintw(7, 54, "%s", name);
+		free(name);
+	}
+}
+
 /* basic window setup */
+
+static void refresh_all(void)
+{
+	battery_refresh();
+	led1_refresh();
+	led2_refresh();
+	led3_refresh();
+	led4_refresh();
+	devtype_refresh();
+	extension_refresh();
+}
 
 static void setup_window(void)
 {
@@ -723,17 +1148,17 @@ static void setup_window(void)
 
 	i = 0;
 	/* 80x24 Box */
-	mvprintw(i++, 0, "+- Keys ----------+ +------+ +-------------------------------------------------+");
-	mvprintw(i++, 0, "|       +-+       | |      |  Accel x:       y:       z:                       |");
-	mvprintw(i++, 0, "|       | |       | +------+ +-------------------------------------------------+");
+	mvprintw(i++, 0, "+- Keys ----------+ +------+ +---------------------------------+---------------+");
+	mvprintw(i++, 0, "|       +-+       | |      |  Accel x:       y:       z:       | XWIIMOTE SHOW |");
+	mvprintw(i++, 0, "|       | |       | +------+ +---------------------------------+---------------+");
 	mvprintw(i++, 0, "|     +-+ +-+     | IR #1:     x     #2:     x     #3:     x     #4:     x     |");
 	mvprintw(i++, 0, "|     |     |     | +--------------------------------+-------------------------+");
-	mvprintw(i++, 0, "|     +-+ +-+     | MP x:        y:        z:        |                         |");
-	mvprintw(i++, 0, "|       | |       | +--------------------------------+-------------------------+");
-	mvprintw(i++, 0, "|       +-+       |                                                            |");
-	mvprintw(i++, 0, "|                 |                                                            |");
-	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
-	mvprintw(i++, 0, "|   | |     | |   |                                                            |");
+	mvprintw(i++, 0, "|     +-+ +-+     | MP x:        y:        z:        | LED  -0   -1   -2   -3  |");
+	mvprintw(i++, 0, "|       | |       | +--------------------------+-----+----------------------+--+");
+	mvprintw(i++, 0, "|       +-+       | Battery:      |          | | Ext:                       |  |");
+	mvprintw(i++, 0, "|                 | +--------------------------+----------------------------+--+");
+	mvprintw(i++, 0, "|   +-+     +-+   | Device:                                                    |");
+	mvprintw(i++, 0, "|   | |     | |   | +----------------------------------------------------------+");
 	mvprintw(i++, 0, "|   +-+     +-+   |                                                            |");
 	mvprintw(i++, 0, "|                 |                                                            |");
 	mvprintw(i++, 0, "| ( ) |     | ( ) |                                                            |");
@@ -767,17 +1192,53 @@ static void setup_ext_window(void)
 	mvprintw(i++, 80, "                       | |                          |                          |");
 	mvprintw(i++, 80, "                       | |                                                     |");
 	mvprintw(i++, 80, "              Y        | |                          |                          |");
-	mvprintw(i++, 80, " +- Balance Board -----+ +--------------------------+--------------------------+");
-	mvprintw(i++, 80, "  Sum:                 |");
-	mvprintw(i++, 80, "                       |");
-	mvprintw(i++, 80, "            |          |");
-	mvprintw(i++, 80, "            |          |");
-	mvprintw(i++, 80, "  #1:        #2:       |");
-	mvprintw(i++, 80, "            |          |");
-	mvprintw(i++, 80, "            |          |");
-	mvprintw(i++, 80, "  #3:        #4:       |");
-	mvprintw(i++, 80, "                       |");
-	mvprintw(i++, 80, " +---------------------+");
+	mvprintw(i++, 80, " +- Balance Board -----+ +- Pro Controller ---------+--------------------------+");
+	mvprintw(i++, 80, "  Sum:                 | | |ZL|           +-+               +-+           |ZR| |");
+	mvprintw(i++, 80, "                       | | |TL|           | |               | |           |TR| |");
+	mvprintw(i++, 80, "            |          | |   +-+     +---     ---+     +---     ---+           |");
+	mvprintw(i++, 80, "            |          | |   | |     |     +     |     |     +     |           |");
+	mvprintw(i++, 80, "  #1:        #2:       | | +-+ +-+   +---     ---+     +---     ---+           |");
+	mvprintw(i++, 80, "            |          | | |     |        | |               | |                |");
+	mvprintw(i++, 80, "            |          | | +-+ +-+        +-+               +-+          |X|   |");
+	mvprintw(i++, 80, "  #3:        #4:       | |   | |                                       |Y| |A| |");
+	mvprintw(i++, 80, "                       | |   +-+         (-)     |HOME+|     (+)         |B|   |");
+	mvprintw(i++, 80, " +---------------------+ +-----------------------------------------------------+");
+
+	i = 24;
+	mvprintw(i++, 0,  "+-------------------+----------------------------------------------------------+");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "+------------------------------------------------------------------------------+");
+
+	i = 24;
+	mvprintw(i++, 80, " +-----------------------------------------------------------------------------+");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, "                                                                               |");
+	mvprintw(i++, 80, " +-----------------------------------------------------------------------------+");
 }
 
 static void handle_resize(void)
@@ -790,12 +1251,14 @@ static void handle_resize(void)
 		mode = MODE_NORMAL;
 		erase();
 		setup_window();
+		refresh_all();
 		print_error("Info: Screen smaller than 160x40; limited view");
 	} else {
 		mode = MODE_EXTENDED;
 		erase();
 		setup_ext_window();
 		setup_window();
+		refresh_all();
 		print_error("Info: Screen initialized for extended view");
 	}
 }
@@ -835,11 +1298,29 @@ static int keyboard(void)
 	case 'b':
 		bboard_toggle();
 		break;
+	case 'p':
+		pro_toggle();
+		break;
 	case 'r':
 		rumble_toggle();
 		break;
+	case '1':
+		led1_toggle();
+		break;
+	case '2':
+		led2_toggle();
+		break;
+	case '3':
+		led3_toggle();
+		break;
+	case '4':
+		led4_toggle();
+		break;
 	case 'f':
 		freeze_toggle();
+		break;
+	case 's':
+		refresh_all();
 		break;
 	case 'q':
 		return -ECANCELED;
@@ -859,6 +1340,8 @@ static int run_iface(struct xwii_iface *iface)
 	ir_clear();
 	mp_clear();
 	bboard_clear();
+	pro_clear();
+	refresh_all();
 
 	while (true) {
 		ret = xwii_iface_poll(iface, &event);
@@ -893,6 +1376,11 @@ static int run_iface(struct xwii_iface *iface)
 			case XWII_EVENT_BALANCE_BOARD:
 				if (mode == MODE_EXTENDED)
 					bboard_show_ext(&event);
+				break;
+			case XWII_EVENT_PRO_CONTROLLER_KEY:
+			case XWII_EVENT_PRO_CONTROLLER_MOVE:
+				if (mode == MODE_EXTENDED)
+					pro_show_ext(&event);
 				break;
 			}
 		}
@@ -969,12 +1457,18 @@ int main(int argc, char **argv)
 		printf("UI commands:\n");
 		printf("\tq: Quit application\n");
 		printf("\tf: Freeze/Unfreeze screen\n");
+		printf("\ts: Refresh static values (like battery)\n");
 		printf("\tk: Toggle key events\n");
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
 		printf("\ti: Toggle IR camera\n");
 		printf("\tm: Toggle motion plus\n");
 		printf("\tb: Toggle balance board\n");
+		printf("\tp: Toggle pro controller\n");
+		printf("\t1: Toggle LED 1\n");
+		printf("\t2: Toggle LED 2\n");
+		printf("\t3: Toggle LED 3\n");
+		printf("\t4: Toggle LED 4\n");
 		ret = -1;
 	} else if (!strcmp(argv[1], "list")) {
 		printf("Listing connected Wii Remote devices:\n");
