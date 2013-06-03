@@ -661,16 +661,15 @@ static void mp_toggle(void)
 static void mp_normalize_toggle(void)
 {
     static bool normalize = false;
-    static int x = 0, y = 0, z = 0;
-    bool cr;
+    static int x = 0, y = 0, z = 0, cf = 50;
     normalize = !normalize;
     if (normalize) {
-        xwii_iface_mp_start_normalize(iface, x, y, z, 30, true);
-		print_error("Info: Enabled Motion Plus Normalization (%i,%i,%i)",x,y,z);
+        xwii_iface_mp_start_normalize(iface, x, y, z, cf);
+		print_error("Info: Enabled Motion Plus Normalization (%i,%i,%i) * %i",x,y,z, cf);
     } else {
-        xwii_iface_mp_get_normalize(iface, &x, &y, &z, &cr);
+        xwii_iface_mp_get_normalize(iface, &x, &y, &z, &cf);
         xwii_iface_mp_stop_normalize(iface);
-		print_error("Info: Disabled Motion Plus Normalization (%i,%i,%i)",x,y,z);
+		print_error("Info: Disabled Motion Plus Normalization (%i,%i,%i) * %i",x,y,z, cf);
     }
 }
 
