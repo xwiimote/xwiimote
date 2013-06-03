@@ -80,6 +80,7 @@ struct xwii_iface {
 	/* motion plus normalization stuff */
 	struct xwii_event_abs mp_normalizer;
 	bool mp_normalize; bool mp_calibrate;
+	int32_t mp_normalize_factor;
 	/* pro controller cache */
 	struct xwii_event_abs pro_cache[2];
 };
@@ -720,9 +721,9 @@ try_again:
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		if (dev->mp_normalize) {
-    		ev->v.abs[0].x = dev->mp_cache.x - dev->mp_normalizer.x;
-    		ev->v.abs[0].y = dev->mp_cache.y - dev->mp_normalizer.y;
-    		ev->v.abs[0].z = dev->mp_cache.z - dev->mp_normalizer.z;
+    		ev->v.abs[0].x = dev->mp_cache.x - dev->mp_normalizer.x * dev->mp_normalize_factor / 100;
+    		ev->v.abs[0].y = dev->mp_cache.y - dev->mp_normalizer.y * dev->mp_normalize_factor / 100;
+    		ev->v.abs[0].z = dev->mp_cache.z - dev->mp_normalizer.z * dev->mp_normalize_factor / 100;
     		if (dev->mp_calibrate) {
     		    dev->mp_normalizer.x += (ev->v.abs[0].x > 0) ? 1 : -1;
     		    dev->mp_normalizer.y += (ev->v.abs[0].y > 0) ? 1 : -1;
@@ -1130,7 +1131,7 @@ int xwii_iface_get_extension(struct xwii_iface *dev, char **extension)
 	return read_line(dev->extension_attr, extension);
 }
 
-int xwii_iface_mp_start_normalize(struct xwii_iface *dev, int32_t x, int32_t y, int32_t z, bool continuousRecalibration)
+int xwii_iface_mp_start_normalize(struct xwii_iface *dev, int32_t x, int32_t y, int32_t z, int32_t factor, bool continuousRecalibration)
 {
     if (!dev)
         return -EINVAL;
@@ -1143,6 +1144,7 @@ int xwii_iface_mp_start_normalize(struct xwii_iface *dev, int32_t x, int32_t y, 
     dev->mp_normalizer.x = x;
     dev->mp_normalizer.y = y;
     dev->mp_normalizer.z = z;
+    dev->mp_normalize_factor = factor;
     dev->mp_calibrate = continuousRecalibration; 
     return 0;
 }

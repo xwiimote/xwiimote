@@ -163,7 +163,7 @@ int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype);
 int xwii_iface_get_extension(struct xwii_iface *dev, char **extension);
 
 /* MotionPlus calibration functions */
-int xwii_iface_mp_start_normalize(struct xwii_iface *dev, int x, int y, int z, bool continuousRecalibration);
+int xwii_iface_mp_start_normalize(struct xwii_iface *dev, int x, int y, int z, int factor, bool continuousRecalibration);
 int xwii_iface_mp_get_normalize(struct xwii_iface *dev, int *x, int *y, int *z, bool *continousRecalibration);
 int xwii_iface_mp_stop_normalize(struct xwii_iface *dev);
 

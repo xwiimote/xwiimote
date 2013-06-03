@@ -665,7 +665,7 @@ static void mp_normalize_toggle(void)
     bool cr;
     normalize = !normalize;
     if (normalize) {
-        xwii_iface_mp_start_normalize(iface, x, y, z, true);
+        xwii_iface_mp_start_normalize(iface, x, y, z, 30, true);
 		print_error("Info: Enabled Motion Plus Normalization (%i,%i,%i)",x,y,z);
     } else {
         xwii_iface_mp_get_normalize(iface, &x, &y, &z, &cr);
