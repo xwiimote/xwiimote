@@ -623,17 +623,32 @@ static void ir_toggle(void)
 
 /* motion plus */
 
+static bool mp_do_refresh;
+
 static void mp_show(const struct xwii_event *event)
 {
-	int16_t x, y, z;
+	int32_t x, y, z, factor;
+
+	if (mp_do_refresh) {
+		xwii_iface_get_mp_normalization(iface, &x, &y, &z, &factor);
+		x = event->v.abs[0].x + x;
+		y = event->v.abs[0].y + y;
+		z = event->v.abs[0].z + z;
+		xwii_iface_set_mp_normalization(iface, x, y, z, factor);
+
+		/* try to stabilize calibration as MP tends to report huge
+		 * values during initialization for 1-2s. */
+		if (x < 5000 && y < 5000 && z < 5000)
+			mp_do_refresh = false;
+	}
 
 	x = event->v.abs[0].x;
 	y = event->v.abs[0].y;
 	z = event->v.abs[0].z;
 
-	mvprintw(5, 25, " %6d", x);
-	mvprintw(5, 35, " %6d", y);
-	mvprintw(5, 45, " %6d", z);
+	mvprintw(5, 25, " %6d", (int16_t)x);
+	mvprintw(5, 35, " %6d", (int16_t)y);
+	mvprintw(5, 45, " %6d", (int16_t)z);
 }
 
 static void mp_clear(void)
@@ -656,6 +671,27 @@ static void mp_toggle(void)
 		xwii_iface_open(iface, XWII_IFACE_MOTION_PLUS);
 		print_error("Info: Enable Motion Plus");
 	}
+}
+
+static void mp_normalization_toggle(void)
+{
+	int32_t x, y, z, factor;
+
+	xwii_iface_get_mp_normalization(iface, &x, &y, &z, &factor);
+	if (!factor) {
+		xwii_iface_set_mp_normalization(iface, x, y, z, 50);
+		print_error("Info: Enabled Motion Plus Normalization (%i:%i:%i)",
+			    (int)x, (int)y, (int)z);
+	} else {
+		xwii_iface_set_mp_normalization(iface, x, y, z, 0);
+		print_error("Info: Disabled Motion Plus Normalization (%i:%i:%i)",
+			    (int)x, (int)y, (int)z);
+	}
+}
+
+static void mp_refresh(void)
+{
+	mp_do_refresh = true;
 }
 
 /* balance board */
@@ -1140,6 +1176,7 @@ static void refresh_all(void)
 	led4_refresh();
 	devtype_refresh();
 	extension_refresh();
+	mp_refresh();
 }
 
 static void setup_window(void)
@@ -1294,6 +1331,9 @@ static int keyboard(void)
 		break;
 	case 'm':
 		mp_toggle();
+		break;
+	case 'n':
+		mp_normalization_toggle();
 		break;
 	case 'b':
 		bboard_toggle();
@@ -1457,12 +1497,13 @@ int main(int argc, char **argv)
 		printf("UI commands:\n");
 		printf("\tq: Quit application\n");
 		printf("\tf: Freeze/Unfreeze screen\n");
-		printf("\ts: Refresh static values (like battery)\n");
+		printf("\ts: Refresh static values (like battery or calibration)\n");
 		printf("\tk: Toggle key events\n");
 		printf("\tr: Toggle rumble motor\n");
 		printf("\ta: Toggle accelerometer\n");
 		printf("\ti: Toggle IR camera\n");
 		printf("\tm: Toggle motion plus\n");
+		printf("\tn: Toggle normalization for motion plus\n");
 		printf("\tb: Toggle balance board\n");
 		printf("\tp: Toggle pro controller\n");
 		printf("\t1: Toggle LED 1\n");

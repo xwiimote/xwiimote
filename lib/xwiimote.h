@@ -162,6 +162,11 @@ int xwii_iface_get_battery(struct xwii_iface *dev, uint8_t *capacity);
 int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype);
 int xwii_iface_get_extension(struct xwii_iface *dev, char **extension);
 
+void xwii_iface_set_mp_normalization(struct xwii_iface *dev, int32_t x,
+				     int32_t y, int32_t z, int32_t factor);
+void xwii_iface_get_mp_normalization(struct xwii_iface *dev, int32_t *x,
+				     int32_t *y, int32_t *z, int32_t *factor);
+
 /* old deprecated functions */
 XWII__DEPRECATED int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
 
