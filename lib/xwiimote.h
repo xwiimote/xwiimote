@@ -162,6 +162,11 @@ int xwii_iface_get_battery(struct xwii_iface *dev, uint8_t *capacity);
 int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype);
 int xwii_iface_get_extension(struct xwii_iface *dev, char **extension);
 
+/* MotionPlus calibration functions */
+int xwii_iface_mp_start_normalize(struct xwii_iface *dev, int x, int y, int z, bool continuousRecalibration);
+int xwii_iface_mp_get_normalize(struct xwii_iface *dev, int *x, int *y, int *z, bool *continousRecalibration);
+int xwii_iface_mp_stop_normalize(struct xwii_iface *dev);
+
 /* old deprecated functions */
 XWII__DEPRECATED int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
 
