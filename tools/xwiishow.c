@@ -658,6 +658,21 @@ static void mp_toggle(void)
 	}
 }
 
+static void mp_normalize_toggle(void)
+{
+	static bool normalize = false;
+	static int32_t x = 0, y = 0, z = 0, cf = 50;
+	normalize = !normalize;
+	if (normalize) {
+		xwii_iface_mp_start_normalize(iface, x, y, z, cf);
+		print_error("Info: Enabled Motion Plus Normalization (%i,%i,%i) * %i",x,y,z, cf);
+	} else {
+		xwii_iface_mp_get_normalize(iface, &x, &y, &z, &cf);
+		xwii_iface_mp_stop_normalize(iface);
+		print_error("Info: Disabled Motion Plus Normalization (%i,%i,%i) * %i",x,y,z, cf);
+	}
+}
+
 /* balance board */
 
 static void bboard_show_ext(const struct xwii_event *event)
@@ -1295,6 +1310,9 @@ static int keyboard(void)
 	case 'm':
 		mp_toggle();
 		break;
+	case 'n':
+		mp_normalize_toggle();
+		break;
 	case 'b':
 		bboard_toggle();
 		break;
@@ -1463,6 +1481,7 @@ int main(int argc, char **argv)
 		printf("\ta: Toggle accelerometer\n");
 		printf("\ti: Toggle IR camera\n");
 		printf("\tm: Toggle motion plus\n");
+		printf("\tn: Toggle normalization for motion plus\n");
 		printf("\tb: Toggle balance board\n");
 		printf("\tp: Toggle pro controller\n");
 		printf("\t1: Toggle LED 1\n");

@@ -162,6 +162,20 @@ int xwii_iface_get_battery(struct xwii_iface *dev, uint8_t *capacity);
 int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype);
 int xwii_iface_get_extension(struct xwii_iface *dev, char **extension);
 
+/* 
+ * MotionPlus calibration functions 
+ * MotionPlus is badly calibrated regarding 0, so we have to do this.
+ * x,y,z are the vector that normalizes the input which is added as static offset to the values
+ * calibration_factor is for automatic adjustment of these values wrt the inputs received.
+ * good values for calibration_factor are 10 to 100.
+ * Note that a high calibration_factor will give you "backsnaps" on long movements.
+ * Best use a good approximation via x,y,z and a small factor, or start with w high
+ * factor and then get x,y,z and restart with these and a small factor.
+ */
+int xwii_iface_mp_start_normalize(struct xwii_iface *dev, int32_t x, int32_t y, int32_t z, int32_t calibration_factor);
+int xwii_iface_mp_get_normalize(struct xwii_iface *dev, int32_t *x, int32_t *y, int32_t *z, int32_t *calibration_factor);
+int xwii_iface_mp_stop_normalize(struct xwii_iface *dev);
+
 /* old deprecated functions */
 XWII__DEPRECATED int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
 
