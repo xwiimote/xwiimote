@@ -77,6 +77,10 @@ struct xwii_iface {
 	struct xwii_event_abs bboard_cache[4];
 	/* motion plus cache */
 	struct xwii_event_abs mp_cache;
+	/* motion plus normalization stuff */
+	bool mp_normalize;
+	struct xwii_event_abs mp_normalizer;
+	int32_t mp_calibration_factor;
 	/* pro controller cache */
 	struct xwii_event_abs pro_cache[2];
 };
@@ -716,8 +720,15 @@ try_again:
 	if (input.type == EV_SYN) {
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
-		memcpy(&ev->v.abs, &dev->mp_cache,
-		       sizeof(dev->mp_cache));
+		if (dev->mp_normalize) {
+			ev->v.abs[0].x = dev->mp_cache.x - (dev->mp_normalizer.x / 100);
+			ev->v.abs[0].y = dev->mp_cache.y - (dev->mp_normalizer.y / 100);
+			ev->v.abs[0].z = dev->mp_cache.z - (dev->mp_normalizer.z / 100);
+			dev->mp_normalizer.x += dev->mp_calibration_factor * ((ev->v.abs[0].x > 0) ? 1 : -1);
+			dev->mp_normalizer.y += dev->mp_calibration_factor * ((ev->v.abs[0].y > 0) ? 1 : -1);
+			dev->mp_normalizer.z += dev->mp_calibration_factor * ((ev->v.abs[0].z > 0) ? 1 : -1);
+		} else
+			memcpy(&ev->v.abs, &dev->mp_cache, sizeof(dev->mp_cache));
 		ev->type = XWII_EVENT_MOTION_PLUS;
 		return 0;
 	}
@@ -1116,4 +1127,47 @@ int xwii_iface_get_extension(struct xwii_iface *dev, char **extension)
 		return -ENODEV;
 
 	return read_line(dev->extension_attr, extension);
+}
+
+int xwii_iface_mp_start_normalize(struct xwii_iface *dev, int32_t x, int32_t y, int32_t z, int32_t calibration_factor)
+{
+	if (!dev)
+		return -EINVAL;
+	int fd = dev->ifs[XWII_IF_MOTION_PLUS].fd;
+	if (fd < 0)
+		return -EINVAL;
+
+	dev->mp_normalize = true;
+		
+	dev->mp_normalizer.x = x;
+	dev->mp_normalizer.y = y;
+	dev->mp_normalizer.z = z;
+	dev->mp_calibration_factor = calibration_factor;
+	return 0;
+}
+
+int xwii_iface_mp_get_normalize(struct xwii_iface *dev, int32_t *x, int32_t *y, int32_t *z, int32_t *calibration_factor)
+{
+	if (!dev || !x || !y || !z || !calibration_factor)
+		return -EINVAL;
+	int fd = dev->ifs[XWII_IF_MOTION_PLUS].fd;
+	if (fd < 0)
+		return -EINVAL;
+
+	if (!dev->mp_normalize)
+		return 1;
+		
+	*x = dev->mp_normalizer.x;
+	*y = dev->mp_normalizer.y;
+	*z = dev->mp_normalizer.z;
+	*calibration_factor = dev->mp_calibration_factor; 
+	return 0;
+}
+
+int xwii_iface_mp_stop_normalize(struct xwii_iface *dev)
+{
+	if (!dev)
+		return -EINVAL;
+	dev->mp_normalize = false;
+	return 0;
 }
