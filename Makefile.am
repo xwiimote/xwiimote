@@ -14,14 +14,13 @@ EXTRA_DIST = \
 	res/50-xorg-fix-xwiimote.conf
 
 lib_LTLIBRARIES = libxwiimote.la
-bin_PROGRAMS = xwiishow xwiikeymap
+bin_PROGRAMS = xwiishow
 noinst_PROGRAMS = xwiidump
 include_HEADERS = lib/xwiimote.h
 man_MANS = \
 	doc/xwiimote.7 \
 	doc/libxwiimote.7 \
-	doc/xwiishow.1 \
-	doc/xwiikeymap.1
+	doc/xwiishow.1
 EXTRA_DIST += $(man_MANS)
 
 pkgconfigdir = $(libdir)/pkgconfig
@@ -64,13 +63,6 @@ xwiishow_LDADD = \
 xwiishow_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-lncurses
-
-xwiikeymap_SOURCES = \
-	tools/xwiikeymap.c \
-	tools/eloop.c tools/eloop.h \
-	tools/log.c tools/log.h
-xwiikeymap_LDADD = \
-	libxwiimote.la
 
 xwiidump_SOURCES = \
 	tools/xwiidump.c
