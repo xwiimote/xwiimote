@@ -384,7 +384,7 @@ static int xwii_iface_open_if(struct xwii_iface *dev, unsigned int tif,
 
 	memset(&ep, 0, sizeof(ep));
 	ep.events = EPOLLIN;
-	ep.data.ptr = dev;
+	ep.data.ptr = &dev->ifs[tif];
 	if (epoll_ctl(dev->efd, EPOLL_CTL_ADD, fd, &ep) < 0) {
 		close(fd);
 		return -errno;
@@ -942,6 +942,25 @@ int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
 	return read_iface(dev, ev);
 }
 
+static int dispatch_event(struct xwii_iface *dev, struct epoll_event *ep,
+			  struct xwii_event *ev)
+{
+	if (ep->data.ptr == &dev->ifs[XWII_IF_CORE])
+		return read_core(dev, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_ACCEL])
+		return read_accel(dev, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_IR])
+		return read_ir(dev, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_MOTION_PLUS])
+		return read_mp(dev, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_BALANCE_BOARD])
+		return read_bboard(dev, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_PRO_CONTROLLER])
+		return read_pro(dev, ev);
+
+	return -EAGAIN;
+}
+
 /*
  * Poll for events on device \dev.
  * Returns -EAGAIN if no new events can be read.
@@ -960,13 +979,32 @@ int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
  */
 int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev)
 {
+	struct epoll_event ep[32];
+	int ret, i;
+	size_t siz;
+
 	if (!dev)
 		return -EFAULT;
 
-	if (ev)
-		return read_iface(dev, ev);
+	/* write outgoing events here */
 
-	return 0;
+	if (!ev)
+		return 0;
+
+	siz = sizeof(ep) / sizeof(*ep);
+	ret = epoll_wait(dev->efd, ep, siz, 0);
+	if (ret < 0)
+		return -errno;
+	if (ret > siz)
+		ret = siz;
+
+	for (i = 0; i < ret; ++i) {
+		ret = dispatch_event(dev, &ep[i], ev);
+		if (ret != -EAGAIN)
+			return ret;
+	}
+
+	return -EAGAIN;
 }
 
 /*
