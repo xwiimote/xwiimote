@@ -144,6 +144,7 @@ int xwii_iface_watch(struct xwii_iface *dev, bool watch);
 int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces);
 void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces);
 unsigned int xwii_iface_opened(struct xwii_iface *dev);
+unsigned int xwii_iface_available(struct xwii_iface *dev);
 int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev);
 
 int xwii_iface_rumble(struct xwii_iface *dev, bool on);

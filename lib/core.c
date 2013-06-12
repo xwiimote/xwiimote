@@ -646,6 +646,19 @@ unsigned int xwii_iface_opened(struct xwii_iface *dev)
 	return dev->ifaces;
 }
 
+unsigned int xwii_iface_available(struct xwii_iface *dev)
+{
+	unsigned int ifs = 0, i;
+
+	if (!dev)
+		return 0;
+
+	for (i = 0; i < XWII_IF_NUM; ++i)
+		ifs |= dev->ifs[i].node ? if_to_iface(i) : 0;
+
+	return ifs;
+}
+
 static int read_umon(struct xwii_iface *dev, struct epoll_event *ep,
 		     struct xwii_event *ev)
 {
