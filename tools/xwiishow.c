@@ -18,6 +18,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <ncurses.h>
+#include <poll.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -1373,6 +1374,7 @@ static int run_iface(struct xwii_iface *iface)
 {
 	struct xwii_event event;
 	int ret = 0;
+	struct pollfd fds[2];
 
 	handle_resize();
 	key_clear();
@@ -1382,15 +1384,29 @@ static int run_iface(struct xwii_iface *iface)
 	bboard_clear();
 	pro_clear();
 	refresh_all();
+	refresh();
+
+	memset(fds, 0, sizeof(fds));
+	fds[0].fd = 0;
+	fds[0].events = POLLIN;
+	fds[1].fd = xwii_iface_get_fd(iface);
+	fds[1].events = POLLIN;
 
 	while (true) {
-		ret = xwii_iface_poll(iface, &event);
-		if (ret == -EAGAIN) {
-			nanosleep(&(struct timespec)
-				{.tv_sec = 0, .tv_nsec = 5000000 }, NULL);
-		} else if (ret) {
-			print_error("Error: Read failed with err:%d", ret);
+		ret = poll(fds, 2, -1);
+		if (ret < 0) {
+			ret = -errno;
+			print_error("Error: Cannot poll fds: %d", ret);
 			break;
+		}
+
+		ret = xwii_iface_poll(iface, &event);
+		if (ret) {
+			if (ret != -EAGAIN) {
+				print_error("Error: Read failed with err:%d",
+					    ret);
+				break;
+			}
 		} else if (!freeze) {
 			switch (event.type) {
 			case XWII_EVENT_KEY:
