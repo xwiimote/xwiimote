@@ -682,7 +682,9 @@ try_again:
 		return -EAGAIN;
 	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_CORE);
-		return -ENODEV;
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		return 0;
 	}
 
 	if (input.type != EV_KEY)
@@ -752,7 +754,9 @@ try_again:
 		return -EAGAIN;
 	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_ACCEL);
-		return -ENODEV;
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		return 0;
 	}
 
 	if (input.type == EV_SYN) {
@@ -791,7 +795,9 @@ try_again:
 		return -EAGAIN;
 	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_IR);
-		return -ENODEV;
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		return 0;
 	}
 
 	if (input.type == EV_SYN) {
@@ -840,7 +846,9 @@ try_again:
 		return -EAGAIN;
 	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_MOTION_PLUS);
-		return -ENODEV;
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		return 0;
 	}
 
 	if (input.type == EV_SYN) {
@@ -889,7 +897,9 @@ try_again:
 		return -EAGAIN;
 	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_BALANCE_BOARD);
-		return -ENODEV;
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		return 0;
 	}
 
 	if (input.type == EV_SYN) {
@@ -932,7 +942,9 @@ try_again:
 		return -EAGAIN;
 	} else if (ret < 0) {
 		xwii_iface_close(dev, XWII_IFACE_PRO_CONTROLLER);
-		return -ENODEV;
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		return 0;
 	}
 
 	if (input.type == EV_KEY) {
@@ -1092,19 +1104,25 @@ static int dispatch_event(struct xwii_iface *dev, struct epoll_event *ep,
 
 /*
  * Poll for events on device \dev.
- * Returns -EAGAIN if no new events can be read.
- * Returns 0 on success and writes the new event into \ev.
- * Returns negative error on failure.
- * Returns -ENODEV *once* if *any* interface failed and got closed. Further
- * reads may succeed on other interfaces but this seems unlikely as all event
- * devices are created and destroyed by the kernel at the same time. Therefore,
- * it is recommended to assume the device was disconnected if this returns
- * -ENODEV.
- * Returns -EAGAIN on further reads if no interface is open anymore.
  *
- * This also writes all pending requests to the devices in contrast to *_read()
- * which only reads for events. If \ev is NULL, only pending requests are
- * written but no read is performed.
+ * This function always performs any outstanding I/O. If this fails, an error
+ * is returned.
+ *
+ * If @ev is NULL, nothing else is done and 0 is returned.
+ *
+ * If @ev is non-NULL, this function reads incoming events from the kernel. If
+ * no event is available, -EAGAIN is returned. Otherwise, 0 is returned and a
+ * single event is stored in @ev. You should call this function in a row until
+ * it returns -EAGAIN to get all events.
+ *
+ * Once this function returns -EAGAIN, you must watch the descriptor returned
+ * by xwii_iface_get_fd() for POLLIN/EPOLLIN/read-events. No other events
+ * need to be watched for.
+ * Once this fd is readable, you should call xwii_iface_poll() again.
+ *
+ * If an interface gets closed or some hotplug event is detected, this
+ * function returns XWII_EVENT_WATCH. This event does not provide any payload
+ * and you need to re-open any interfaces if they got closed.
  */
 int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev)
 {
