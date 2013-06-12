@@ -1301,6 +1301,16 @@ static void handle_resize(void)
 	}
 }
 
+/* device watch events */
+
+static void handle_watch(void)
+{
+	static unsigned int num;
+
+	print_error("Info: Watch Event #%u", ++num);
+	refresh_all();
+}
+
 /* keyboard handling */
 
 static void freeze_toggle(void)
@@ -1392,6 +1402,10 @@ static int run_iface(struct xwii_iface *iface)
 	fds[1].fd = xwii_iface_get_fd(iface);
 	fds[1].events = POLLIN;
 
+	ret = xwii_iface_watch(iface, true);
+	if (ret)
+		print_error("Error: Cannot initialize hotplug watch descriptor");
+
 	while (true) {
 		ret = poll(fds, 2, -1);
 		if (ret < 0) {
@@ -1402,13 +1416,16 @@ static int run_iface(struct xwii_iface *iface)
 
 		ret = xwii_iface_poll(iface, &event);
 		if (ret) {
-			if (ret != -EAGAIN) {
+			if (ret != -EAGAIN && ret != -ENODEV) {
 				print_error("Error: Read failed with err:%d",
 					    ret);
 				break;
 			}
 		} else if (!freeze) {
 			switch (event.type) {
+			case XWII_EVENT_WATCH:
+				handle_watch();
+				break;
 			case XWII_EVENT_KEY:
 				if (mode != MODE_ERROR)
 					key_show(&event);
