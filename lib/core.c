@@ -41,6 +41,8 @@ struct xwii_if {
 	char *node;
 	/* open file or -1 */
 	int fd;
+	/* temporary state during device detection */
+	unsigned int available : 1;
 };
 
 /* main device interface */
@@ -111,11 +113,33 @@ static int name_to_if(const char *name)
 	return -1;
 }
 
+/* table to convert interface to public interface */
+static unsigned int if_to_iface_table[] = {
+	[XWII_IF_CORE] = XWII_IFACE_CORE,
+	[XWII_IF_ACCEL] = XWII_IFACE_ACCEL,
+	[XWII_IF_IR] = XWII_IFACE_IR,
+	[XWII_IF_MOTION_PLUS] = XWII_IFACE_MOTION_PLUS,
+	[XWII_IF_NUNCHUK] = XWII_IFACE_NUNCHUK,
+	[XWII_IF_CLASSIC_CONTROLLER] = XWII_IFACE_CLASSIC_CONTROLLER,
+	[XWII_IF_BALANCE_BOARD] = XWII_IFACE_BALANCE_BOARD,
+	[XWII_IF_PRO_CONTROLLER] = XWII_IFACE_PRO_CONTROLLER,
+	[XWII_IF_NUM] = 0,
+};
+
+/* convert name to interface or -1 */
+static int if_to_iface(unsigned int ifs)
+{
+	return if_to_iface_table[ifs];
+}
+
 /*
  * Scan the device \dev for child input devices and update our device-node
  * cache with the new information. This is called during device setup to
  * find all /dev/input/eventX nodes for all currently available interfaces.
  * We also cache attribute paths for sub-devices like LEDs or batteries.
+ *
+ * When called during hotplug-events, this updates all currently known
+ * information and removes nodes that are no longer present.
  */
 static int xwii_iface_read_nodes(struct xwii_iface *dev)
 {
@@ -125,6 +149,7 @@ static int xwii_iface_read_nodes(struct xwii_iface *dev)
 	const char *name, *node, *subs;
 	char *n;
 	int ret, prev_if, tif, len, i;
+	unsigned int ifs;
 
 	e = udev_enumerate_new(dev->udev);
 	if (!e)
@@ -144,6 +169,9 @@ static int xwii_iface_read_nodes(struct xwii_iface *dev)
 		udev_enumerate_unref(e);
 		return ret;
 	}
+
+	for (i = 0; i < XWII_IF_NUM; ++i)
+		dev->ifs[i].available = 0;
 
 	/* The returned list is sorted. So we first get an inputXY entry,
 	 * possibly followed by the inputXY/eventXY entry. We remember the type
@@ -173,22 +201,33 @@ static int xwii_iface_read_nodes(struct xwii_iface *dev)
 					continue;
 
 				tif = name_to_if(name);
-				if (tif >= 0) {
-					/* skip duplicates */
-					if (dev->ifs[tif].node)
-						continue;
+				if (tif >= 0)
 					prev_if = tif;
-				}
 			} else if (!strncmp(name, "event", 5)) {
 				if (tif < 0)
 					continue;
+
 				node = udev_device_get_devnode(d);
 				if (!node)
 					continue;
+
+				if (dev->ifs[tif].node &&
+				    !strcmp(node, dev->ifs[tif].node)) {
+					dev->ifs[tif].available = 1;
+					continue;
+				} else if (dev->ifs[tif].node) {
+					xwii_iface_close(dev,
+							 if_to_iface(tif));
+					free(dev->ifs[tif].node);
+					dev->ifs[tif].node = NULL;
+				}
+
 				n = strdup(node);
 				if (!n)
 					continue;
+
 				dev->ifs[tif].node = n;
+				dev->ifs[tif].available = 1;
 			}
 		} else if (!strcmp(subs, "leds")) {
 			len = strlen(name);
@@ -221,6 +260,17 @@ static int xwii_iface_read_nodes(struct xwii_iface *dev)
 	}
 
 	udev_enumerate_unref(e);
+
+	/* close no longer available ifaces */
+	ifs = 0;
+	for (i = 0; i < XWII_IF_NUM; ++i) {
+		if (!dev->ifs[i].available && dev->ifs[i].node) {
+			free(dev->ifs[i].node);
+			dev->ifs[i].node = NULL;
+			ifs |= if_to_iface(i);
+		}
+	}
+	xwii_iface_close(dev, ifs);
 
 	return 0;
 }
@@ -641,6 +691,7 @@ static int read_umon(struct xwii_iface *dev, struct epoll_event *ep,
 		if (hotplug) {
 			memset(ev, 0, sizeof(*ev));
 			ev->type = XWII_EVENT_WATCH;
+			xwii_iface_read_nodes(dev);
 			return 0;
 		}
 	}
@@ -684,6 +735,7 @@ try_again:
 		xwii_iface_close(dev, XWII_IFACE_CORE);
 		memset(ev, 0, sizeof(*ev));
 		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
 		return 0;
 	}
 
@@ -756,6 +808,7 @@ try_again:
 		xwii_iface_close(dev, XWII_IFACE_ACCEL);
 		memset(ev, 0, sizeof(*ev));
 		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
 		return 0;
 	}
 
@@ -797,6 +850,7 @@ try_again:
 		xwii_iface_close(dev, XWII_IFACE_IR);
 		memset(ev, 0, sizeof(*ev));
 		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
 		return 0;
 	}
 
@@ -848,6 +902,7 @@ try_again:
 		xwii_iface_close(dev, XWII_IFACE_MOTION_PLUS);
 		memset(ev, 0, sizeof(*ev));
 		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
 		return 0;
 	}
 
@@ -899,6 +954,7 @@ try_again:
 		xwii_iface_close(dev, XWII_IFACE_BALANCE_BOARD);
 		memset(ev, 0, sizeof(*ev));
 		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
 		return 0;
 	}
 
@@ -944,6 +1000,7 @@ try_again:
 		xwii_iface_close(dev, XWII_IFACE_PRO_CONTROLLER);
 		memset(ev, 0, sizeof(*ev));
 		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
 		return 0;
 	}
 
