@@ -1416,7 +1416,7 @@ static int run_iface(struct xwii_iface *iface)
 
 		ret = xwii_iface_poll(iface, &event);
 		if (ret) {
-			if (ret != -EAGAIN && ret != -ENODEV) {
+			if (ret != -EAGAIN) {
 				print_error("Error: Read failed with err:%d",
 					    ret);
 				break;
