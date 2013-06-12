@@ -79,6 +79,7 @@ enum xwii_event_types {
 	XWII_EVENT_MOTION_PLUS,	/* motion plus event */
 	XWII_EVENT_PRO_CONTROLLER_KEY,	/* pro controller key event */
 	XWII_EVENT_PRO_CONTROLLER_MOVE,	/* pro controller movement event */
+	XWII_EVENT_WATCH,	/* device hotplug event */
 	XWII_EVENT_NUM
 };
 
@@ -138,6 +139,7 @@ int xwii_iface_new(struct xwii_iface **dev, const char *syspath);
 void xwii_iface_ref(struct xwii_iface *dev);
 void xwii_iface_unref(struct xwii_iface *dev);
 int xwii_iface_get_fd(struct xwii_iface *dev);
+int xwii_iface_watch(struct xwii_iface *dev, bool watch);
 
 int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces);
 void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces);

@@ -53,6 +53,8 @@ struct xwii_iface {
 	struct udev *udev;
 	/* main udev device */
 	struct udev_device *dev;
+	/* udev monitor */
+	struct udev_monitor *umon;
 
 	/* bitmask of open interfaces */
 	unsigned int ifaces;
@@ -329,6 +331,7 @@ void xwii_iface_unref(struct xwii_iface *dev)
 		return;
 
 	xwii_iface_close(dev, XWII_IFACE_ALL);
+	xwii_iface_watch(dev, false);
 
 	for (i = 0; i < XWII_IF_NUM; ++i)
 		free(dev->ifs[i].node);
@@ -350,6 +353,75 @@ int xwii_iface_get_fd(struct xwii_iface *dev)
 		return -1;
 
 	return dev->efd;
+}
+
+int xwii_iface_watch(struct xwii_iface *dev, bool watch)
+{
+	int fd, ret;
+	struct epoll_event ep;
+
+	if (!dev)
+		return -EINVAL;
+
+	if (!watch) {
+		/* remove device watch descriptor */
+
+		if (!dev->umon)
+			return 0;
+
+		fd = udev_monitor_get_fd(dev->umon);
+		epoll_ctl(dev->efd, EPOLL_CTL_DEL, fd, NULL);
+		udev_monitor_unref(dev->umon);
+		dev->umon = NULL;
+		return 0;
+	}
+
+	/* add device watch descriptor */
+
+	if (dev->umon)
+		return 0;
+
+	dev->umon = udev_monitor_new_from_netlink(dev->udev, "udev");
+	if (!dev->umon)
+		return -ENOMEM;
+
+	ret = udev_monitor_filter_add_match_subsystem_devtype(dev->umon,
+							      "input", NULL);
+	if (ret) {
+		ret = -errno;
+		goto err_mon;
+	}
+
+	ret = udev_monitor_filter_add_match_subsystem_devtype(dev->umon,
+							      "hid", NULL);
+	if (ret) {
+		ret = -errno;
+		goto err_mon;
+	}
+
+	ret = udev_monitor_enable_receiving(dev->umon);
+	if (ret) {
+		ret = -errno;
+		goto err_mon;
+	}
+
+	fd = udev_monitor_get_fd(dev->umon);
+	memset(&ep, 0, sizeof(ep));
+	ep.events = EPOLLIN;
+	ep.data.ptr = dev->umon;
+
+	ret = epoll_ctl(dev->efd, EPOLL_CTL_ADD, fd, &ep);
+	if (ret) {
+		ret = -errno;
+		goto err_mon;
+	}
+
+	return 0;
+
+err_mon:
+	udev_monitor_unref(dev->umon);
+	dev->umon = NULL;
+	return ret;
 }
 
 static int xwii_iface_open_if(struct xwii_iface *dev, unsigned int tif,
@@ -522,6 +594,61 @@ unsigned int xwii_iface_opened(struct xwii_iface *dev)
 		return 0;
 
 	return dev->ifaces;
+}
+
+static int read_umon(struct xwii_iface *dev, struct epoll_event *ep,
+		     struct xwii_event *ev)
+{
+	struct udev_device *ndev, *p;
+	const char *act, *path, *npath, *ppath, *node;
+	bool hotplug;
+
+	if (ep->events & EPOLLIN) {
+		hotplug = false;
+		path = udev_device_get_syspath(dev->dev);
+
+		/* try to merge as many hotplug events as possible */
+		while (true) {
+			ndev = udev_monitor_receive_device(dev->umon);
+			if (!ndev)
+				break;
+
+			/* We are interested in two kinds of events:
+			 *  1) "change" events on the main HID device notify
+			 *     us of device-detection events.
+			 *  2) "add"/"remove" events on input events (not
+			 *     the evdev events with "devnode") notify us
+			 *     of extension changes. */
+
+			act = udev_device_get_action(ndev);
+			npath = udev_device_get_syspath(ndev);
+			node = udev_device_get_devnode(ndev);
+			p = udev_device_get_parent_with_subsystem_devtype(ndev,
+								"hid", NULL);
+			if (p)
+				ppath = udev_device_get_syspath(p);
+
+			if (act && !strcmp(act, "change") &&
+			    !strcmp(path, npath))
+				hotplug = true;
+			else if (!node && p && !strcmp(ppath, path))
+				hotplug = true;
+
+			udev_device_unref(ndev);
+		}
+
+		/* notify caller via generic hotplug event */
+		if (hotplug) {
+			memset(ev, 0, sizeof(*ev));
+			ev->type = XWII_EVENT_WATCH;
+			return 0;
+		}
+	}
+
+	if (ep->events & (EPOLLHUP | EPOLLERR))
+		return -EPIPE;
+
+	return -EAGAIN;
 }
 
 static int read_event(int fd, struct input_event *ev)
@@ -945,7 +1072,9 @@ int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
 static int dispatch_event(struct xwii_iface *dev, struct epoll_event *ep,
 			  struct xwii_event *ev)
 {
-	if (ep->data.ptr == &dev->ifs[XWII_IF_CORE])
+	if (dev->umon && ep->data.ptr == dev->umon)
+		return read_umon(dev, ep, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_CORE])
 		return read_core(dev, ev);
 	else if (ep->data.ptr == &dev->ifs[XWII_IF_ACCEL])
 		return read_accel(dev, ev);
