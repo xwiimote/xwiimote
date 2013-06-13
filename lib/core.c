@@ -1105,52 +1105,6 @@ try_again:
 	goto try_again;
 }
 
-/*
- * Read new event from any opened interface of \dev.
- * Returns -EAGAIN if no new event can be read.
- * Returns 0 on success and writes the new event into \ev.
- * Returns negative error on failure.
- * Returns -ENODEV *once* if *any* interface failed and got closed. Further
- * reads may succeed on other interfaces but this seems unlikely as all event
- * devices are created and destroyed by the kernel at the same time. Therefore,
- * it is recommended to assume the device was disconnected if this returns
- * -ENODEV.
- * Returns -EAGAIN on further reads if no interface is open anymore.
- */
-static int read_iface(struct xwii_iface *dev, struct xwii_event *ev)
-{
-	int ret;
-
-	if (!dev || !ev)
-		return -EFAULT;
-
-	ret = read_core(dev, ev);
-	if (ret != -EAGAIN)
-		return ret;
-	ret = read_accel(dev, ev);
-	if (ret != -EAGAIN)
-		return ret;
-	ret = read_ir(dev, ev);
-	if (ret != -EAGAIN)
-		return ret;
-	ret = read_mp(dev, ev);
-	if (ret != -EAGAIN)
-		return ret;
-	ret = read_bboard(dev, ev);
-	if (ret != -EAGAIN)
-		return ret;
-	ret = read_pro(dev, ev);
-	if (ret != -EAGAIN)
-		return ret;
-
-	return -EAGAIN;
-}
-
-int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev)
-{
-	return read_iface(dev, ev);
-}
-
 static int dispatch_event(struct xwii_iface *dev, struct epoll_event *ep,
 			  struct xwii_event *ev)
 {

@@ -28,16 +28,10 @@ extern "C" {
  * This defines kernel interface constants that we use.
  */
 
-#define XWII_ID_BUS		0x0005
-#define XWII_ID_VENDOR		0x057e
-#define XWII_ID_PRODUCT		0x0306
-
 #define XWII__NAME			"Nintendo Wii Remote"
 #define XWII_NAME_CORE			XWII__NAME
 #define XWII_NAME_ACCEL			XWII__NAME " Accelerometer"
 #define XWII_NAME_IR			XWII__NAME " IR"
-#define XWII_NAME_MP			XWII__NAME " Motion+"
-#define XWII_NAME_EXT			XWII__NAME " Extension"
 
 #define XWII_NAME_MOTION_PLUS		XWII__NAME " Motion Plus"
 #define XWII_NAME_NUNCHUK		XWII__NAME " Nunchuk"
@@ -55,10 +49,6 @@ extern "C" {
 #define XWII_IFACE_CORE			0x000001 /* core interface */
 #define XWII_IFACE_ACCEL		0x000002 /* accelerometer interface */
 #define XWII_IFACE_IR			0x000004 /* ir interface */
-
-/* old deprecated interfaces */
-#define XWII_IFACE_MP			0x000008 /* motion+ interface */
-#define XWII_IFACE_EXT			0x000010 /* extension interface */
 
 /* hotpluggable extension interfaces */
 #define XWII_IFACE_MOTION_PLUS		0x000100 /* motion plus extension */
@@ -169,9 +159,6 @@ void xwii_iface_set_mp_normalization(struct xwii_iface *dev, int32_t x,
 				     int32_t y, int32_t z, int32_t factor);
 void xwii_iface_get_mp_normalization(struct xwii_iface *dev, int32_t *x,
 				     int32_t *y, int32_t *z, int32_t *factor);
-
-/* old deprecated functions */
-XWII__DEPRECATED int xwii_iface_read(struct xwii_iface *dev, struct xwii_event *ev);
 
 /*
  * Device monitor
