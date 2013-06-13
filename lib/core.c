@@ -1183,6 +1183,43 @@ int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev)
 	return -EAGAIN;
 }
 
+int xwii_iface_dispatch(struct xwii_iface *dev, struct xwii_event *u_ev,
+			size_t size)
+{
+	struct epoll_event ep[32];
+	int ret, i;
+	size_t siz;
+	struct xwii_event ev;
+
+	if (!dev)
+		return -EFAULT;
+
+	/* write outgoing events here */
+
+	if (!u_ev || size <= 0)
+		return 0;
+	if (size > sizeof(ev))
+		size = sizeof(ev);
+
+	siz = sizeof(ep) / sizeof(*ep);
+	ret = epoll_wait(dev->efd, ep, siz, 0);
+	if (ret < 0)
+		return -errno;
+	if (ret > siz)
+		ret = siz;
+
+	for (i = 0; i < ret; ++i) {
+		ret = dispatch_event(dev, &ep[i], &ev);
+		if (ret != -EAGAIN) {
+			if (!ret)
+				memcpy(u_ev, &ev, size);
+			return ret;
+		}
+	}
+
+	return -EAGAIN;
+}
+
 /*
  * Toogle wiimote rumble motor
  * Enable or disable the rumble motor of \dev depending on \on. This requires

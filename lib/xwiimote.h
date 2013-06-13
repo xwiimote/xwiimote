@@ -512,7 +512,7 @@ static inline bool xwii_event_ir_is_valid(const struct xwii_event_abs *abs)
  *
  * Interfaces must be opened via @xwii_iface_open before you can use them. Once
  * opened, they return events via the event stream which is accessed via
- * @xwii_iface_poll. Furthermore, outgoing events can now be sent via the
+ * @xwii_iface_dispatch. Furthermore, outgoing events can now be sent via the
  * different helper functions.
  * Some interfaces are static and don't need to be opened. You notice it if no
  * XWII_IFACE_* constant is provided.
@@ -632,7 +632,7 @@ void xwii_iface_unref(struct xwii_iface *dev);
  * Return the file-descriptor used by this device. If multiple file-descriptors
  * are used internally, they are multi-plexed through an epoll descriptor.
  * Therefore, this always returns the same single file-descriptor. You need to
- * watch this for readable-events (POLLIN/EPOLLIN) and call @xwii_iface_poll
+ * watch this for readable-events (POLLIN/EPOLLIN) and call @xwii_iface_dispatch
  * whenever it is readable.
  *
  * This function always returns a valid file-descriptor.
@@ -740,7 +740,38 @@ unsigned int xwii_iface_available(struct xwii_iface *dev);
  * @returns 0 on success, -EAGAIN if no event can be read and @ev is non-NULL
  * and a negative error-code on failure
  */
+XWII__DEPRECATED
 int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev);
+
+/**
+ * Read incoming event-queue
+ *
+ * @param[in] dev Valid device object
+ * @param[out] ev Pointer where to store a new event or NULL
+ * @param[in] size Size of @ev if @ev is non-NULL
+ *
+ * You should call this whenever the file-descriptor returned by
+ * @xwii_iface_get_fd is reported as being readable. This function will perform
+ * all non-blocking outstanding tasks and then return.
+ *
+ * This function always performs any background tasks and outgoing event-writes
+ * if they don't block. It returns an error if they fail.
+ * If @ev is NULL, this function returns 0 on success after this has been done.
+ *
+ * If @ev is non-NULL, this function then tries to read a single incoming event.
+ * If no event is available, it returns -EAGAIN and you should watch the
+ * file-desciptor again until it is readable. Otherwise, you should call this
+ * function in a row as long as it returns 0. It stores the event in @ev which
+ * you can then handle in your application.
+ *
+ * This function is the successor or @xwii_iface_poll. It takes an additional
+ * @size argument to provide backwards compatibility.
+ *
+ * @returns 0 on success, -EAGAIN if no event can be read and @ev is non-NULL
+ * and a negative error-code on failure
+ */
+int xwii_iface_dispatch(struct xwii_iface *dev, struct xwii_event *ev,
+			size_t size);
 
 /**
  * Toggle rumble motor
