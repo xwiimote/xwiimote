@@ -1414,7 +1414,7 @@ static int run_iface(struct xwii_iface *iface)
 			break;
 		}
 
-		ret = xwii_iface_poll(iface, &event);
+		ret = xwii_iface_dispatch(iface, &event, sizeof(event));
 		if (ret) {
 			if (ret != -EAGAIN) {
 				print_error("Error: Read failed with err:%d",
