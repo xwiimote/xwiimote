@@ -537,7 +537,7 @@ static void xwii_iface_upload_rumble(struct xwii_iface *dev)
 int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 {
 	bool wr;
-	int ret;
+	int ret, err;
 
 	if (!dev)
 		return -EINVAL;
@@ -548,53 +548,58 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 	if (!ifaces)
 		return 0;
 
+	err = 0;
 	if (ifaces & XWII_IFACE_CORE) {
 		ret = xwii_iface_open_if(dev, XWII_IF_CORE, wr);
-		if (ret)
-			goto err_out;
-		dev->ifaces |= XWII_IFACE_CORE;
-		xwii_iface_upload_rumble(dev);
+		if (!ret) {
+			dev->ifaces |= XWII_IFACE_CORE;
+			xwii_iface_upload_rumble(dev);
+		} else {
+			err = ret;
+		}
 	}
 
 	if (ifaces & XWII_IFACE_ACCEL) {
 		ret = xwii_iface_open_if(dev, XWII_IF_ACCEL, wr);
-		if (ret)
-			goto err_out;
-		dev->ifaces |= XWII_IFACE_ACCEL;
+		if (!ret)
+			dev->ifaces |= XWII_IFACE_ACCEL;
+		else
+			err = ret;
 	}
 
 	if (ifaces & XWII_IFACE_IR) {
 		ret = xwii_iface_open_if(dev, XWII_IF_IR, wr);
 		if (ret)
-			goto err_out;
-		dev->ifaces |= XWII_IFACE_IR;
+			dev->ifaces |= XWII_IFACE_IR;
+		else
+			err = ret;
 	}
 
 	if (ifaces & XWII_IFACE_MOTION_PLUS) {
 		ret = xwii_iface_open_if(dev, XWII_IF_MOTION_PLUS, wr);
 		if (ret)
-			goto err_out;
-		dev->ifaces |= XWII_IFACE_MOTION_PLUS;
+			dev->ifaces |= XWII_IFACE_MOTION_PLUS;
+		else
+			err = ret;
 	}
 
 	if (ifaces & XWII_IFACE_BALANCE_BOARD) {
 		ret = xwii_iface_open_if(dev, XWII_IF_BALANCE_BOARD, wr);
 		if (ret)
-			goto err_out;
-		dev->ifaces |= XWII_IFACE_BALANCE_BOARD;
+			dev->ifaces |= XWII_IFACE_BALANCE_BOARD;
+		else
+			err = ret;
 	}
 
 	if (ifaces & XWII_IFACE_PRO_CONTROLLER) {
 		ret = xwii_iface_open_if(dev, XWII_IF_PRO_CONTROLLER, wr);
 		if (ret)
-			goto err_out;
-		dev->ifaces |= XWII_IFACE_PRO_CONTROLLER;
+			dev->ifaces |= XWII_IFACE_PRO_CONTROLLER;
+		else
+			err = ret;
 	}
 
-	return 0;
-
-err_out:
-	return ret;
+	return err;
 }
 
 static void xwii_iface_close_if(struct xwii_iface *dev, unsigned int tif)
