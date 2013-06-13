@@ -7,15 +7,15 @@
 #ifndef XWII_XWIIMOTE_H
 #define XWII_XWIIMOTE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <time.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if (__GNUC__ > 3)
 #define XWII__DEPRECATED __attribute__((__deprecated__))
