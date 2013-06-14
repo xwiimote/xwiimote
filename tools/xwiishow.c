@@ -1409,9 +1409,11 @@ static int run_iface(struct xwii_iface *iface)
 	while (true) {
 		ret = poll(fds, 2, -1);
 		if (ret < 0) {
-			ret = -errno;
-			print_error("Error: Cannot poll fds: %d", ret);
-			break;
+			if (errno != EINTR) {
+				ret = -errno;
+				print_error("Error: Cannot poll fds: %d", ret);
+				break;
+			}
 		}
 
 		ret = xwii_iface_dispatch(iface, &event, sizeof(event));
