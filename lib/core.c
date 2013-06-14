@@ -485,7 +485,7 @@ static int xwii_iface_open_if(struct xwii_iface *dev, unsigned int tif,
 	char name[256];
 	struct epoll_event ep;
 	unsigned int flags;
-	int fd;
+	int fd, err;
 
 	if (dev->ifs[tif].fd >= 0)
 		return 0;
@@ -513,8 +513,9 @@ static int xwii_iface_open_if(struct xwii_iface *dev, unsigned int tif,
 	ep.events = EPOLLIN;
 	ep.data.ptr = &dev->ifs[tif];
 	if (epoll_ctl(dev->efd, EPOLL_CTL_ADD, fd, &ep) < 0) {
+		err = -errno;
 		close(fd);
-		return -errno;
+		return err;
 	}
 
 	dev->ifs[tif].fd = fd;
@@ -575,7 +576,7 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 
 	if (ifaces & XWII_IFACE_IR) {
 		ret = xwii_iface_open_if(dev, XWII_IF_IR, wr);
-		if (ret)
+		if (!ret)
 			dev->ifaces |= XWII_IFACE_IR;
 		else
 			err = ret;
@@ -583,7 +584,7 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 
 	if (ifaces & XWII_IFACE_MOTION_PLUS) {
 		ret = xwii_iface_open_if(dev, XWII_IF_MOTION_PLUS, wr);
-		if (ret)
+		if (!ret)
 			dev->ifaces |= XWII_IFACE_MOTION_PLUS;
 		else
 			err = ret;
@@ -591,7 +592,7 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 
 	if (ifaces & XWII_IFACE_BALANCE_BOARD) {
 		ret = xwii_iface_open_if(dev, XWII_IF_BALANCE_BOARD, wr);
-		if (ret)
+		if (!ret)
 			dev->ifaces |= XWII_IFACE_BALANCE_BOARD;
 		else
 			err = ret;
@@ -599,7 +600,7 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 
 	if (ifaces & XWII_IFACE_PRO_CONTROLLER) {
 		ret = xwii_iface_open_if(dev, XWII_IF_PRO_CONTROLLER, wr);
-		if (ret)
+		if (!ret)
 			dev->ifaces |= XWII_IFACE_PRO_CONTROLLER;
 		else
 			err = ret;
