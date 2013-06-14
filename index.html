@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+    <!--
+      body { font-family: Helvetica, sans-serif; }
+      p { text-align: justify; }
+      img {
+        border: 1px solid black;
+      }
+      .image {
+        text-align: center;
+        font-size: 80%;
+        margin: 10px;
+      }
+    -->
+    </style>
+
+    <title>XWiimote - Open-Source Nintendo Wii / Wii U Device Driver</title>
+  </head>
+
+  <body>
+    <div style="float: right; width: 400px;" class="image">
+      <img alt="Nintendo Wii Remote" src="wiimote.jpg" width="400px" height="304px" />
+      (Nintendo Wii Remote - Image taken from
+      <a href="http://commons.wikimedia.org/wiki/File:Wii_Remote">Wikipedia</a>)
+    </div>
+    <div>
+      <h2>XWiimote</h2>
+      <p>
+        XWiimote is an open-source linux device driver for Nintendo Wii / Wii U
+        Remotes and
+        <a href="#devices">compatible devices</a>. It is a relatively new driver
+        that tries to supercede
+        <a href="http://abstrakraft.org/cwiid/">cwiid</a>,
+        <a href="http://wiibrew.org/wiki/Wiiuse">wiiuse</a> and others by
+        integrating the driver into existing linux infrastructure. The project
+        consists of an official linux
+        <a href="https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/hid/hid-wiimote-core.c">kernel driver</a>,
+        which is part of the kernel
+        since linux-3.1, an extension to
+        <a href="http://www.bluez.org">bluez</a>, the official linux bluetooth
+        stack, an X11 input driver, some user-space helpers and test
+        applications.
+      </p>
+      <p>
+        Unfortunately, nobody has volunteered to beautify this website;
+        contributions welcome!
+      </p>
+    </div>
+    <div>
+      <h3>How to use it?</h3>
+      <p>
+        To use Nintendo Wii Remotes, or any
+        <a href="#devices">compatible device</a>, on linux, you need:
+        <ul>
+          <li><strong>linux kernel</strong> 3.1 or newer (<strong>3.11</strong>
+              or newer recommended)</li>
+          <li><strong>bluez</strong>-4.101 or newer (<strong>bluez-5.0</strong>
+              or newer recommended)</li>
+        </ul>
+      </p>
+      <p>
+        The <em>kernel drive</em>r is available since linux-3.1 upstream.
+        However, you need at least <em>linux-3.11</em>
+        for a hotplug-capable driver and proper device
+        support. Older versions of the kernel driver are no longer recommended
+        (still supported, but may lack important features). Most major
+        distributions provide toose kernels out-of-the-box with the
+        <strong>hid-wiimote</strong>
+        driver enabled. But you might have to call
+        <code>modprobe hid-wiimote</code>
+        to load the driver manually.
+        <br />
+        The <em>bluez bluetooth stack</em> is the official linux bluetooth
+        stack which
+        is provided by all major distributions. Since <em>version 4.101</em>
+        it includes
+        fixes so Nintendo devices can be paired with linux hosts. If you use
+        an older bluez version, you may still be able to use Nintendo
+        Wii / Wii U devices, but you cannot pair them.
+      </p>
+      <p>
+        Once you made sure you have the required software installed, you can
+        start a bluetooth-manager of your choice (eg.,
+        <a href="https://launchpad.net/blueman">blueman</a>,
+        <a href="https://live.gnome.org/GnomeBluetooth">gnome-bluetooth</a>)
+        and perform a bluetooth inquiry (ie., search for nearby devices). Your
+        remotes will show up as <strong>Nintendo RVL-CNT-01</strong>
+        (<em>Revolution</em> was the codename of the Nintendo Wii) or with
+        slightly modified names (eg., the balance board shows up as
+        <strong>Nintendo RVL-WBC-01</strong>). Select a device and connect to
+        it. If you use a new enough bluez version, it will automatically select
+        the
+        correct PIN. If you are prompted for PIN input, your bluez stack is too
+        old. In this case simply select <em>"Connect without PIN"</em> or
+        <em>"Connect without Pairing"</em> as you cannot enter the required PIN
+        via these interfaces.
+      </p>
+      <p>
+        If you connected a device, the <em>hid-wiimote</em> kernel driver
+        will pick it up and provide kernel input interfaces for it. As these
+        interfaces are pretty useless on its own, you need a user-space
+        application or driver that uses the device. The kernel interfaces
+        provide the parsed data input (eg., accelerometer data, IR cam
+        positioning information, ...) but do not apply any policy. So if you
+        want to use your device to emulate mouse-input, you need a user-space
+        driver which does exactly that. There is no sane generic way how X11
+        or other applications could use this data, as it is very device
+        specific.
+        <br />
+        The <strong>xwiimote tools</strong> provide a library and some
+        programs
+        to help application-developers use Nintendo Wii / Wii U remotes.
+        It is highly recommended to install the
+        <a href="http://github.com/dvdhrm/xwiimote">xwiimote-package</a>
+        before using a device. It will install some X11 blacklists so your
+        X-Server will not pick up those devices by default. It also provides
+        a tool called <strong>xwiishow</strong>, which can be used for testing.
+      </p>
+      <p>
+        From this point on, there are several ways to use the device:
+        <ul>
+          <li>Use <a href="#xwiishow">xwiishow</a> for testing</li>
+          <li>Install <a href="#x11">xf86-input-xwiimote</a> to make X11 use
+              the device as input device</li>
+          <li>Use the device with an application that supports
+              <em>xwiimote</em></li>
+        </ul>
+      </p>
+    </div>
+    <div>
+      <h3 id="xwiishow">xwiishow</h3>
+      <p>
+        Once you followed the instructions given above, you can use the
+        <em>xwiishow</em> command-line program from the
+        <em>xwiimote tools</em> project. Simply install the
+        <a href="http://github.com/dvdhrm/xwiimote">xwiimote-package</a>
+        and run <code>xwiishow list</code>. This will list all currently
+        connected devices. Via <code>xwiishow &lt;num&gt;</code> you can open
+        a device and see a visualization of all input events. Several hotkeys
+        are available to control the device.
+      </p>
+      <p>
+        A manpage <em>xwiishow(1)</em> is also provided which explains all
+        hotkeys and command-line arguments.
+      </p>
+    </div>
+    <div>
+      <h3 id="x11">X11 Input Driver</h3>
+      <p>
+        The <strong>xf86-input-xwiimote</strong> project provides an X11
+        input driver so a Nintendo Wii / Wii U device can be used as X11
+        input device. The project is still under development, but currently
+        supports emulating arbitrary button and keyboard input and emulating
+        a mouse with the accelerometer and Motion-Plus gyroscope. Install the
+        <a href="http://github.com/dvdhrm/xf86-input-xwiimote">xf86-input-xwiimote</a>
+        package and give it a try!
+      </p>
+    </div>
+    <div style="float: right; width: 200px;" class="image">
+      <img alt="Bluetooth" src="bluetooth.png" width="200px" height="49px" />
+      (Bluetooth - source:
+      <a href="http://de.wikipedia.org/w/index.php?title=Datei:Bluetooth-Logo.svg">Wikipedia</a>)
+    </div>
+    <div>
+      <h3 id="devices">Supported Devices</h3>
+      <p>
+        Nintendo produced many different devices for the Wii and Wii U consoles
+        and 3rd party companies continously produce new devices based on them.
+        The <strong>XWiimote</strong> project tries to support all of the
+        Bluetooth-based HID input devices, which currently includes:
+        <ul>
+          <li>Nintendo Wii Remote (Nintendo RVL-CNT-01)</li>
+          <li>Nintendo Wii Remote Plus (Nintendo RVL-CNT-01-TR)</li>
+          <li>Nintendo Wii Nunchuk Extension</li>
+          <li>Nintendo Wii Classic Controller Extension</li>
+          <li>Nintendo Wii Classic Controller Pro Extension</li>
+          <li>Nintendo Wii Balance Board (Nintendo RVL-WBC-01)</li>
+          <li>Nintendo Wii U Pro Controller (Nintendo RVL-CNT-01-UC)</li>
+        </ul>
+      </p>
+      <p>
+        Note that compatible 3rd-party devices are also supported. If you
+        own a device that does not work, please let us know! We do our best
+        to support all devices that are internally based on the Wii Remote.
+      </p>
+      <p>
+        The <strong>Nintendo Wii U GamePad</strong> is not based on Bluetooth,
+        but rather on <em>IEEE-802.11 wifi</em> and, thus, is not supported by
+        <em>XWiimote</em>. However, there is ongoing work to reverse-engineer
+        the device and we will try to provide a new driver for it when enough
+        information is known. Contributions are highly welcome!
+      </p>
+    </div>
+    <div>
+      <h3>Developing Applications</h3>
+      <p>
+        If you want to use Nintendo Wii / Wii U devices in your application,
+        please don't hesitate to <a href="#contact">contact us</a>! The
+        <em>XWiimote tools</em> provide a user-space library that can be easily
+        integrated into any linux application. With this library you can use
+        Wii Remotes very easily for any purpose! The library is available as
+        Open-Source and extensively documented. Please let us know if anything
+        is missing.
+      </p>
+    </div>
+    <div>
+      <h3 id="contact">Contact</h3>
+      <p>
+        <em>XWiimote</em> is maintained by David Herrmann
+        (dh.herrmann@gmail.com) with contributions from many others. Please
+        don't hesitate to contact us. The main development takes place on
+        <a href="http://github.com/dvdhrm/xwiimote">github</a>.
+      </p>
+    </div>
+  </body>
+</html>
