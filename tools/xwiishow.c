@@ -1392,8 +1392,15 @@ static void handle_resize(void)
 static void handle_watch(void)
 {
 	static unsigned int num;
+	int ret;
 
 	print_info("Info: Watch Event #%u", ++num);
+
+	ret = xwii_iface_open(iface, xwii_iface_available(iface) |
+				     XWII_IFACE_WRITABLE);
+	if (ret)
+		print_error("Error: Cannot open interface: %d", ret);
+
 	refresh_all();
 }
 
@@ -1653,10 +1660,11 @@ int main(int argc, char **argv)
 			noecho();
 			timeout(0);
 
-			ret = xwii_iface_open(iface, XWII_IFACE_CORE |
-						     XWII_IFACE_WRITABLE);
+			ret = xwii_iface_open(iface,
+					      xwii_iface_available(iface) |
+					      XWII_IFACE_WRITABLE);
 			if (ret)
-				print_error("Error: Cannot open key iface: %d",
+				print_error("Error: Cannot open interface: %d",
 					    ret);
 
 			ret = run_iface(iface);
