@@ -6,6 +6,10 @@
 # Dedicated to the Public Domain
 #
 
+set -e
 mkdir -p m4/
 autoreconf -i
-./configure --enable-debug --prefix=/usr $*
+
+if test ! "x$NOCONFIGURE" = "x1" ; then
+        ./configure --enable-debug $*
+fi
