@@ -22,9 +22,9 @@ extern "C" {
  * Main libxwiimote API
  *
  * This file defines the public libxwiimote API and ABI. All identifiers are
- * prefixed either with XWII_* or xwii_*. Note that all identifiers prefixed
- * with XWII__* or xwii__* are not part of the stable ABI and may change at
- * any time.
+ * prefixed either with **XWII_** or **xwii_**. Note that all identifiers
+ * prefixed with a double-underscore (**XWII__** or **xwii__**) are not part
+ * of the stable ABI and may change at any time.
  */
 
 #if (__GNUC__ > 3)
@@ -48,97 +48,122 @@ extern "C" {
  * constants are only needed for integration into existing applications. You
  * should try to avoid them and use them only if you need direct kernel access.
  *
- * The kernel driver "hid-wiimote" provides connected Wii-Remotes, and all
+ * The kernel driver **hid-wiimote** provides connected Wii-Remotes, and all
  * Nintendo or 3rd party devices that are compatible (including balance-boards,
  * pro-controllers, gamepads, ...), as HID devices. All HID devices can be
  * found in /sys/bus/hid/devices/. The kernel creates one directory for each
  * device.
- * A wiimote compatible device ("wiimote") can be detected via normal
- * udev-filters. The 'subsystem' field is "hid" and the 'driver' field is
- * "wiimote". If both match, the device is guaranteed to be handled by the
+ * A wiimote compatible device (**wiimote**) can be detected via normal
+ * udev-filters. The **subsystem** field is **hid** and the **driver** field is
+ * **wiimote**. If both match, the device is guaranteed to be handled by the
  * hid-wiimote driver and compatible with this library.
  *
  * Each wiimote provides several sub-devices as child-devices of the HID node.
  * During device-setup and device-detection, the kernel sets up most of these
- * nodes and sends a "change" event on the HID device after it is done.
+ * nodes and sends a **change** event on the HID device after it is done.
  * Userspace must react to this event by re-reading the device state. Otherwise,
  * userspace might miss some nodes.
  * For each hotpluggable sub-device (like extensions or motion-plus), the
  * kernel attaches/detaches such nodes during runtime. Userspace must use
  * udev-monitors to react to those events, if interested. All available
  * interfaces on the HID device are explained below. From now on we assume that
- * /sys/bus/hid/devices/<dev>/ is a valid wiimote device.
+ * `/sys/bus/hid/devices/[dev]/` is a valid wiimote device.
+ *
+ * Global Interfaces
+ * =================
  *
  * The following interfaces are always present, regardless of the device-type
- * and extension-type:
+ * and extension-type.
  *
- * devtype: The HID device has a 'devtype' attribute which can be found in
- *          /sys/bus/hid/devices/<dev>/devtype. This attribute provides a
- *          newline-terminated string which describes the device-type. If
- *          support for new devices is added to the kernel, new identifiers may
- *          be added. Valid values are:
- *            "pending": Device detection is not done, yet. The kernel will
- *                       send a "change" uevent after it is done. A device
- *                       must not be in this state for longer than a few hundred
- *                       milliseconds.
- *            "unknown": The device-type is unknown and couldn't be initialized.
- *                       Such devices are normally useles and should be ignored
- *                       by most applications.
- *            "generic": The device-type could not be detected, but the device
- *                       was successfully initialized. That means, most standard
- *                       interfaces are available on this device, but may not
- *                       function properly.
- *                       Nearly all interfaces are enabled for such devices so
- *                       no special policies apply.
- *            "gen1<num>": First generation of Wii-Remotes. This is mostly
- *                         "gen10", but there are also 1st-gen devices with
- *                         built-in motion-plus which might be reported as
- *                         "gen15" or similar.
- *                         Newer WiiRemotePlus devices with built-in motion-plus
- *                         extensions belong to the 2nd-gen devices, though.
- *                         Nearly all interfaces are enabled for such devices.
- *            "gen2<num>": Second generation of Wii-Remotes. These are
- *                         guaranteed to have motion-plus built-in and use a
- *                         different bluetooth-chipset. Hence, there VID/PID
- *                         changed and a few details differ to gen1 devices.
- *                         Nearly all interfaces are enabled for such devices.
- *            "balanceboard": Balance-boards and compatible devices. Nearly no
- *                            interfaces are available on balance-boards. They
- *                            are limited to an extension port (which is
- *                            normally occupied by the balance-board extension),
- *                            one LED and the battery interface. No MotionPlus
- *                            is available.
- *            "procontroller": Wii-U Pro Controller and compatible devices.
- *                             Nearly no interfaces are available. One extension
- *                             port is supported (which is normally occupied by
- *                             the pro-controller extension), 4 LEDs and a
- *                             battery. MotionPlus may be available but is
- *                             currently not supported.
- *          Note that this attribute does not describe the extensions. Instead,
- *          it describes the type of device. So users might build custom
- *          extensions which allow a balance-board extension to be plugged on
- *          a regular WiiRemote. This would cause 'devtype' to be "gen10" but
- *          'extension' to be "balanceboard".
+ * devtype
+ * -------
  *
- * extension: An 'extension' attribute is provided as
- *            /sys/bus/hid/devices/<dev>/extension and provides a
- *            newline-terminated string that describes the currently attached
- *            extension. New identifiers might be added if we add support for
- *            new extensions to the kernel driver. Note that normal Wii-Remotes
- *            provide a physical I2C extension port, but other devices might
- *            not. So if 'devtype' reports a different device-type than a normal
- *            Wii-Remote, the extension might be built-in and not physically
- *            unpluggable. Valid values are:
- *              "none": No extension is plugged.
- *              "unknown": An unknown extension is plugged or the driver
- *                         failed to initialize it.
- *              "nunchuk": A Nintendo Nunchuk extension is plugged.
- *              "classic": A Classic Controller or Classic Controller Pro
- *                         extension is plugged.
- *              "balanceboard": A balance-board extension is plugged. This is
- *                              normally a built-in extension.
- *              "procontroller": A pro-controller extension is plugged. This is
- *                               normally a built-in extension.
+ * The HID device has a **devtype** attribute which can be found in
+ * `/sys/bus/hid/devices/[dev]/devtype`. This attribute provides a
+ * newline-terminated string which describes the device-type. If
+ * support for new devices is added to the kernel, new identifiers may
+ * be added. Valid values are:
+ *
+ * * **pending**: Device detection is not done, yet. The kernel will
+ *                send a **change** uevent after it is done. A device
+ *                must not be in this state for longer than a few hundred
+ *                milliseconds.
+ *
+ * * **unknown**: The device-type is unknown and couldn't be initialized.
+ *                Such devices are normally useles and should be ignored
+ *                by most applications.
+ *
+ * * **generic**: The device-type could not be detected, but the device
+ *                was successfully initialized. That means, most standard
+ *                interfaces are available on this device, but may not
+ *                function properly.
+ *                Nearly all interfaces are enabled for such devices so
+ *                no special policies apply.
+ *
+ * * **gen1[num]**: First generation of Wii-Remotes. This is mostly
+ *                  **gen10**, but there are also 1st-gen devices with
+ *                  built-in motion-plus which might be reported as
+ *                  **gen15** or similar.
+ *                  Newer WiiRemotePlus devices with built-in motion-plus
+ *                  extensions belong to the 2nd-gen devices, though.
+ *                  Nearly all interfaces are enabled for such devices.
+ *
+ * * **gen2[num]**: Second generation of Wii-Remotes. These are
+ *                  guaranteed to have motion-plus built-in and use a
+ *                  different bluetooth-chipset. Hence, there VID/PID
+ *                  changed and a few details differ to gen1 devices.
+ *                  Nearly all interfaces are enabled for such devices.
+ *
+ * * **balanceboard**: Balance-boards and compatible devices. Nearly no
+ *                     interfaces are available on balance-boards. They
+ *                     are limited to an extension port (which is
+ *                     normally occupied by the balance-board extension),
+ *                     one LED and the battery interface. No MotionPlus
+ *                     is available.
+ *
+ * * **procontroller**: Wii-U Pro Controller and compatible devices.
+ *                      Nearly no interfaces are available. One extension
+ *                      port is supported (which is normally occupied by
+ *                      the pro-controller extension), 4 LEDs and a
+ *                      battery. MotionPlus may be available but is
+ *                      currently not supported.
+ *
+ * Note that this attribute does not describe the extensions. Instead,
+ * it describes the type of device. So users might build custom
+ * extensions which allow a balance-board extension to be plugged on
+ * a regular WiiRemote. This would cause **devtype** to be **gen10** but
+ * **extension** to be **balanceboard**.
+ *
+ * extension
+ * ---------
+ *
+ * An **extension** attribute is provided as
+ * `/sys/bus/hid/devices/[dev]/extension` and provides a newline-terminated
+ * string that describes the currently attached extension. New identifiers
+ * might be added if we add support for new extensions to the kernel driver.
+ * Note that normal Wii-Remotes provide a physical I2C extension port, but
+ * other devices might not. So if **devtype** reports a different device-type
+ * than a normal Wii-Remote, the extension might be built-in and not physically
+ * unpluggable. Valid values are:
+ *
+ * * **none**: No extension is plugged.
+ *
+ * * **unknown**: An unknown extension is plugged or the driver
+ *               failed to initialize it.
+ *
+ * * **nunchuk**: A Nintendo Nunchuk extension is plugged.
+ *
+ * * **classic**: A Classic Controller or Classic Controller Pro
+ *                extension is plugged.
+ *
+ * * **balanceboard**: A balance-board extension is plugged. This is
+ *                     normally a built-in extension.
+ *
+ * * **procontroller**: A pro-controller extension is plugged. This is
+ *                      normally a built-in extension.
+ *
+ * Device-dependant interfaces
+ * ===========================
  *
  * The following interfaces depend on the device-type. They may be present,
  * depending on the device. However, not that even if they are present, they
@@ -146,41 +171,60 @@ extern "C" {
  * party-device pretend to have a built-in battery, but do not report real
  * battery-capacity values. Instead they return a constant or fake value.
  * All the following interfaces are created during device-detection. After
- * device-detection is done, a "change" uevent is sent. Device-detection is
+ * device-detection is done, a **change** uevent is sent. Device-detection is
  * normally performed only once, but may be triggered via debug-hooks from
  * user-space at any time. Applications should be aware of that.
  *
- * Battery: A 'power_supply' device is available as
- *          /sys/bus/hid/devices/<dev>/power_supply/wiimote_battery_<bdaddr>/
- *          and the interface is defined by the kernel 'power_supply' interface.
- *          <bdaddr> is the bluetooth-address of the remote device.
+ * Battery
+ * -------
  *
- * LEDs: Player-LEDs on a device are available as
- *       /sys/bus/hid/devices/<dev>/leds/<dev>:blue:p<num>/ and the interface
- *       is defined by the kernel 'led' interface.
- *       <dev> is the same as the device-name. <num> can be any non-negative
- *       integer and defines which LED this is. Normally these are 0-3 for the
- *       4 player-LEDs which can be found on any Nintendo Remote. However,
- *       newer hardware may use more or less LEDs or skip some (unlikely).
+ * A **power_supply** device is available as
+ * `/sys/bus/hid/devices/[dev]/power_supply/wiimote_battery_[bdaddr]/`
+ * and the interface is defined by the kernel **power_supply** interface.
+ * *[bdaddr]* is the bluetooth-address of the remote device.
+ *
+ * LEDs
+ * ----
+ *
+ * Player-LEDs on a device are available as
+ * `/sys/bus/hid/devices/[dev]/leds/[dev]:blue:p[num]/` and the interface
+ * is defined by the kernel **led** interface. *[dev]* is the same as the
+ * device-name. *[num]* can be any non-negative integer and defines which LED
+ * this is. Normally these are 0-3 for the 4 player-LEDs which can be found on
+ * any Nintendo Remote. However, newer hardware may use more or less LEDs or
+ * skip some (unlikely).
+ *
+ * Input: Core
+ * ----------
  *
  * Input-Core: Core input device. It is available as
- *             /sys/bus/hid/device/<dev>/input/input<num>/ and can be detected
- *             via the device name @XWII_NAME_CORE.
- *             TODO: Describe the provided interface
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_CORE.
+ *
+ * TODO: Describe the provided interface
+ *
+ * Input: Accelerometer
+ * --------------------
  *
  * Input-Accel: Accelerometer input device. Available as
- *              /sys/bus/hid/device/<dev>/input/input<num>/ and can be detected
- *              via the device name @XWII_NAME_ACCEL.
- *              If this input-interface is not opened by user-space, the
- *              accelerometer on the remote is disabled to save energy.
- *              TODO: Describe the provided interface
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_ACCEL. If this input-interface is not opened by
+ * user-space, the accelerometer on the remote is disabled to save energy.
  *
- * Input-IR: IR input device. It is available as
- *           /sys/bus/hid/device/<dev>/input/input<num>/ and can be detected
- *           via the device name @XWII_NAME_IR.
- *           If this input-interface is not opened by user-space, the IR-cam
- *           on the remote is disabled to save energy.
- *           TODO: Describe the provided interface
+ * TODO: Describe the provided interface
+ *
+ * Input: IR
+ * ---------
+ *
+ * IR input device. It is available as
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_IR. If this input-interface is not opened by
+ * user-space, the IR-cam on the remote is disabled to save energy.
+ *
+ * TODO: Describe the provided interface
+ *
+ * Motion-Plus Interfaces
+ * ======================
  *
  * The following interfaces belong to motion-plus capabilities. Motion-Plus
  * extension may be hotplugged or built-in. Even if built-in, they are handled
@@ -189,54 +233,76 @@ extern "C" {
  * As MotionPlus hotplug events are not generated by the device, the kernel
  * driver needs to periodically poll for them (only if not built-in). Hence,
  * hotplug-events may be delayed by up to 5s.
- * MotionPlus and related hardware is often abbreviated with MP or M+.
+ * MotionPlus and related hardware is often abbreviated with **MP** or **M+**.
  *
- * Input-MP: Motion-Plus input device. Is is available as
- *           /sys/bus/hid/device/<dev>/input/input<num>/ and can be detected
- *           via the device name @XWII_NAME_MOTION_PLUS.
- *           If this input-interface is not opened by user-space, the MP
- *           device is disabled to save energy. While the interface is opened,
- *           MP hardware hotplug events are generated by the remote device so
- *           we don't need to poll for MP availability.
- *           TODO: Describe the provided interface
+ * Input: MP
+ * ---------
+ *
+ * Motion-Plus input device. Is is available as
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_MOTION_PLUS. If this input-interface is not
+ * opened by user-space, the MP device is disabled to save energy. While the
+ * interface is opened, MP hardware hotplug events are generated by the remote
+ * device so we don't need to poll for MP availability.
+ *
+ * TODO: Describe the provided interface
+ *
+ * Extension Interfaces
+ * ====================
  *
  * The following interfaces are extension interfaces. They are created whenever
  * an extension is hotplugged to a device. Only one extension-port is currently
- * available on each hardware (exposed via 'extension' attribute), but newer
+ * available on each hardware (exposed via **extension** attribute), but newer
  * hardware may introduce more ports. Therefore, these extension might be
- * available simultaneously. However, in this case additional 'extension2'
+ * available simultaneously. However, in this case additional **extension2**
  * or similar attributes will also be introduced.
  * Note that some devices have built-in extensions which cannot be hotplugged.
  * But these extensions are handled as if they were normal hotpluggable
  * extensions.
+ *
  * Extension-changes are advertized via udev uevents. The remote device sends
  * hotplug-events for regular extensions so they are deteced immediately (in a
  * few hundred milliseconds).
  * Note that devices are not initialized unless userspace opens them. This
  * saves energy as we don't need to power them up or stream any data.
  *
- * Input-Nunchuk: Nunchuk extension input device. Available as
- *                /sys/bus/hid/device/<dev>/input/input<num>/ and can be
- *                detected via the device name @XWII_NAME_NUNCHUK.
- *                TODO: Describe the provided interface
+ * Input: Nunchuk
+ * --------------
  *
- * Input-Classic: Classic Controller extension input device. Available as
- *                /sys/bus/hid/device/<dev>/input/input<num>/ and can be
- *                detected via the device name @XWII_NAME_CLASSIC_CONTROLLER.
- *                The Classic Controller Pro is also reported via this interface
- *                and cannot be distinguished from a normal classic controller
- *                extension.
- *                TODO: Describe the provided interface
+ * Nunchuk extension input device. Available as
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_NUNCHUK.
  *
- * Input-BBoard: BalanceBoard extension input device. Available as
- *               /sys/bus/hid/device/<dev>/input/input<num>/ and can be
- *               detected via the device name @XWII_NAME_BALANCE_BOARD.
- *               TODO: Describe the provided interface
+ * TODO: Describe the provided interface
  *
- * Input-Pro: Wii-U Pro Controller extension input device. Available as
- *            /sys/bus/hid/device/<dev>/input/input<num>/ and can be
- *            detected via the device name @XWII_NAME_PRO_CONTROLLER.
- *            TODO: Describe the provided interface
+ * Input: Classic Controller
+ * -------------------------
+ *
+ * Classic Controller extension input device. Available as
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_CLASSIC_CONTROLLER. The Classic Controller Pro is
+ * also reported via this interface, but cannot be distinguished from a normal
+ * classic controller extension.
+ *
+ * TODO: Describe the provided interface
+ *
+ * Input: Balance Board
+ * --------------------
+ *
+ * BalanceBoard extension input device. Available as
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_BALANCE_BOARD.
+ *
+ * TODO: Describe the provided interface
+ *
+ * Input: Pro Controller
+ * ---------------------
+ *
+ * Wii-U Pro Controller extension input device. Available as
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_PRO_CONTROLLER.
+ *
+ * TODO: Describe the provided interface
  *
  * @{
  */
@@ -275,6 +341,7 @@ extern "C" {
 
 /**
  * Event Types
+ *
  * Each event can be identified by the type field. New types might be added
  * at any time so unknown event-types must be ignored by applications. The
  * given payload of an event is described for each type. Unused payload-space
@@ -284,7 +351,8 @@ extern "C" {
 enum xwii_event_types {
 	/**
 	 * Core-interface key event
-	 * The payload of such events is @struct xwii_event_key. Valid
+	 *
+	 * The payload of such events is struct xwii_event_key. Valid
 	 * key-events include all the events reported by the core-interface,
 	 * which is normally only LEFT, RIGHT, UP, DOWN, A, B, PLUS, MINUS,
 	 * HOME, ONE, TWO.
@@ -293,8 +361,9 @@ enum xwii_event_types {
 
 	/**
 	 * Accelerometer event
-	 * Provides accelerometer data. Payload is @struct xwii_event_abs and
-	 * only the first element in the abs-array is used. The x, y and z
+	 *
+	 * Provides accelerometer data. Payload is struct xwii_event_abs
+	 * and only the first element in the abs-array is used. The x, y and z
 	 * fields contain the accelerometer data.
 	 * Note that the accelerometer reports acceleration data, not speed
 	 * data!
@@ -303,55 +372,64 @@ enum xwii_event_types {
 
 	/**
 	 * IR-Camera event
+	 *
 	 * Provides IR-camera events. The camera can track up two four IR
 	 * sources. As long as a single source is tracked, it stays at it's
 	 * pre-allocated slot. The four available slots are reported as
-	 * @struct xwii_event_abs payload. The x and y fields contain the
-	 * position of each slot.
+	 * struct xwii_event_abs
+	 * payload. The x and y fields contain the position of each slot.
 	 *
-	 * Use @xwii_event_ir_is_valid to see whether a specific slot is
+	 * Use xwii_event_ir_is_valid() to see whether a specific slot is
 	 * currently valid or whether it currently doesn't track any IR source.
 	 */
 	XWII_EVENT_IR,
 
 	/**
 	 * Balance-Board event
+	 *
 	 * Provides balance-board weight data. Four sensors report weight-data
 	 * for each of the four edges of the board. The data is available as
-	 * @struct xwii_event_abs payload. The x fields of the first four
-	 * array-entries contain the weight-value.
+	 * struct xwii_event_abs
+	 * payload. The x fields of the first four array-entries contain the
+	 * weight-value.
 	 */
 	XWII_EVENT_BALANCE_BOARD,
 
 	/**
 	 * Motion-Plus event
+	 *
 	 * Motion-Plus gyroscope events. These describe rotational speed, not
 	 * acceleration, of the motion-plus extension. The payload is available
-	 * as @struct xwii_event_abs and the x, y and z field of the first
-	 * array-element describes the motion-events in the 3 dimensions.
+	 * as struct xwii_event_abs
+	 * and the x, y and z field of the first array-element describes the
+	 * motion-events in the 3 dimensions.
 	 */
 	XWII_EVENT_MOTION_PLUS,
 
 	/**
 	 * Pro-Controller key event
+	 *
 	 * Button events of the pro-controller are reported via this interface
 	 * and not via the core-interface (which only reports core-buttons).
 	 * Valid buttons include: LEFT, RIGHT, UP, DOWN, PLUS, MINUS, HOME, X,
 	 * Y, A, B, TR, TL, ZR, ZL, THUMBL, THUMBR.
-	 * Payload type is @struct xwii_event_key.
+	 * Payload type is struct xwii_event_key.
 	 */
 	XWII_EVENT_PRO_CONTROLLER_KEY,
 
 	/**
 	 * Pro-Controller movement event
+	 *
 	 * Movement of analog sticks are reported via this event. The payload
-	 * is a @struct xwii_event_abs and the first two array elements contain
-	 * the absolute x and y position of both analog sticks.
+	 * is a struct xwii_event_abs
+	 * and the first two array elements contain the absolute x and y
+	 * position of both analog sticks.
 	 */
 	XWII_EVENT_PRO_CONTROLLER_MOVE,
 
 	/**
 	 * Hotplug Event
+	 *
 	 * This event is sent whenever an extension was hotplugged (plugged or
 	 * unplugged), a device-detection finished or some other static data
 	 * changed which cannot be monitored separately. No payload is provided.
@@ -367,6 +445,7 @@ enum xwii_event_types {
 
 	/**
 	 * Number of available event types
+	 *
 	 * The value of this constant may increase on each new library revision.
 	 * It is not guaranteed to stay constant. However, it may never shrink.
 	 */
@@ -375,6 +454,7 @@ enum xwii_event_types {
 
 /**
  * Key Event Identifiers
+ *
  * For each key found on a supported device, a separate key identifier is
  * defined. Note that a device may have a specific key (for instance: HOME) on
  * the main device and on an extension device. An application can detect which
@@ -407,6 +487,7 @@ enum xwii_event_keys {
 
 	/**
 	 * Left thumb button
+	 *
 	 * This is reported if the left analog stick is pressed. Not all analog
 	 * sticks support this. The Wii-U Pro Controller is one of few devices
 	 * that report this event.
@@ -415,6 +496,7 @@ enum xwii_event_keys {
 
 	/**
 	 * Right thumb button
+	 *
 	 * This is reported if the right analog stick is pressed. Not all analog
 	 * sticks support this. The Wii-U Pro Controller is one of few devices
 	 * that report this event.
@@ -423,6 +505,7 @@ enum xwii_event_keys {
 
 	/**
 	 * Number of key identifiers
+	 *
 	 * This defines the number of available key-identifiers. It is not
 	 * guaranteed to stay constant and may change when new identifiers are
 	 * added. However, it will never shrink.
@@ -432,17 +515,19 @@ enum xwii_event_keys {
 
 /**
  * Key Event Payload
- * A key-event always uses this payload. The @code field contains the
- * key-identifier. @state contains the same value that was reported by the
- * kernel (0 not-pressed, 1 pressed, 2 auto-repeat).
+ *
+ * A key-event always uses this payload.
  */
 struct xwii_event_key {
+	/** key identifier defined as enum xwii_event_keys */
 	unsigned int code;
+	/** key state copied from kernel (0: up, 1: down, 2: auto-repeat) */
 	unsigned int state;
 };
 
 /**
  * Absolute Motion Payload
+ *
  * This payload is used for absolute motion events. The meaning of the fields
  * depends on the event-type.
  */
@@ -453,30 +538,41 @@ struct xwii_event_abs {
 };
 
 /**
- * Event Object
- * Every event is reported via this structure. The @time field contains the
- * time when this event occurred (copied from the kernel event). The @type
- * field contains the event type. The @v union contains the payload which
- * depends on the event type.
+ * Event Payload
  *
+ * Payload of event objects.
+ */
+union xwii_event_union {
+	/** key event payload */
+	struct xwii_event_key key;
+	/** absolute motion event payload */
+	struct xwii_event_abs abs[4];
+	/** reserved; do not use! */
+	uint8_t reserved[128];
+};
+
+/**
+ * Event Object
+ *
+ * Every event is reported via this structure.
  * Note that even though this object reserves some space, it may grow in the
  * future. It is not guaranteed to stay at this size. That's why functions
  * dealing with it always accept an additional size argument, which is used
  * for backwards-compatibility to not write beyond object-boundaries.
  */
 struct xwii_event {
+	/** timestamp when this event was generated (copied from kernel) */
 	struct timeval time;
+	/** event type ref xwii_event_types */
 	unsigned int type;
 
-	union xwii_event_union {
-		struct xwii_event_key key;
-		struct xwii_event_abs abs[4];
-		uint8_t reserved[128];
-	} v;
+	/** data payload */
+	union xwii_event_union v;
 };
 
 /**
  * Test whether an IR event is valid
+ *
  * If you receive an IR event, you can use this function on the first 4
  * absolute motion payloads. It returns true iff the given slot currently tracks
  * a valid IR source. false is returned if the slot is invalid and currently
@@ -503,22 +599,23 @@ static inline bool xwii_event_ir_is_valid(const struct xwii_event_abs *abs)
  * you?
  *
  * If you want to enumerate connected devices and monitor the system for hotplug
- * events, you should use the @monitor interface or use libudev directly.
+ * events, you should use the @ref monitor "monitor interface" or use libudev
+ * directly.
  *
  * The device interface is split up into different sub-interfaces. Each of them
  * is related to specific hardware available on the remote device. If some
  * hardware is not present, the interfaces will not be provided to the
  * application and will return -ENODEV.
  *
- * Interfaces must be opened via @xwii_iface_open before you can use them. Once
+ * Interfaces must be opened via xwii_iface_open() before you can use them. Once
  * opened, they return events via the event stream which is accessed via
- * @xwii_iface_dispatch. Furthermore, outgoing events can now be sent via the
+ * xwii_iface_dispatch(). Furthermore, outgoing events can now be sent via the
  * different helper functions.
  * Some interfaces are static and don't need to be opened. You notice it if no
  * XWII_IFACE_* constant is provided.
  *
  * Once you are done with an interface, you should close it via
- * @xwii_iface_close. The kernel can deactivate unused hardware to safe energy.
+ * xwii_iface_close(). The kernel can deactivate unused hardware to safe energy.
  * If you keep them open, the kernel keeps them powered up.
  *
  * @{
@@ -526,6 +623,7 @@ static inline bool xwii_event_ir_is_valid(const struct xwii_event_abs *abs)
 
 /**
  * Device Object
+ *
  * This object describes the communication with a single device. That is, you
  * create one for each device you use. All sub-interfaces are opened on this
  * object.
@@ -534,6 +632,7 @@ struct xwii_iface;
 
 /**
  * Interfaces
+ *
  * Each constant describes a single interface. These are bit-masks that can be
  * binary-ORed. If an interface does not provide such a constant, it is static
  * and can be used without opening/closing it.
@@ -572,6 +671,7 @@ enum xwii_iface_type {
 
 /**
  * LEDs
+ *
  * One constant for each Player-LED.
  */
 enum xwii_led {
@@ -582,9 +682,10 @@ enum xwii_led {
 };
 
 /**
- * Create @enum xwii_led constants during runtime
- * The argument is a number starting with 1. So XWII_LED(<num>) produces the
- * same value as the constant XWII_LED<num> defined in @enum xwii_led.
+ * Create enum xwii_led constants during runtime
+ *
+ * The argument is a number starting with 1. So XWII_LED([num]) produces the
+ * same value as the constant XWII_LED[num] defined in enum xwii_led.
  */
 #define XWII_LED(num) (XWII_LED1 + (num) - 1)
 
@@ -595,11 +696,11 @@ enum xwii_led {
  * @param[in] syspath Sysfs path to root device node
  *
  * Creates a new device object. No interfaces on the device are opened by
- * default. @syspath must be a valid path to a wiimote device, either retrieved
- * via a @monitor object or via udev. It must point to the hid device, which is
- * normally /sys/bus/hid/devices/<dev>.
+ * default. @p syspath must be a valid path to a wiimote device, either
+ * retrieved via a @ref monitor "monitor object" or via udev. It must point to
+ * the hid device, which is normally /sys/bus/hid/devices/[dev].
  *
- * If this function fails, @dev is not touched at all (and not cleared!). A
+ * If this function fails, @p dev is not touched at all (and not cleared!). A
  * new object always has an initial ref-count of 1.
  *
  * @returns 0 on success, negative error code on failure
@@ -632,8 +733,8 @@ void xwii_iface_unref(struct xwii_iface *dev);
  * Return the file-descriptor used by this device. If multiple file-descriptors
  * are used internally, they are multi-plexed through an epoll descriptor.
  * Therefore, this always returns the same single file-descriptor. You need to
- * watch this for readable-events (POLLIN/EPOLLIN) and call @xwii_iface_dispatch
- * whenever it is readable.
+ * watch this for readable-events (POLLIN/EPOLLIN) and call
+ * xwii_iface_dispatch() whenever it is readable.
  *
  * This function always returns a valid file-descriptor.
  */
@@ -660,20 +761,20 @@ int xwii_iface_watch(struct xwii_iface *dev, bool watch);
  * Open interfaces on this device
  *
  * @param[in] dev Valid device object
- * @param[in] ifaces Bitmask of interfaces of type @enum xwii_iface_type
+ * @param[in] ifaces Bitmask of interfaces of type enum xwii_iface_type
  *
- * Open all the requested interfaces. If @XWII_IFACE_WRITABLE is also set,
+ * Open all the requested interfaces. If @ref XWII_IFACE_WRITABLE is also set,
  * the interfaces are opened with write-access. Note that interfaces that are
  * already opened are ignored and not touched.
  * If _any_ interface fails to open, this function still tries to open the other
  * requested interfaces and then returns the error afterwards. Hence, if this
- * function fails, you should use @xwii_iface_opened to get a bitmask of opened
+ * function fails, you should use xwii_iface_opened() to get a bitmask of opened
  * interfaces and see which failed (if that is of interest).
  *
  * Note that interfaces may be closed automatically during runtime if the
  * kernel removes the interface or on error conditions. You always get an
- * @XWII_EVENT_WATCH event which you should react on. This is returned
- * regardless whether @xwii_iface_watch was enabled or not.
+ * @ref XWII_EVENT_WATCH event which you should react on. This is returned
+ * regardless whether xwii_iface_watch() was enabled or not.
  *
  * @returns 0 on success, negative error code on failure.
  */
@@ -683,7 +784,7 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces);
  * Close interfaces on this device
  *
  * @param[in] dev Valid device object
- * @param[in] ifaces Bitmask of interfaces of type @enum xwii_iface_type
+ * @param[in] ifaces Bitmask of interfaces of type enum xwii_iface_type
  *
  * Close the requested interfaces. This never fails.
  */
@@ -699,8 +800,8 @@ void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces);
  * automatically.
  *
  * You will get notified whenever this bitmask changes, except on explicit
- * calls to @xwii_iface_open and @xwii_iface_close. See the @XWII_EVENT_WATCH
- * event for more information.
+ * calls to xwii_iface_open() and xwii_iface_close(). See the
+ * @ref XWII_EVENT_WATCH event for more information.
  */
 unsigned int xwii_iface_opened(struct xwii_iface *dev);
 
@@ -711,8 +812,8 @@ unsigned int xwii_iface_opened(struct xwii_iface *dev);
  *
  * Return a bitmask of available devices. These devices can be opened and are
  * guaranteed to be present on the hardware at this time. If you watch your
- * device for hotplug events (see @xwii_iface_watch) you will get notified
- * whenever this bitmask changes. See the @XWII_EVENT_WATCH event for more
+ * device for hotplug events (see xwii_iface_watch()) you will get notified
+ * whenever this bitmask changes. See the @ref XWII_EVENT_WATCH event for more
  * information.
  */
 unsigned int xwii_iface_available(struct xwii_iface *dev);
@@ -724,20 +825,21 @@ unsigned int xwii_iface_available(struct xwii_iface *dev);
  * @param[out] ev Pointer where to store a new event or NULL
  *
  * You should call this whenever the file-descriptor returned by
- * @xwii_iface_get_fd is reported as being readable. This function will perform
+ * xwii_iface_get_fd() is reported as being readable. This function will perform
  * all non-blocking outstanding tasks and then return.
  *
  * This function always performs any background tasks and outgoing event-writes
  * if they don't block. It returns an error if they fail.
- * If @ev is NULL, this function returns 0 on success after this has been done.
+ * If @p ev is NULL, this function returns 0 on success after this has been
+ * done.
  *
- * If @ev is non-NULL, this function then tries to read a single incoming event.
- * If no event is available, it returns -EAGAIN and you should watch the
+ * If @p ev is non-NULL, this function then tries to read a single incoming
+ * event. If no event is available, it returns -EAGAIN and you should watch the
  * file-desciptor again until it is readable. Otherwise, you should call this
- * function in a row as long as it returns 0. It stores the event in @ev which
+ * function in a row as long as it returns 0. It stores the event in @p ev which
  * you can then handle in your application.
  *
- * @returns 0 on success, -EAGAIN if no event can be read and @ev is non-NULL
+ * @returns 0 on success, -EAGAIN if no event can be read and @p ev is non-NULL
  * and a negative error-code on failure
  */
 XWII__DEPRECATED
@@ -748,26 +850,27 @@ int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev);
  *
  * @param[in] dev Valid device object
  * @param[out] ev Pointer where to store a new event or NULL
- * @param[in] size Size of @ev if @ev is non-NULL
+ * @param[in] size Size of @p ev if @p ev is non-NULL
  *
  * You should call this whenever the file-descriptor returned by
- * @xwii_iface_get_fd is reported as being readable. This function will perform
+ * xwii_iface_get_fd() is reported as being readable. This function will perform
  * all non-blocking outstanding tasks and then return.
  *
  * This function always performs any background tasks and outgoing event-writes
  * if they don't block. It returns an error if they fail.
- * If @ev is NULL, this function returns 0 on success after this has been done.
+ * If @p ev is NULL, this function returns 0 on success after this has been
+ * done.
  *
- * If @ev is non-NULL, this function then tries to read a single incoming event.
- * If no event is available, it returns -EAGAIN and you should watch the
+ * If @p ev is non-NULL, this function then tries to read a single incoming
+ * event. If no event is available, it returns -EAGAIN and you should watch the
  * file-desciptor again until it is readable. Otherwise, you should call this
- * function in a row as long as it returns 0. It stores the event in @ev which
+ * function in a row as long as it returns 0. It stores the event in @p ev which
  * you can then handle in your application.
  *
- * This function is the successor or @xwii_iface_poll. It takes an additional
- * @size argument to provide backwards compatibility.
+ * This function is the successor or xwii_iface_poll(). It takes an additional
+ * @p size argument to provide backwards compatibility.
  *
- * @returns 0 on success, -EAGAIN if no event can be read and @ev is non-NULL
+ * @returns 0 on success, -EAGAIN if no event can be read and @p ev is non-NULL
  * and a negative error-code on failure
  */
 int xwii_iface_dispatch(struct xwii_iface *dev, struct xwii_event *ev,
@@ -790,10 +893,10 @@ int xwii_iface_rumble(struct xwii_iface *dev, bool on);
  * Read LED state
  *
  * @param[in] dev Valid device object
- * @param[in] led LED constant defined in @enum xwii_led
+ * @param[in] led LED constant defined in enum xwii_led
  * @param[out] state Pointer where state should be written to
  *
- * Reads the current LED state of the given LED. @state will be either true or
+ * Reads the current LED state of the given LED. @p state will be either true or
  * false depending on whether the LED is on or off.
  *
  * LEDs are a static interface that does not have to be opened first.
@@ -806,7 +909,7 @@ int xwii_iface_get_led(struct xwii_iface *dev, unsigned int led, bool *state);
  * Set LED state
  *
  * @param[in] dev Valid device object
- * @param[in] led LED constant defined in @enum xwii_led
+ * @param[in] led LED constant defined in enum xwii_led
  * @param[in] state State to set on the LED
  *
  * Changes the current LED state of the given LED. This has immediate effect.
@@ -823,7 +926,7 @@ int xwii_iface_set_led(struct xwii_iface *dev, unsigned int led, bool state);
  * @param[in] dev Valid device object
  * @param[out] capacity Pointer where state should be written to
  *
- * Reads the current battery capacity and write it into @capacity. This is
+ * Reads the current battery capacity and write it into @p capacity. This is
  * a value between 0 and 100, which describes the current capacity in per-cent.
  *
  * Batteries are a static interface that does not have to be opened first.
@@ -839,7 +942,7 @@ int xwii_iface_get_battery(struct xwii_iface *dev, uint8_t *capacity);
  * @param[out] devtype Pointer where the device type should be stored
  *
  * Reads the current device-type, allocates a string and stores a pointer to
- * the string in @devtype. You must free it via free() after you are done.
+ * the string in @p devtype. You must free it via free() after you are done.
  *
  * This is a static interface that does not have to be opened first.
  *
@@ -854,7 +957,8 @@ int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype);
  * @param[out] extension Pointer where the extension type should be stored
  *
  * Reads the current extension type, allocates a string and stores a pointer
- * to the string in @extension. You must free it via free() after you are done.
+ * to the string in @p extension. You must free it via free() after you are
+ * done.
  *
  * This is a static interface that does not have to be opened first.
  *
@@ -873,15 +977,15 @@ int xwii_iface_get_extension(struct xwii_iface *dev, char **extension);
  *
  * Set MP-normalization and calibration values. The Motion-Plus sensor is very
  * sensitive and may return really crappy values. This interfaces allows to
- * apply 3 absolute offsets @x, @y and @z which are subtracted from any MP data
+ * apply 3 absolute offsets x, y and z which are subtracted from any MP data
  * before it is returned to the application. That is, if you set these values
  * to 0, this has no effect (which is also the initial state).
  *
- * The calibration factor @factor is used to perform runtime calibration. If it
- * is 0 (the initial state), no runtime calibration is performed. Otherwise, the
- * factor is used to re-calibrate the zero-point of MP data depending on MP
+ * The calibration factor @p factor is used to perform runtime calibration. If
+ * it is 0 (the initial state), no runtime calibration is performed. Otherwise,
+ * the factor is used to re-calibrate the zero-point of MP data depending on MP
  * input. This is an angoing calibration which modifies the internal state of
- * the @x, @y and @z values.
+ * the x, y and z values.
  */
 void xwii_iface_set_mp_normalization(struct xwii_iface *dev, int32_t x,
 				     int32_t y, int32_t z, int32_t factor);
@@ -896,13 +1000,13 @@ void xwii_iface_set_mp_normalization(struct xwii_iface *dev, int32_t x,
  * @param[out] factor Pointer where to store factor-value or NULL
  *
  * Reads the MP normalization and calibration values. Please see
- * @xwii_iface_set_mp_normalization how this is handled.
+ * xwii_iface_set_mp_normalization() how this is handled.
  *
  * Note that if the calibration factor is not 0, the normalization values may
  * change depending on incoming MP data. Therefore, the data read via this
  * function may differ from the values that you wrote to previously. However,
  * apart from applied calibration, these value are the same as were set
- * previously via @xwii_iface_set_mp_normalization and you can feed them back
+ * previously via xwii_iface_set_mp_normalization() and you can feed them back
  * in later.
  */
 void xwii_iface_get_mp_normalization(struct xwii_iface *dev, int32_t *x,
@@ -926,6 +1030,7 @@ void xwii_iface_get_mp_normalization(struct xwii_iface *dev, int32_t *x,
 
 /**
  * Monitor object
+ *
  * Each object describes a separate monitor. A single monitor must not be
  * used from multiple threads without locking. Different monitors are
  * independent of each other and can be used simultaneously.
@@ -934,6 +1039,7 @@ struct xwii_monitor;
 
 /**
  * Create a new monitor
+ *
  * Creates a new monitor and returns a pointer to the opaque object. NULL is
  * returned on failure.
  *
@@ -941,8 +1047,8 @@ struct xwii_monitor;
  * @param[in] direct True if kernel uevents should be used instead of udevd
  *
  * A monitor always provides all devices that are available on a system. If
- * @poll is true, the monitor also sets up a system-monitor to watch the system
- * for new hotplug events so new devices can be detected.
+ * @p poll is true, the monitor also sets up a system-monitor to watch the
+ * system for new hotplug events so new devices can be detected.
  *
  * A new monitor always has a ref-count of 1.
  */
@@ -950,11 +1056,16 @@ struct xwii_monitor *xwii_monitor_new(bool poll, bool direct);
 
 /**
  * Increase monitor ref-count by 1
+ *
+ * @param[in] mon Valid monitor object
  */
 void xwii_monitor_ref(struct xwii_monitor *mon);
 
 /**
  * Decrease monitor ref-count by 1
+ *
+ * @param[in] mon Valid monitor object
+ *
  * If the ref-count drops below 1, the object is destroyed immediately.
  */
 void xwii_monitor_unref(struct xwii_monitor *mon);
@@ -965,7 +1076,7 @@ void xwii_monitor_unref(struct xwii_monitor *mon);
  * @param[in] monitor A valid monitor object
  * @param[in] blocking True to set the monitor in blocking mode
  *
- * Returns the file-descriptor used by this monitor. If @blocking is true,
+ * Returns the file-descriptor used by this monitor. If @p blocking is true,
  * the FD is set into blocking mode. If false, it is set into non-blocking mode.
  * Only one file-descriptor exists, that is, this function always returns the
  * same descriptor.
@@ -973,7 +1084,7 @@ void xwii_monitor_unref(struct xwii_monitor *mon);
  * This returns -1 if this monitor was not created with a hotplug-monitor. So
  * you need this function only if you want to watch the system for hotplug
  * events. Whenever this descriptor is readable, you should call
- * @xwii_monitor_poll() to read new incoming events.
+ * xwii_monitor_poll() to read new incoming events.
  */
 int xwii_monitor_get_fd(struct xwii_monitor *monitor, bool blocking);
 
@@ -984,15 +1095,15 @@ int xwii_monitor_get_fd(struct xwii_monitor *monitor, bool blocking);
  *
  * This returns a single device-name on each call. A device-name is actually
  * an absolute sysfs path to the device's root-node. This is normally a path
- * to /sys/bus/hid/devices/<dev>/. You can use this path to create a new
- * @struct xwii_iface object.
+ * to /sys/bus/hid/devices/[dev]/. You can use this path to create a new
+ * struct xwii_iface object.
  *
  * After a monitor was created, this function returns all currently available
  * devices. After all devices have been returned, this function returns NULL
  * _once_. After that, this function polls the monitor for hotplug events and
  * returns hotplugged devices, if the monitor was opened to watch the system for
  * hotplug events.
- * Use @xwii_monitor_get_fd to get notified when a new event is available. If
+ * Use xwii_monitor_get_fd() to get notified when a new event is available. If
  * the fd is in non-blocking mode, this function never blocks but returns NULL
  * if no new event is available.
  *
