@@ -27,6 +27,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
 #include "xwiimote.h"
 
 enum window_mode {
@@ -1200,6 +1201,9 @@ static void refresh_all(void)
 	devtype_refresh();
 	extension_refresh();
 	mp_refresh();
+
+	if (geteuid() != 0)
+		mvprintw(20, 22, "Warning: Please run as root! (sysfs+evdev access needed)");
 }
 
 static void setup_window(void)
@@ -1227,8 +1231,8 @@ static void setup_window(void)
 	mvprintw(i++, 0, "|      +   +      |                                                            |");
 	mvprintw(i++, 0, "|      +   +      |                                                            |");
 	mvprintw(i++, 0, "|      +++++      |                                                            |");
-	mvprintw(i++, 0, "|                 |                                                            |");
-	mvprintw(i++, 0, "|       | |       |                                                            |");
+	mvprintw(i++, 0, "|                 | +----------------------------------------------------------+");
+	mvprintw(i++, 0, "|       | |       | |                                                          |");
 	mvprintw(i++, 0, "|       | |       | +----------------------------------------------------------+");
 	mvprintw(i++, 0, "|                 | |                                                           ");
 	mvprintw(i++, 0, "+-----------------+ |");
