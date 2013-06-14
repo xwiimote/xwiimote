@@ -22,6 +22,7 @@ config.log
 config.status
 configure
 *.tar.bz2
+*.tar.xz
 libtool
 m4/
 stamp-*
