@@ -72,7 +72,7 @@ static void print_error(const char *format, ...)
 	mvprintw(23, 22, "                                                          ");
 	if (mode == MODE_EXTENDED)
 		mvprintw(23, 80, "                                                                                ");
-	mvprintw(23, 22, format, list);
+	mvprintw(23, 22, "%s", str);
 }
 
 /* key events */
