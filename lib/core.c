@@ -286,6 +286,7 @@ static int xwii_iface_read_nodes(struct xwii_iface *dev)
  * failure.
  * Initial refcount is 1 so you need to call *_unref() to free the device.
  */
+XWII__EXPORT
 int xwii_iface_new(struct xwii_iface **dev, const char *syspath)
 {
 	struct xwii_iface *d;
@@ -365,6 +366,7 @@ err_free:
 	return ret;
 }
 
+XWII__EXPORT
 void xwii_iface_ref(struct xwii_iface *dev)
 {
 	if (!dev || !dev->ref)
@@ -373,6 +375,7 @@ void xwii_iface_ref(struct xwii_iface *dev)
 	dev->ref++;
 }
 
+XWII__EXPORT
 void xwii_iface_unref(struct xwii_iface *dev)
 {
 	unsigned int i;
@@ -397,6 +400,7 @@ void xwii_iface_unref(struct xwii_iface *dev)
 	free(dev);
 }
 
+XWII__EXPORT
 int xwii_iface_get_fd(struct xwii_iface *dev)
 {
 	if (!dev)
@@ -405,6 +409,7 @@ int xwii_iface_get_fd(struct xwii_iface *dev)
 	return dev->efd;
 }
 
+XWII__EXPORT
 int xwii_iface_watch(struct xwii_iface *dev, bool watch)
 {
 	int fd, ret;
@@ -534,6 +539,7 @@ static void xwii_iface_upload_rumble(struct xwii_iface *dev)
 		dev->rumble_id = effect.id;
 }
 
+XWII__EXPORT
 int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 {
 	bool wr;
@@ -612,6 +618,7 @@ static void xwii_iface_close_if(struct xwii_iface *dev, unsigned int tif)
 	dev->ifs[tif].fd = -1;
 }
 
+XWII__EXPORT
 void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces)
 {
 	if (!dev)
@@ -643,6 +650,7 @@ void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces)
 	dev->ifaces &= ~ifaces;
 }
 
+XWII__EXPORT
 unsigned int xwii_iface_opened(struct xwii_iface *dev)
 {
 	if (!dev)
@@ -651,6 +659,7 @@ unsigned int xwii_iface_opened(struct xwii_iface *dev)
 	return dev->ifaces;
 }
 
+XWII__EXPORT
 unsigned int xwii_iface_available(struct xwii_iface *dev)
 {
 	unsigned int ifs = 0, i;
@@ -1153,6 +1162,7 @@ static int dispatch_event(struct xwii_iface *dev, struct epoll_event *ep,
  * function returns XWII_EVENT_WATCH. This event does not provide any payload
  * and you need to re-open any interfaces if they got closed.
  */
+XWII__EXPORT
 int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev)
 {
 	struct epoll_event ep[32];
@@ -1183,6 +1193,7 @@ int xwii_iface_poll(struct xwii_iface *dev, struct xwii_event *ev)
 	return -EAGAIN;
 }
 
+XWII__EXPORT
 int xwii_iface_dispatch(struct xwii_iface *dev, struct xwii_event *u_ev,
 			size_t size)
 {
@@ -1225,6 +1236,7 @@ int xwii_iface_dispatch(struct xwii_iface *dev, struct xwii_event *u_ev,
  * Enable or disable the rumble motor of \dev depending on \on. This requires
  * the core interface to be opened.
  */
+XWII__EXPORT
 int xwii_iface_rumble(struct xwii_iface *dev, bool on)
 {
 	struct input_event ev;
@@ -1310,6 +1322,7 @@ static int read_led(const char *path, bool *state)
 	return 0;
 }
 
+XWII__EXPORT
 int xwii_iface_get_led(struct xwii_iface *dev, unsigned int led, bool *state)
 {
 	if (led > XWII_LED4 || led < XWII_LED1)
@@ -1324,6 +1337,7 @@ int xwii_iface_get_led(struct xwii_iface *dev, unsigned int led, bool *state)
 	return read_led(dev->led_attrs[led], state);
 }
 
+XWII__EXPORT
 int xwii_iface_set_led(struct xwii_iface *dev, unsigned int led, bool state)
 {
 	if (!dev || led > XWII_LED4 || led < XWII_LED1)
@@ -1351,6 +1365,7 @@ static int read_battery(const char *path, uint8_t *capacity)
 	return 0;
 }
 
+XWII__EXPORT
 int xwii_iface_get_battery(struct xwii_iface *dev, uint8_t *capacity)
 {
 	if (!dev || !capacity)
@@ -1361,6 +1376,7 @@ int xwii_iface_get_battery(struct xwii_iface *dev, uint8_t *capacity)
 	return read_battery(dev->battery_attr, capacity);
 }
 
+XWII__EXPORT
 int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype)
 {
 	if (!dev || !devtype)
@@ -1371,6 +1387,7 @@ int xwii_iface_get_devtype(struct xwii_iface *dev, char **devtype)
 	return read_line(dev->devtype_attr, devtype);
 }
 
+XWII__EXPORT
 int xwii_iface_get_extension(struct xwii_iface *dev, char **extension)
 {
 	if (!dev || !extension)
@@ -1381,6 +1398,7 @@ int xwii_iface_get_extension(struct xwii_iface *dev, char **extension)
 	return read_line(dev->extension_attr, extension);
 }
 
+XWII__EXPORT
 void xwii_iface_set_mp_normalization(struct xwii_iface *dev, int32_t x,
 				     int32_t y, int32_t z, int32_t factor)
 {
@@ -1393,6 +1411,7 @@ void xwii_iface_set_mp_normalization(struct xwii_iface *dev, int32_t x,
 	dev->mp_normalize_factor = factor;
 }
 
+XWII__EXPORT
 void xwii_iface_get_mp_normalization(struct xwii_iface *dev, int32_t *x,
 				     int32_t *y, int32_t *z, int32_t *factor)
 {

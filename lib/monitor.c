@@ -29,6 +29,7 @@ struct xwii_monitor {
 	struct udev_monitor *monitor;
 };
 
+XWII__EXPORT
 struct xwii_monitor *xwii_monitor_new(bool poll, bool direct)
 {
 	struct udev *udev;
@@ -82,6 +83,7 @@ out:
 	return NULL;
 }
 
+XWII__EXPORT
 void xwii_monitor_ref(struct xwii_monitor *mon)
 {
 	if (!mon || !mon->ref)
@@ -99,6 +101,7 @@ static inline void free_enum(struct xwii_monitor *monitor)
 	}
 }
 
+XWII__EXPORT
 void xwii_monitor_unref(struct xwii_monitor *monitor)
 {
 	if (!monitor || !monitor->ref)
@@ -114,6 +117,7 @@ void xwii_monitor_unref(struct xwii_monitor *monitor)
 	free(monitor);
 }
 
+XWII__EXPORT
 int xwii_monitor_get_fd(struct xwii_monitor *monitor, bool blocking)
 {
 	signed int fd, set;
@@ -185,6 +189,7 @@ out:
 	return ret;
 }
 
+XWII__EXPORT
 char *xwii_monitor_poll(struct xwii_monitor *monitor)
 {
 	struct udev_device *dev;

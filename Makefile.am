@@ -1,8 +1,16 @@
 #
 # XWiimote - makefile
-# Written by David Herrmann, 2011
+# Written by David Herrmann, 2011-2013
 # Dedicated to the Public Domain
 #
+
+#
+# Library Version Numbers
+#
+
+LIBXWIIMOTE_CURRENT = 2
+LIBXWIIMOTE_REVISION = 0
+LIBXWIIMOTE_AGE = 0
 
 #
 # miscellaneous
@@ -26,7 +34,8 @@ EXTRA_DIST = \
 	COPYING \
 	DEV \
 	LICENSE \
-	res/50-xorg-fix-xwiimote.conf
+	res/50-xorg-fix-xwiimote.conf \
+	libxwiimote.sym
 
 #
 # Build targets
@@ -59,12 +68,14 @@ AM_CFLAGS = \
 	-ffast-math \
 	-fdiagnostics-show-option \
 	-fno-strict-aliasing \
+	-fvisibility=hidden \
 	-ffunction-sections \
 	-fdata-sections \
 	-fstack-protector
 AM_CPPFLAGS = \
 	-include $(top_builddir)/config.h \
-	-I $(srcdir)/lib
+	-I $(srcdir)/lib \
+	-D'XWII__EXPORT=__attribute__((visibility("default")))'
 AM_LDFLAGS = \
 	-Wall \
 	-Wl,--as-needed \
@@ -87,6 +98,8 @@ libxwiimote_la_SOURCES = \
 	lib/core.c \
 	lib/monitor.c
 
+EXTRA_libxwiimote_la_DEPENDENCIES = ${top_srcdir}/libxwiimote.sym
+
 libxwiimote_la_CPPFLAGS = \
 	$(AM_CPPFLAGS) \
 	$(UDEV_CFLAGS)
@@ -95,7 +108,8 @@ libxwiimote_la_LIBADD = \
 	$(UDEV_LIBS)
 libxwiimote_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
-	-version-info 1:0:0
+	-version-info $(LIBXWIIMOTE_CURRENT):$(LIBXWIIMOTE_REVISION):$(LIBXWIIMOTE_AGE) \
+	-Wl,--version-script=$(top_srcdir)/libxwiimote.sym
 
 #
 # xwiishow

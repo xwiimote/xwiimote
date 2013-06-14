@@ -1,0 +1,34 @@
+LIBXWIIMOTE_1 {
+global:
+	xwii_iface_new;
+	xwii_iface_ref;
+	xwii_iface_unref;
+
+	xwii_iface_get_fd;
+	xwii_iface_watch;
+
+	xwii_iface_open;
+	xwii_iface_close;
+	xwii_iface_opened;
+	xwii_iface_available;
+	xwii_iface_poll;
+	xwii_iface_dispatch;
+
+	xwii_iface_rumble;
+	xwii_iface_get_led;
+	xwii_iface_set_led;
+	xwii_iface_get_battery;
+	xwii_iface_get_devtype;
+	xwii_iface_get_extension;
+
+	xwii_iface_set_mp_normalization;
+	xwii_iface_get_mp_normalization;
+
+	xwii_monitor_new;
+	xwii_monitor_ref;
+	xwii_monitor_unref;
+	xwii_monitor_get_fd;
+	xwii_monitor_poll;
+local:
+	*;
+};
