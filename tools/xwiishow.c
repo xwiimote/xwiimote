@@ -44,23 +44,34 @@ static bool freeze = false;
 static void print_info(const char *format, ...)
 {
 	va_list list;
+	char str[58 + 1];
 
 	va_start(list, format);
-	mvprintw(22, 22, "                                                           ");
-	move(22, 22);
-	vw_printw(stdscr, format, list);
+	vsnprintf(str, sizeof(str), format, list);
+	str[sizeof(str) - 1] = 0;
 	va_end(list);
+
+	mvprintw(22, 22, "                                                          ");
+	mvprintw(22, 22, "%s", str);
 }
 
 static void print_error(const char *format, ...)
 {
 	va_list list;
+	char str[58 + 80 + 1];
 
 	va_start(list, format);
-	mvprintw(23, 22, "                                                           ");
-	move(23, 22);
-	vw_printw(stdscr, format, list);
+	vsnprintf(str, sizeof(str), format, list);
+	if (mode == MODE_EXTENDED)
+		str[sizeof(str) - 1] = 0;
+	else
+		str[58] = 0;
 	va_end(list);
+
+	mvprintw(23, 22, "                                                          ");
+	if (mode == MODE_EXTENDED)
+		mvprintw(23, 80, "                                                                                ");
+	mvprintw(23, 22, format, list);
 }
 
 /* key events */
