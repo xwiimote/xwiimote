@@ -1,0 +1,36 @@
+var group__device =
+[
+    [ "XWII_LED", "group__device.html#ga7d37d56ea1fb9002946bcf1863f54545", null ],
+    [ "xwii_iface_type", "group__device.html#ga781852d892d1184331701a9147497d91", [
+      [ "XWII_IFACE_CORE", "group__device.html#gga781852d892d1184331701a9147497d91a1d50c36edc089416557d814398f66a02", null ],
+      [ "XWII_IFACE_ACCEL", "group__device.html#gga781852d892d1184331701a9147497d91aeaecff3a5dcd70b941a36483c6fdf6c9", null ],
+      [ "XWII_IFACE_IR", "group__device.html#gga781852d892d1184331701a9147497d91ad86c46c0dee8fc8755e7304a8ee5bbbb", null ],
+      [ "XWII_IFACE_MOTION_PLUS", "group__device.html#gga781852d892d1184331701a9147497d91a8d9bed7f2ccad79149f6d2aff1b37081", null ],
+      [ "XWII_IFACE_NUNCHUK", "group__device.html#gga781852d892d1184331701a9147497d91aa2f1390c3ed47b404b3c241632435916", null ],
+      [ "XWII_IFACE_CLASSIC_CONTROLLER", "group__device.html#gga781852d892d1184331701a9147497d91a5ebe169cd83e389c9178e3030244c439", null ],
+      [ "XWII_IFACE_BALANCE_BOARD", "group__device.html#gga781852d892d1184331701a9147497d91a55080e2c6b453a1055692d01f4e57866", null ],
+      [ "XWII_IFACE_PRO_CONTROLLER", "group__device.html#gga781852d892d1184331701a9147497d91a2fbaf95f53fb6c37418104434c690fec", null ],
+      [ "XWII_IFACE_ALL", "group__device.html#gga781852d892d1184331701a9147497d91a563ca6a91f8288fab92418bbcf0ef99e", null ],
+      [ "XWII_IFACE_WRITABLE", "group__device.html#gga781852d892d1184331701a9147497d91ab6447f677b72d4842de2476921b31b1e", null ]
+    ] ],
+    [ "xwii_led", "group__device.html#gaf2498fc0f02df2f6f59632808a70b15a", null ],
+    [ "xwii_iface_new", "group__device.html#gaa3e9517734189fe581dde3bb89e81d09", null ],
+    [ "xwii_iface_ref", "group__device.html#ga7de406d4fa9bd58c8e6bc752aaf46afa", null ],
+    [ "xwii_iface_unref", "group__device.html#gaf92196dc992decb4e1125af750d1bfe8", null ],
+    [ "xwii_iface_get_fd", "group__device.html#gae0bdc11457b4a6b84d16a4c82239b3a5", null ],
+    [ "xwii_iface_watch", "group__device.html#ga27e8f9b73053d1603033d3a4fd067101", null ],
+    [ "xwii_iface_open", "group__device.html#ga432d767dc77b12aa6f86f1d784174a28", null ],
+    [ "xwii_iface_close", "group__device.html#gaca9a605d36b93af451102c03c468a9ab", null ],
+    [ "xwii_iface_opened", "group__device.html#gaffb9507830c554ba34c30a053fd62baf", null ],
+    [ "xwii_iface_available", "group__device.html#gaa0ea234eb0b67ede2c5cb68576ddf0f7", null ],
+    [ "xwii_iface_poll", "group__device.html#gadc90a7e6d0e40c2b250c7799c7f37b42", null ],
+    [ "xwii_iface_dispatch", "group__device.html#gaadebbb6a2f7f9b579552f04ec7e06ae9", null ],
+    [ "xwii_iface_rumble", "group__device.html#ga695ed40bc40c90a6935472dc9b4db181", null ],
+    [ "xwii_iface_get_led", "group__device.html#ga02ef7934408cd3938b2c4bc2d07d4d10", null ],
+    [ "xwii_iface_set_led", "group__device.html#gab9d9f2430ddd7f4940feb3cbc20267f3", null ],
+    [ "xwii_iface_get_battery", "group__device.html#gaea7e94790780b3bd9fd38d6f59d296d9", null ],
+    [ "xwii_iface_get_devtype", "group__device.html#ga73e1f2c199ec478278267f0e48b00321", null ],
+    [ "xwii_iface_get_extension", "group__device.html#ga1aa63daf944bf58af75f68db5314d996", null ],
+    [ "xwii_iface_set_mp_normalization", "group__device.html#ga9042ea6656b4cfb016aab748859ff7c9", null ],
+    [ "xwii_iface_get_mp_normalization", "group__device.html#ga9c38775ba36a6e7940d3ba381b444af5", null ]
+];
