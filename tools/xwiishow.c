@@ -513,13 +513,19 @@ static void accel_clear(void)
 
 static void accel_toggle(void)
 {
+	int ret;
+
 	if (xwii_iface_opened(iface) & XWII_IFACE_ACCEL) {
 		xwii_iface_close(iface, XWII_IFACE_ACCEL);
 		accel_clear();
 		print_info("Info: Disable accelerometer");
 	} else {
-		xwii_iface_open(iface, XWII_IFACE_ACCEL);
-		print_info("Info: Enable accelerometer");
+		ret = xwii_iface_open(iface, XWII_IFACE_ACCEL);
+		if (ret)
+			print_error("Error: Cannot enable accelerometer: %d",
+				    ret);
+		else
+			print_error("Info: Enable accelerometer");
 	}
 }
 
@@ -635,13 +641,19 @@ static void ir_clear(void)
 
 static void ir_toggle(void)
 {
+	int ret;
+
 	if (xwii_iface_opened(iface) & XWII_IFACE_IR) {
 		xwii_iface_close(iface, XWII_IFACE_IR);
 		ir_clear();
 		print_info("Info: Disable IR");
 	} else {
-		xwii_iface_open(iface, XWII_IFACE_IR);
-		print_info("Info: Enable IR");
+		ret = xwii_iface_open(iface, XWII_IFACE_IR);
+		if (ret)
+			print_error("Error: Cannot enable IR: %d",
+				    ret);
+		else
+			print_error("Info: Enable IR");
 	}
 }
 
@@ -687,13 +699,19 @@ static void mp_clear(void)
 
 static void mp_toggle(void)
 {
+	int ret;
+
 	if (xwii_iface_opened(iface) & XWII_IFACE_MOTION_PLUS) {
 		xwii_iface_close(iface, XWII_IFACE_MOTION_PLUS);
 		mp_clear();
 		print_info("Info: Disable Motion Plus");
 	} else {
-		xwii_iface_open(iface, XWII_IFACE_MOTION_PLUS);
-		print_info("Info: Enable Motion Plus");
+		ret = xwii_iface_open(iface, XWII_IFACE_MOTION_PLUS);
+		if (ret)
+			print_error("Error: Cannot enable MP: %d",
+				    ret);
+		else
+			print_info("Info: Enable Motion Plus");
 	}
 }
 
@@ -749,13 +767,19 @@ static void bboard_clear(void)
 
 static void bboard_toggle(void)
 {
+	int ret;
+
 	if (xwii_iface_opened(iface) & XWII_IFACE_BALANCE_BOARD) {
 		xwii_iface_close(iface, XWII_IFACE_BALANCE_BOARD);
 		bboard_clear();
 		print_info("Info: Disable Balance Board");
 	} else {
-		xwii_iface_open(iface, XWII_IFACE_BALANCE_BOARD);
-		print_info("Info: Enable Balance Board");
+		ret = xwii_iface_open(iface, XWII_IFACE_BALANCE_BOARD);
+		if (ret)
+			print_error("Error: Cannot enable Balance Board: %d",
+				    ret);
+		else
+			print_error("Info: Enable Balance Board");
 	}
 }
 
@@ -1002,13 +1026,19 @@ static void pro_clear(void)
 
 static void pro_toggle(void)
 {
+	int ret;
+
 	if (xwii_iface_opened(iface) & XWII_IFACE_PRO_CONTROLLER) {
 		xwii_iface_close(iface, XWII_IFACE_PRO_CONTROLLER);
 		pro_clear();
 		print_info("Info: Disable Pro Controller");
 	} else {
-		xwii_iface_open(iface, XWII_IFACE_PRO_CONTROLLER);
-		print_info("Info: Enable Pro Controller");
+		ret = xwii_iface_open(iface, XWII_IFACE_PRO_CONTROLLER);
+		if (ret)
+			print_error("Error: Cannot enable Pro Controller: %d",
+				    ret);
+		else
+			print_error("Info: Enable Pro Controller");
 	}
 }
 
@@ -1022,9 +1052,15 @@ static void rumble_show(bool on)
 static void rumble_toggle(void)
 {
 	static bool on = false;
+	int ret;
 
 	on = !on;
-	xwii_iface_rumble(iface, on);
+	ret = xwii_iface_rumble(iface, on);
+	if (ret) {
+		print_error("Error: Cannot toggle rumble motor: %d", ret);
+		on = !on;
+	}
+
 	rumble_show(on);
 }
 
@@ -1039,8 +1075,14 @@ static void led1_show(bool on)
 
 static void led1_toggle(void)
 {
+	int ret;
+
 	led1_state = !led1_state;
-	xwii_iface_set_led(iface, XWII_LED(1), led1_state);
+	ret = xwii_iface_set_led(iface, XWII_LED(1), led1_state);
+	if (ret) {
+		print_error("Error: Cannot toggle LED 1: %d", ret);
+		led1_state = !led1_state;
+	}
 	led1_show(led1_state);
 }
 
@@ -1064,8 +1106,14 @@ static void led2_show(bool on)
 
 static void led2_toggle(void)
 {
+	int ret;
+
 	led2_state = !led2_state;
-	xwii_iface_set_led(iface, XWII_LED(2), led2_state);
+	ret = xwii_iface_set_led(iface, XWII_LED(2), led2_state);
+	if (ret) {
+		print_error("Error: Cannot toggle LED 2: %d", ret);
+		led2_state = !led2_state;
+	}
 	led2_show(led2_state);
 }
 
@@ -1089,8 +1137,14 @@ static void led3_show(bool on)
 
 static void led3_toggle(void)
 {
+	int ret;
+
 	led3_state = !led3_state;
-	xwii_iface_set_led(iface, XWII_LED(3), led3_state);
+	ret = xwii_iface_set_led(iface, XWII_LED(3), led3_state);
+	if (ret) {
+		print_error("Error: Cannot toggle LED 3: %d", ret);
+		led3_state = !led3_state;
+	}
 	led3_show(led3_state);
 }
 
@@ -1114,8 +1168,14 @@ static void led4_show(bool on)
 
 static void led4_toggle(void)
 {
+	int ret;
+
 	led4_state = !led4_state;
-	xwii_iface_set_led(iface, XWII_LED(4), led4_state);
+	ret = xwii_iface_set_led(iface, XWII_LED(4), led4_state);
+	if (ret) {
+		print_error("Error: Cannot toggle LED 4: %d", ret);
+		led4_state = !led4_state;
+	}
 	led4_show(led4_state);
 }
 
