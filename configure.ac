@@ -48,7 +48,34 @@ AC_ARG_ENABLE([debug],
 AM_CONDITIONAL([DEBUG], [test x$debug = xyes])
 AC_MSG_RESULT([$debug])
 
-AC_CONFIG_FILES([Makefile libxwiimote.pc])
+#
+# Check for doxygen
+#
+
+AC_ARG_VAR([DOXYGEN], [Path to doxygen command])
+AC_ARG_WITH(doxygen,
+            AS_HELP_STRING([--with-doxygen],
+                           [Use doxygen to generate documentation]),
+            [use_doxygen=$withval],
+            [use_doxygen=auto])
+have_doxygen=no
+if test ! "x$use_doxygen" = "xno" ; then
+        AC_PATH_PROG([DOXYGEN], [doxygen])
+        if test "x$DOXYGEN" = "x" ; then
+                if test "x$use_doxygen" = "xyes" ; then
+                        AC_MSG_ERROR([--with-doxygen=yes specified but doxygen not found in PATH])
+                fi
+        else
+                have_doxygen=yes
+        fi
+fi
+AM_CONDITIONAL([HAVE_DOXYGEN], [test "$have_doxygen" = yes])
+
+#
+# Write configuration
+#
+
+AC_CONFIG_FILES([Makefile libxwiimote.pc doc/Doxyfile])
 AC_OUTPUT
 
 AC_MSG_NOTICE([Build configuration:
@@ -57,5 +84,8 @@ AC_MSG_NOTICE([Build configuration:
           exec-prefix: $exec_prefix
                libdir: $libdir
            includedir: $includedir
+
+                debug: $debug
+              doxygen: $have_doxygen
 
         Run "${MAKE-make}" to start compilation process])

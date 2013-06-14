@@ -32,3 +32,6 @@ xwiidump
 xwiishow
 xwiikeymap
 libxwiimote.pc
+doc/Doxyfile
+doc/html/
+doc/stamp-doxygen

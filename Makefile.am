@@ -137,3 +137,30 @@ xwiidump_CPPFLAGS = \
 	$(AM_CPPFLAGS)
 xwiidump_LDFLAGS = \
 	$(AM_LDFLAGS)
+
+#
+# doxygen
+#
+
+if HAVE_DOXYGEN
+
+doc: doc/stamp-doxygen
+clean-doc: clean-doxygen
+all-local:: doc
+clean-local:: clean-doc
+
+doc/stamp-doxygen: $(top_srcdir)/lib/xwiimote.h
+	$(AM_V_GEN)$(DOXYGEN) doc/Doxyfile
+	$(AM_V_at)touch $@
+
+clean-doxygen:
+	$(AM_V_at)rm -vrf doc/html doc/stamp-doxygen
+
+install-data-local:: doc
+	$(MKDIR_P) $(DESTDIR)$(htmldir)
+	$(INSTALL_DATA) doc/html/* $(DESTDIR)$(htmldir)
+
+uninstall-local::
+	rm -rf $(DESTDIR)$(htmldir)
+
+endif # HAVE_DOXYGEN

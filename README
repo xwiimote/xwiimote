@@ -1,8 +1,9 @@
-= Open-Source Nintendo Wii / Wii U Device Driver =
+Overview {#mainpage}
+========
 
-This project contains tools and libraries related to the open
-source Nintendo Wii / Wii U device driver which is available since
-linux-3.1 in the official linux kernel sources.
+xwiimote is an open-source device driver for Nintendo Wii / Wii U remotes. It
+contains tools and libraries which work together with the official hid-wiimote
+kernel driver, available since linux-3.1.
 
 If you want to use a Nintendo Wii Remote or any compatible device (including the
 Nintendo Wii Balance Board, Nintendo Wii U Pro Controller, and more) on your
@@ -13,9 +14,8 @@ This distribution is hosted at:
 Use this website to contact the maintainers or developers or to file bug
 reports.
 
-Happy Wii'ing!
-
-== Install ==
+Install
+=======
 
 To install the libxwiimote.so library and the related tools, use:
 	$ ./configure [--enable-debug] [--prefix=/usr]
@@ -60,27 +60,32 @@ Following software is not part of this package:
 		BlueZ package and available since bluez-4.96. It should be
 		already installed on your system.
 
-== Usage ==
+Usage
+=====
 
 Please see the website for help:
   http://dvdhrm.github.io/xwiimote
 
-== Documentation ==
+Documentation
+=============
 
 ./doc/website/index.html: Official website of XWiimote and documentation
 ./doc/*.3: Manpages
 ./doc/DEVICES: Enumeration of all Nintendo Wii / Wii U related devices
 ./doc/DEV_*: Device communication/protocol descriptions
 
-== Development ==
+Development
+===========
 
 Please see ./DEV for development information.
 
-== Copying ==
+Copying
+=======
 
 Please see ./COPYING for more information.
 
-== Compatibility ==
+Compatibility
+=============
 
 Two other commonly used Wii-Remote libraries are cwiid and wiiuse. Both provide
 a full user-space driver and were used heavily in the past. We do not provide
@@ -103,7 +108,8 @@ or any other kind that it wants. We achieve this by keeping the user-space API
 very similar to the kernel-API so the application can integrate this into any
 infrastructure it wants.
 
-== Contact ==
+Contact
+=======
 
 Website:
   http://dvdhrm.github.io/xwiimote
