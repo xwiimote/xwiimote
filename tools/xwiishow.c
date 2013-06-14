@@ -41,6 +41,17 @@ static bool freeze = false;
 
 /* error messages */
 
+static void print_info(const char *format, ...)
+{
+	va_list list;
+
+	va_start(list, format);
+	mvprintw(22, 22, "                                                           ");
+	move(22, 22);
+	vw_printw(stdscr, format, list);
+	va_end(list);
+}
+
 static void print_error(const char *format, ...)
 {
 	va_list list;
@@ -126,7 +137,7 @@ static void key_toggle(void)
 	if (xwii_iface_opened(iface) & XWII_IFACE_CORE) {
 		xwii_iface_close(iface, XWII_IFACE_CORE);
 		key_clear();
-		print_error("Info: Disable key events");
+		print_info("Info: Disable key events");
 	} else {
 		ret = xwii_iface_open(iface, XWII_IFACE_CORE |
 					     XWII_IFACE_WRITABLE);
@@ -493,10 +504,10 @@ static void accel_toggle(void)
 	if (xwii_iface_opened(iface) & XWII_IFACE_ACCEL) {
 		xwii_iface_close(iface, XWII_IFACE_ACCEL);
 		accel_clear();
-		print_error("Info: Disable accelerometer");
+		print_info("Info: Disable accelerometer");
 	} else {
 		xwii_iface_open(iface, XWII_IFACE_ACCEL);
-		print_error("Info: Enable accelerometer");
+		print_info("Info: Enable accelerometer");
 	}
 }
 
@@ -615,10 +626,10 @@ static void ir_toggle(void)
 	if (xwii_iface_opened(iface) & XWII_IFACE_IR) {
 		xwii_iface_close(iface, XWII_IFACE_IR);
 		ir_clear();
-		print_error("Info: Disable IR");
+		print_info("Info: Disable IR");
 	} else {
 		xwii_iface_open(iface, XWII_IFACE_IR);
-		print_error("Info: Enable IR");
+		print_info("Info: Enable IR");
 	}
 }
 
@@ -667,10 +678,10 @@ static void mp_toggle(void)
 	if (xwii_iface_opened(iface) & XWII_IFACE_MOTION_PLUS) {
 		xwii_iface_close(iface, XWII_IFACE_MOTION_PLUS);
 		mp_clear();
-		print_error("Info: Disable Motion Plus");
+		print_info("Info: Disable Motion Plus");
 	} else {
 		xwii_iface_open(iface, XWII_IFACE_MOTION_PLUS);
-		print_error("Info: Enable Motion Plus");
+		print_info("Info: Enable Motion Plus");
 	}
 }
 
@@ -681,11 +692,11 @@ static void mp_normalization_toggle(void)
 	xwii_iface_get_mp_normalization(iface, &x, &y, &z, &factor);
 	if (!factor) {
 		xwii_iface_set_mp_normalization(iface, x, y, z, 50);
-		print_error("Info: Enabled Motion Plus Normalization (%i:%i:%i)",
+		print_info("Info: Enable MP Norm: (%i:%i:%i)",
 			    (int)x, (int)y, (int)z);
 	} else {
 		xwii_iface_set_mp_normalization(iface, x, y, z, 0);
-		print_error("Info: Disabled Motion Plus Normalization (%i:%i:%i)",
+		print_info("Info: Disable MP Norm: (%i:%i:%i)",
 			    (int)x, (int)y, (int)z);
 	}
 }
@@ -729,10 +740,10 @@ static void bboard_toggle(void)
 	if (xwii_iface_opened(iface) & XWII_IFACE_BALANCE_BOARD) {
 		xwii_iface_close(iface, XWII_IFACE_BALANCE_BOARD);
 		bboard_clear();
-		print_error("Info: Disable Balance Board");
+		print_info("Info: Disable Balance Board");
 	} else {
 		xwii_iface_open(iface, XWII_IFACE_BALANCE_BOARD);
-		print_error("Info: Enable Balance Board");
+		print_info("Info: Enable Balance Board");
 	}
 }
 
@@ -982,10 +993,10 @@ static void pro_toggle(void)
 	if (xwii_iface_opened(iface) & XWII_IFACE_PRO_CONTROLLER) {
 		xwii_iface_close(iface, XWII_IFACE_PRO_CONTROLLER);
 		pro_clear();
-		print_error("Info: Disable Pro Controller");
+		print_info("Info: Disable Pro Controller");
 	} else {
 		xwii_iface_open(iface, XWII_IFACE_PRO_CONTROLLER);
-		print_error("Info: Enable Pro Controller");
+		print_info("Info: Enable Pro Controller");
 	}
 }
 
@@ -1207,8 +1218,8 @@ static void setup_window(void)
 	mvprintw(i++, 0, "|      +++++      |                                                            |");
 	mvprintw(i++, 0, "|                 |                                                            |");
 	mvprintw(i++, 0, "|       | |       |                                                            |");
-	mvprintw(i++, 0, "|       | |       |                                                            |");
-	mvprintw(i++, 0, "|                 | +----------------------------------------------------------+");
+	mvprintw(i++, 0, "|       | |       | +----------------------------------------------------------+");
+	mvprintw(i++, 0, "|                 | |                                                           ");
 	mvprintw(i++, 0, "+-----------------+ |");
 }
 
@@ -1290,14 +1301,14 @@ static void handle_resize(void)
 		erase();
 		setup_window();
 		refresh_all();
-		print_error("Info: Screen smaller than 160x40; limited view");
+		print_info("Info: Screen smaller than 160x40; limited view");
 	} else {
 		mode = MODE_EXTENDED;
 		erase();
 		setup_ext_window();
 		setup_window();
 		refresh_all();
-		print_error("Info: Screen initialized for extended view");
+		print_info("Info: Screen initialized for extended view");
 	}
 }
 
@@ -1307,7 +1318,7 @@ static void handle_watch(void)
 {
 	static unsigned int num;
 
-	print_error("Info: Watch Event #%u", ++num);
+	print_info("Info: Watch Event #%u", ++num);
 	refresh_all();
 }
 
@@ -1316,7 +1327,7 @@ static void handle_watch(void)
 static void freeze_toggle(void)
 {
 	freeze = !freeze;
-	print_error("Info: %sreeze screen", freeze ? "F" : "Unf");
+	print_info("Info: %sreeze screen", freeze ? "F" : "Unf");
 }
 
 static int keyboard(void)
