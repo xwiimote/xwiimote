@@ -1,20 +1,19 @@
-= Nintendo Wii Remote Linux Device Driver Tools =
+= Open-Source Nintendo Wii / Wii U Device Driver =
 
-This distribution contains tools and libraries related to the open
-source Nintendo Wii Remote linux device driver which is available since
+This project contains tools and libraries related to the open
+source Nintendo Wii / Wii U device driver which is available since
 linux-3.1 in the official linux kernel sources.
 
+If you want to use a Nintendo Wii Remote or any compatible device (including the
+Nintendo Wii Balance Board, Nintendo Wii U Pro Controller, and more) on your
+linux system, the xwiimote software stack provides everything you need.
+
 This distribution is hosted at:
-  https://github.com/dvdhrm/xwiimote
+  http://dvdhrm.github.io/xwiimote
 Use this website to contact the maintainers or developers or to file bug
-reports. It also provides access to the source code history of the git
-repository.
+reports.
 
-For email contact please see ./COPYING for a list of contributors or
-write an email to the current maintainer at:
-  dh.herrmann@gmail.com
-
-Thank you for using this driver!
+Happy Wii'ing!
 
 == Install ==
 
@@ -23,7 +22,7 @@ To install the libxwiimote.so library and the related tools, use:
 	$ make
 	$ make install
 If "configure" is not available, use:
-	$ ./autogen.sh
+	$ ./autogen.sh [<configure-flags>]
 
 Dependencies:
 	- libudev: Used for device enumeration
@@ -42,108 +41,34 @@ This software packages contains:
 		adds all Wii Remotes to the input blacklist of the X-server.
 		This is needed since the raw Wii Remote kernel interface is
 		useless (even irritating) to the X-server. Instead the
-		emulators should be used or the xf86-input-xwiimote driver.
-	xwiikeymap: The most basic emulator. It reads input from a Wii Remote,
-		maps it to other configured keys and feeds it as input into the
-		system. This allows to remap the Wii Remote buttons to your
-		needs and have it as input to the X-server or similar. This is
-		only for the buttons and has no accelerometer, IR, etc. support.
+		xf86-input-xwiimote driver should be used.
+	manpages: Several manpages are provided. One overview page and several
+		other pages for each tool and feature. They are installed by
+		the autotools scripts automatically alongside the library and
+		applications.
 
 The following tools are available but not installed into the system:
 	xwiidump: A test application which reads the EEPROM memory of a
 		connected Wii Remote and prints it to stdout. This requires
-		debugfs support in the kernel and hid-wiimote kernel module.
+		debugfs support in the kernel and the hid-wiimote kernel module.
 
 Following software is not part of this package:
 	hid-wiimote.ko: The wiimote kernel module is available in the official
 		linux kernel sources and should already be installed in your
-		system if you run a kernel linux-3.1 or newer.
+		system if you run linux-3.1 or newer.
 	wiimote.so: The BlueZ bluetoothd wiimote plugin is part of the upstream
 		BlueZ package and available since bluez-4.96. It should be
 		already installed on your system.
 
 == Usage ==
 
-The XWiimote software stack is split into 3 parts:
-	- BlueZ: The official linux bluetooth stack (BlueZ) needs a few patches
-		to allow pairing with Wii Remotes. These patches are part of
-		BlueZ since bluez-4.96. They are available as plugin wiimote.so,
-		which needs to be enabled during configuration with:
-			./configure --enable-wiimote
-		Most distribution should already contain the plugin. It is
-		enabled by default in newer bluez distributions.
-
-		With this plugin you should be able to pair your Wii Remote like
-		any other bluetooth device. If this plugin is not available, you
-		need to connect to the device without pairing/bonding. Simply
-		select "Connect without authentication/pairing/bonding" or
-		"Use no PIN" during connection.
-		The Wii Remote can be put into discoverable mode by pressing the
-		red sync-button behind the battery cover on the back of the Wii
-		Remote. You can also put it into discoverable mode by holding
-		the 1+2 buttons simultaneously. However, the red-sync button
-		works more reliably and auto-reconnect is not available when the
-		1+2 buttons are used.
-
-		This plugin is responsible for pairing Wii Remotes. It does not
-		provide any input from the peripheral. This is done by the
-		kernel driver. This plugin is provided by most distributions by
-		default and you shouldn't care about this.
-	- Kernel: The linux kernel includes an hid-wiimote.ko plugin since
-		version linux-3.1. The related config option is
-		CONFIG_HID_WIIMOTE. It is available in the configuration under:
-			"Linux Kernel/Device Drivers/HID/HID Drivers"
-		With linux-3.1 only basic LED and button input is available.
-		With linux-3.2 accelerometer, IR and rumble support is added.
-		With linux-3.3 extension and debug support is added.
-		Your kernel should already include this driver and you shouldn't
-		care about this.
-		If the kernel driver is loaded and a Wii Remote is connected via
-		BlueZ, the driver automatically takes control over the Wii
-		Remote and provides a kernel interface to user-space. The
-		libxwiimote.so library can be used to access this interface. You
-		may also access it directly. Read ./doc/INTERFACE for a
-		description of the kernel interface. It is recommended to use
-		the library, though.
-		The kernel interface hides the protocol details but still
-		provides very generic access to the Wii Remote. This interface
-		is not suitable to be used as direct application input. Instead
-		several emulators exist which emulate a mouse or keyboard based
-		on the kernel interface. This is needed because there are
-		several different ways to interpret the input and use the Wii
-		Remote as input device. We do not want to limit it to a single
-		mode so you need to use an emulator to get proper input.
-		Applications may choose to use the libxwiimote.so library,
-		though, if they want direct access to the Wii Remote and the
-		emulators are not sufficient. See ./doc/LIBRARY for the library
-		interface.
-	- Userspace: The userspace part (aside from BlueZ) consists of a library
-		called libxwiimote.so to access the Wii Remotes directly and
-		several emulators which provide emulated mouse/keyboard input to
-		the system based on the raw kernel interface.
-		Applications should ignore the kernel input devices from Wii
-		Remotes as they provide only raw data. Instead an emulator
-		should be started which provides a separate input device which
-		can be accessed by the X-server or other applications and
-		provides basic mouse and keyboard input.
-
-To use Wii Remotes you always need the BlueZ wiimote plugin and the
-hid-wiimote.ko kernel driver. Both are part of the upstream repositories of the
-linux kernel and the BlueZ project and automatically built in the distributions.
-
-For testing purposes it is recommended to use the xwiishow tool. It has an
-ncurses based user-interface and is the most straightforward way to test whether
-the Wii Remote works on your machine.
-For more sophisticated tasks you should read the documentation of the emulators
-or the libxwiimote.so library depending on your needs.
-
-Happy Playing!
+Please see the website for help:
+  http://dvdhrm.github.io/xwiimote
 
 == Documentation ==
 
-./doc/*.3: Manpages of the tools
-./doc/LIBRARY: Description of the libxwiimote.so library interface
-./doc/INTERFACE: Description of the direct kernel interface of hid-wiimote.ko
+./doc/website/index.html: Official website of XWiimote and documentation
+./doc/*.3: Manpages
 ./doc/DEVICES: Enumeration of all Nintendo Wii / Wii U related devices
 ./doc/DEV_*: Device communication/protocol descriptions
 
@@ -177,3 +102,12 @@ use our API to support event-based, callback-based or thread-based event-loops
 or any other kind that it wants. We achieve this by keeping the user-space API
 very similar to the kernel-API so the application can integrate this into any
 infrastructure it wants.
+
+== Contact ==
+
+Website:
+  http://dvdhrm.github.io/xwiimote
+
+For email contact please see ./COPYING for a list of contributors or
+write an email to the current maintainer at:
+  dh.herrmann@gmail.com
