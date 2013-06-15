@@ -1037,16 +1037,28 @@ try_again:
 			goto try_again;
 
 		switch (input.code) {
-			case BTN_A:
+#ifndef BTN_EAST
+#define BTN_EAST 0x131
+#endif
+			case BTN_EAST:
 				key = XWII_KEY_A;
 				break;
-			case BTN_B:
+#ifndef BTN_SOUTH
+#define BTN_SOUTH 0x130
+#endif
+			case BTN_SOUTH:
 				key = XWII_KEY_B;
 				break;
-			case BTN_X:
+#ifndef BTN_NORTH
+#define BTN_NORTH 0x133
+#endif
+			case BTN_NORTH:
 				key = XWII_KEY_X;
 				break;
-			case BTN_Y:
+#ifndef BTN_WEST
+#define BTN_WEST 0x134
+#endif
+			case BTN_WEST:
 				key = XWII_KEY_Y;
 				break;
 			case BTN_START:
@@ -1058,16 +1070,28 @@ try_again:
 			case BTN_MODE:
 				key = XWII_KEY_HOME;
 				break;
-			case KEY_LEFT:
+#ifndef BTN_DPAD_LEFT
+#define BTN_DPAD_LEFT 0x222
+#endif
+			case BTN_DPAD_LEFT:
 				key = XWII_KEY_LEFT;
 				break;
-			case KEY_RIGHT:
+#ifndef BTN_DPAD_RIGHT
+#define BTN_DPAD_RIGHT 0x223
+#endif
+			case BTN_DPAD_RIGHT:
 				key = XWII_KEY_RIGHT;
 				break;
-			case KEY_UP:
+#ifndef BTN_DPAD_UP
+#define BTN_DPAD_UP 0x220
+#endif
+			case BTN_DPAD_UP:
 				key = XWII_KEY_UP;
 				break;
-			case KEY_DOWN:
+#ifndef BTN_DPAD_DOWN
+#define BTN_DPAD_DOWN 0x221
+#endif
+			case BTN_DPAD_DOWN:
 				key = XWII_KEY_DOWN;
 				break;
 			case BTN_TL:
@@ -1099,13 +1123,13 @@ try_again:
 		ev->v.key.state = input.value;
 		return 0;
 	} else if (input.type == EV_ABS) {
-		if (input.code == ABS_HAT0X)
+		if (input.code == ABS_X)
 			dev->pro_cache[0].x = input.value;
-		else if (input.code == ABS_HAT0Y)
+		else if (input.code == ABS_Y)
 			dev->pro_cache[0].y = input.value;
-		else if (input.code == ABS_HAT1X)
+		else if (input.code == ABS_RX)
 			dev->pro_cache[1].x = input.value;
-		else if (input.code == ABS_HAT1Y)
+		else if (input.code == ABS_RY)
 			dev->pro_cache[1].y = input.value;
 	} else if (input.type == EV_SYN) {
 		memset(ev, 0, sizeof(*ev));
