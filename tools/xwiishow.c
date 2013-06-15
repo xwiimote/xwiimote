@@ -1247,6 +1247,11 @@ static void extension_refresh(void)
 		mvprintw(7, 54, "%s", name);
 		free(name);
 	}
+
+	if (xwii_iface_available(iface) & XWII_IFACE_MOTION_PLUS)
+		mvprintw(7, 77, "M+");
+	else
+		mvprintw(7, 77, "  ");
 }
 
 /* basic window setup */
