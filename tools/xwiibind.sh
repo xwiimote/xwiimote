@@ -65,19 +65,19 @@ fi
 echo "Removing device..."
 "$PYTHON" "test-device" remove "$DEV"
 echo "Device removed, press any key to continue"
-read
+read tmp
 
 echo "Please press red sync-button on the back of the wiimote and press any key
 to continue"
 echo "If this asks you for PIN input, then your bluetoothd daemon does not
 include the wiimote.so plugin. Please install it or contact your distributor."
-read
+read tmp
 "$PYTHON" "test-device" create "$DEV"
 echo "Please disconnect the device by pressing the power button and then press
 any key to continue"
-read
+read tmp
 echo "Now press the red-sync button again and press any key to continue"
-read
+read tmp
 
 echo "Pairing with the remote device..."
 "$PYTHON" "simple-agent" "hci0" "$DEV"
