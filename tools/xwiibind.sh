@@ -2,7 +2,7 @@
 
 #
 # XWiimote - tools
-# Written 2011 by David Herrmann
+# Written 2011-2013 by David Herrmann
 # Dedicated to the Public Domain
 #
 
@@ -14,18 +14,25 @@
 # method described here is neither fast nor reliable. It is a small hack to get
 # it work.
 #
+# Please specify your device bdaddr as first argument to this script.
+#
 # To run this tool, you need:
 #  - "simple-agent"
 #  - "test-device"
 #  - "test-input"
 # from the "test" directory of the bluez distribution. They are available here:
-# http://git.kernel.org/?p=bluetooth/bluez.git;a=tree;f=test
+#   http://git.kernel.org/?p=bluetooth/bluez.git;a=tree;f=test
 # They are GPL licensed and hence not included here. They are simple python
 # scripts and can be just copied into this directory.
+# The scripts uses "bluez-" as default prefix for these tools. You can pass
+# another prefix as second argument to overwrite this.
+# You can also specify BIN_TESTINP, BIN_TESTDEV, BIN_SIMPLEA as environment
+# variables with the absolute/relative path to the given binaries. The prefix
+# will not be applied in this case.
 #
-# Please specify your device bdaddr as first argument to this script.
 # The python scripts need "python2" and are not python3 compatible, so specify
 # the python interpreter as "PYTHON" below if the default value does not work.
+# Or pass PYTHON="<path>" as environment variable.
 #
 # This script REQUIRES that you have the "wiimote.so" plugin enabled in your
 # bluetoothd daemon. It is often NOT part of the official distribution package
@@ -54,16 +61,49 @@
 # writing "yes" when it prompts you.
 #
 
-PYTHON="python2"
-DEV=$1
+# pass PYTHON=xy to overwrite this
+if test "x$PYTHON" = "x" ; then
+	PYTHON="python2"
+fi
 
-if test x"$1" = "x" ; then
+# first argument is bdaddr
+DEV="$1"
+if test "x$1" = "x" ; then
 	echo "Please specify bdaddr of wiimote as first argument"
 	exit 1
 fi
 
+# optional second argument is binary prefix (default: "bluez-")
+PREFIX="bluez-"
+if test $# -gt 1 ; then
+	PREFIX="$2"
+fi
+
+# Pass BIN_TESTDEV=test-device, BIN_SIMPLEA=simple-agent, BIN_TESTINP=test-input
+# to overwrite the "which" statements.
+ERR=0
+if test "x$BIN_TESTDEV" = "x" ; then
+	BIN_TESTDEV=`which "${PREFIX}test-device" 2>/dev/null`
+	ERR=$(($ERR + $?))
+fi
+
+if test "x$BIN_SIMPLEA" = "x" ; then
+	BIN_SIMPLEA=`which "${PREFIX}simple-agent" 2>/dev/null`
+	ERR=$(($ERR + $?))
+fi
+
+if test "x$BIN_TESTINP" = "x" ; then
+	BIN_TESTINP=`which "${PREFIX}test-input" 2>/dev/null`
+	ERR=$(($ERR + $?))
+fi
+
+if test ! "x$ERR" = "x0" ; then
+	echo "Cannot find bluez '${PREFIX}test-device', '${PREFIX}simple-agent' or '${PREFIX}test-input' scripts"
+	exit 1
+fi
+
 echo "Removing device..."
-"$PYTHON" "test-device" remove "$DEV"
+"$PYTHON" "$BIN_TESTDEV" remove "$DEV"
 echo "Device removed, press any key to continue"
 read tmp
 
@@ -72,7 +112,7 @@ to continue"
 echo "If this asks you for PIN input, then your bluetoothd daemon does not
 include the wiimote.so plugin. Please install it or contact your distributor."
 read tmp
-"$PYTHON" "test-device" create "$DEV"
+"$PYTHON" "$BIN_TESTDEV" create "$DEV"
 echo "Please disconnect the device by pressing the power button and then press
 any key to continue"
 read tmp
@@ -80,7 +120,7 @@ echo "Now press the red-sync button again and press any key to continue"
 read tmp
 
 echo "Pairing with the remote device..."
-"$PYTHON" "simple-agent" "hci0" "$DEV"
+"$PYTHON" "$BIN_SIMPLEA" "hci0" "$DEV"
 echo "Connecting to input device..."
-"$PYTHON" "test-input" connect "$DEV"
+"$PYTHON" "$BIN_TESTINP" connect "$DEV"
 echo "Connected to input device. Autoconnect should be enabled now."
