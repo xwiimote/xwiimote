@@ -2,7 +2,7 @@
 .\" Written 2012 by David Herrmann
 .\" Dedicated to the Public Domain
 .\"
-.TH "XWIIMOTE" 7 "February 2012" "David Herrmann" "Wii Remote Driver"
+.TH "XWIIMOTE" 7 "August 2013" "David Herrmann" "Wii Remote Driver"
 .SH NAME
 XWiimote \- Nintendo Wii Remote Linux Device Driver
 
@@ -28,9 +28,7 @@ the driver and plugin.
 
 The user-space utilities provide a library that can be used to monitor and
 access connected Wii Remotes and they provide several applications to manage
-connected Wii Remotes. There are also tools to remap the peripheral input to
-arbitrary system input so you can use Wii Remotes as input devices for any
-application even if the desired application has no special Wii Remote support.
+connected Wii Remotes.
 
 .SS Connecting Wii Remotes
 To connect a Wii Remote to your host be sure that the official linux Bluetooth
@@ -67,10 +65,6 @@ They are listed there with their device ID inside that directory. For example
 You can retrieve kernel information about the device by reading the files in
 this directory.
 
-If you want to remap the keys of the Wii Remote to other keys, use the
-.BR xwiikeymap (1)
-utility. Further tools are under development.
-
 .SS BlueZ wiimote plugin
 Since bluez-4.96 the bluetooth daemon includes a special wiimote plugin which
 handles wiimote pairing requests. If you pair a Wii Remote, the plugin will
@@ -88,6 +82,10 @@ There is no need to configure this driver. All configuration should be done in
 the user-space utilities. The kernel driver provides a simple abstraction layer
 which does not need any configuration.
 
+With linux-3.11 the driver was rewritten to support extension hotplugging,
+device detection and more advanced functionality. It is highly recommended to
+use a kernel version greater than, or equal to 3.11.
+
 .SS libxwiimote
 The kernel API for the Wii Remote is quite complex. It is documented in the
 xwiimote source repository in
@@ -96,15 +94,10 @@ xwiimote source repository in
 To help application developers to use special Wii Remote functionality, we
 developed the
 .BR libxwiimote (7)
-library which provides an easy API to manage connected Wii Remotes. If an
-application does not support Wii Remotes explicitely you can still use the
-user-space tools like
-.BR xwiikeymap (1)
-to map Wii Remote buttons to arbitrary keys which then can be access as input
-device by any application which accepts keyboard input.
+library which provides an easy API to manage connected Wii Remotes.
 
-However, if an application wants to use the IR or accelerometer sensors of a Wii
-Remote or if it requires more advanced key-maps, then it should use
+If an application wants to use the IR or accelerometer sensors of a Wii
+Remote or if it requires advanced key-maps, it should use
 .B libxwiimote
 to access connected Wii Remotes.
 
@@ -137,9 +130,8 @@ your X-Server.
 .SH AUTHOR
 David Herrmann <dh.herrmann@googlemail.com>
 .br
-The XWiimote Project: http://github.com/dvdhrm/xwiimote
+The XWiimote Project: http://dvdhrm.github.io/xwiimote
 
 .SH "SEE ALSO"
 .BR libxwiimote (7),
-.BR xwiishow (1),
-.BR xwiikeymap (1)
+.BR xwiishow (1)
