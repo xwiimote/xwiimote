@@ -1,4 +1,4 @@
-LIBXWIIMOTE_1 {
+LIBXWIIMOTE_2 {
 global:
 	xwii_iface_new;
 	xwii_iface_ref;

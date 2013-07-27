@@ -7,7 +7,7 @@
 AC_PREREQ(2.68)
 
 AC_INIT([xwiimote],
-        [1],
+        [2],
         [http://github.com/dvdhrm/xwiimote/issues],
         [xwiimote],
         [http://dvdhrm.github.io/xwiimote])
