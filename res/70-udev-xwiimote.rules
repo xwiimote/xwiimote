@@ -1,0 +1,9 @@
+# Udev wiimote permission setup
+# This is an example rule to change the permissions on LED devices on wiimotes.
+# It changes the "group" field to "input" and marks it writeable.
+#
+# This rule is required if you want to control wiimote LEDs without being root.
+# It is not required for input events as these are already changed to "input"
+# group by default udev rules.
+
+SUBSYSTEM=="leds", ACTION=="add", DRIVERS=="wiimote", RUN+="/bin/sh -c 'chgrp -R input /sys%p'", RUN+="/bin/sh -c 'chmod -R g+w /sys%p'"
