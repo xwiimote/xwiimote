@@ -444,6 +444,32 @@ enum xwii_event_types {
 	XWII_EVENT_WATCH,
 
 	/**
+	 * Classic Controller key event
+	 *
+	 * Button events of the classic controller are reported via this
+	 * interface and not via the core-interface (which only reports
+	 * core-buttons).
+	 * Valid buttons include: LEFT, RIGHT, UP, DOWN, PLUS, MINUS, HOME, X,
+	 * Y, A, B, TR, TL, ZR, ZL.
+	 * Payload type is struct xwii_event_key.
+	 */
+	XWII_EVENT_CLASSIC_CONTROLLER_KEY,
+
+	/**
+	 * Classic Controller movement event
+	 *
+	 * Movement of analog sticks are reported via this event. The payload
+	 * is a struct xwii_event_abs and the first two array elements contain
+	 * the absolute x and y position of both analog sticks.
+	 * The x value of the third array element contains the absolute position
+	 * of the TL trigger. The y value contains the absolute position for the
+	 * TR trigger. Note that many classic controllers do not have analog
+	 * TL/TR triggers, in which case these read 0 or MAX (63). The digital
+	 * TL/TR buttons are always reported correctly.
+	 */
+	XWII_EVENT_CLASSIC_CONTROLLER_MOVE,
+
+	/**
 	 * Number of available event types
 	 *
 	 * The value of this constant may increase on each new library revision.

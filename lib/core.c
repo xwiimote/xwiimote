@@ -86,6 +86,8 @@ struct xwii_iface {
 	int32_t mp_normalize_factor;
 	/* pro controller cache */
 	struct xwii_event_abs pro_cache[2];
+	/* classic controller cache */
+	struct xwii_event_abs classic_cache[3];
 };
 
 /* table to convert interface to name */
@@ -590,6 +592,14 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 			err = ret;
 	}
 
+	if (ifaces & XWII_IFACE_CLASSIC_CONTROLLER) {
+		ret = xwii_iface_open_if(dev, XWII_IF_CLASSIC_CONTROLLER, wr);
+		if (!ret)
+			dev->ifaces |= XWII_IFACE_CLASSIC_CONTROLLER;
+		else
+			err = ret;
+	}
+
 	if (ifaces & XWII_IFACE_BALANCE_BOARD) {
 		ret = xwii_iface_open_if(dev, XWII_IF_BALANCE_BOARD, wr);
 		if (!ret)
@@ -965,6 +975,114 @@ try_again:
 	goto try_again;
 }
 
+static int read_classic(struct xwii_iface *dev, struct xwii_event *ev)
+{
+	int ret, fd;
+	struct input_event input;
+	unsigned int key;
+
+	fd = dev->ifs[XWII_IF_CLASSIC_CONTROLLER].fd;
+	if (fd < 0)
+		return -EAGAIN;
+
+try_again:
+	ret = read_event(fd, &input);
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret < 0) {
+		xwii_iface_close(dev, XWII_IFACE_CLASSIC_CONTROLLER);
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
+		return 0;
+	}
+
+	if (input.type == EV_KEY) {
+		if (input.value < 0 || input.value > 2)
+			goto try_again;
+
+		switch (input.code) {
+			case BTN_A:
+				key = XWII_KEY_A;
+				break;
+			case BTN_B:
+				key = XWII_KEY_B;
+				break;
+			case BTN_X:
+				key = XWII_KEY_X;
+				break;
+			case BTN_Y:
+				key = XWII_KEY_Y;
+				break;
+			case KEY_NEXT:
+				key = XWII_KEY_PLUS;
+				break;
+			case KEY_PREVIOUS:
+				key = XWII_KEY_MINUS;
+				break;
+			case BTN_MODE:
+				key = XWII_KEY_HOME;
+				break;
+			case KEY_LEFT:
+				key = XWII_KEY_LEFT;
+				break;
+			case KEY_RIGHT:
+				key = XWII_KEY_RIGHT;
+				break;
+			case KEY_UP:
+				key = XWII_KEY_UP;
+				break;
+			case KEY_DOWN:
+				key = XWII_KEY_DOWN;
+				break;
+			case BTN_TL:
+				key = XWII_KEY_TL;
+				break;
+			case BTN_TR:
+				key = XWII_KEY_TR;
+				break;
+			case BTN_TL2:
+				key = XWII_KEY_ZL;
+				break;
+			case BTN_TR2:
+				key = XWII_KEY_ZR;
+				break;
+			default:
+				goto try_again;
+		}
+
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		ev->type = XWII_EVENT_CLASSIC_CONTROLLER_KEY;
+		ev->v.key.code = key;
+		ev->v.key.state = input.value;
+		return 0;
+	} else if (input.type == EV_ABS) {
+		if (input.code == ABS_HAT1X)
+			dev->classic_cache[0].x = input.value;
+		else if (input.code == ABS_HAT1Y)
+			dev->classic_cache[0].y = input.value;
+		else if (input.code == ABS_HAT2X)
+			dev->classic_cache[1].x = input.value;
+		else if (input.code == ABS_HAT2Y)
+			dev->classic_cache[1].y = input.value;
+		else if (input.code == ABS_HAT3X)
+			dev->classic_cache[2].y = input.value;
+		else if (input.code == ABS_HAT3Y)
+			dev->classic_cache[2].x = input.value;
+	} else if (input.type == EV_SYN) {
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		memcpy(&ev->v.abs, dev->classic_cache,
+		       sizeof(dev->classic_cache));
+		ev->type = XWII_EVENT_CLASSIC_CONTROLLER_MOVE;
+		return 0;
+	} else {
+	}
+
+	goto try_again;
+}
+
 static int read_bboard(struct xwii_iface *dev, struct xwii_event *ev)
 {
 	int ret, fd;
@@ -1157,6 +1275,8 @@ static int dispatch_event(struct xwii_iface *dev, struct epoll_event *ep,
 		return read_ir(dev, ev);
 	else if (ep->data.ptr == &dev->ifs[XWII_IF_MOTION_PLUS])
 		return read_mp(dev, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_CLASSIC_CONTROLLER])
+		return read_classic(dev, ev);
 	else if (ep->data.ptr == &dev->ifs[XWII_IF_BALANCE_BOARD])
 		return read_bboard(dev, ev);
 	else if (ep->data.ptr == &dev->ifs[XWII_IF_PRO_CONTROLLER])
