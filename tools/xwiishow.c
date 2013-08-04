@@ -1044,6 +1044,90 @@ static void pro_toggle(void)
 	}
 }
 
+/* classic controller */
+
+static void classic_show_ext(const struct xwii_event *event)
+{
+	struct xwii_event ev;
+	int32_t v;
+	const char *str;
+
+	/* forward key events to pro handler */
+	if (event->type == XWII_EVENT_CLASSIC_CONTROLLER_KEY) {
+		ev = *event;
+		ev.type = XWII_EVENT_PRO_CONTROLLER_KEY;
+		return pro_show_ext(&ev);
+	}
+
+	/* forward axis events to pro handler... */
+	if (event->type == XWII_EVENT_CLASSIC_CONTROLLER_MOVE) {
+		ev = *event;
+		ev.type = XWII_EVENT_PRO_CONTROLLER_MOVE;
+		ev.v.abs[0].x *= 45;
+		ev.v.abs[0].y *= 45;
+		ev.v.abs[1].x *= 45;
+		ev.v.abs[1].y *= 45;
+		pro_show_ext(&ev);
+
+		/* ...but handle RT/LT triggers which are not reported by pro
+		 * controllers. Note that if they report MAX (31) a key event is
+		 * sent, too. */
+		v = event->v.abs[2].x;
+		if (v < 8)
+			str = "  ";
+		else if (v < 16)
+			str = "--";
+		else if (v < 24)
+			str = "++";
+		else if (v < 32)
+			str = "**";
+		else if (v < 48)
+			str = "##";
+		else
+			str = "TL";
+		mvprintw(14, 108, "%s", str);
+
+		v = event->v.abs[2].y;
+		if (v < 8)
+			str = "  ";
+		else if (v < 16)
+			str = "--";
+		else if (v < 24)
+			str = "++";
+		else if (v < 32)
+			str = "**";
+		else if (v < 48)
+			str = "##";
+		else
+			str = "TL";
+		mvprintw(14, 155, "%s", str);
+	}
+}
+
+static void classic_clear(void)
+{
+	/* forward to pro handler */
+	pro_clear();
+}
+
+static void classic_toggle(void)
+{
+	int ret;
+
+	if (xwii_iface_opened(iface) & XWII_IFACE_CLASSIC_CONTROLLER) {
+		xwii_iface_close(iface, XWII_IFACE_CLASSIC_CONTROLLER);
+		classic_clear();
+		print_info("Info: Disable Classic Controller");
+	} else {
+		ret = xwii_iface_open(iface, XWII_IFACE_CLASSIC_CONTROLLER);
+		if (ret)
+			print_error("Error: Cannot enable Classic Controller: %d",
+				    ret);
+		else
+			print_error("Info: Enable Classic Controller");
+	}
+}
+
 /* rumble events */
 
 static void rumble_show(bool on)
@@ -1323,7 +1407,7 @@ static void setup_ext_window(void)
 	mvprintw(i++, 80, "                       | |                          |                          |");
 	mvprintw(i++, 80, "                       | |                                                     |");
 	mvprintw(i++, 80, "              Y        | |                          |                          |");
-	mvprintw(i++, 80, " +- Balance Board -----+ +- Pro Controller ---------+--------------------------+");
+	mvprintw(i++, 80, " +- Balance Board -----+ +- Classic/Pro Controller -+--------------------------+");
 	mvprintw(i++, 80, "  Sum:                 | | |ZL|           +-+               +-+           |ZR| |");
 	mvprintw(i++, 80, "                       | | |TL|           | |               | |           |TR| |");
 	mvprintw(i++, 80, "            |          | |   +-+     +---     ---+     +---     ---+           |");
@@ -1446,6 +1530,9 @@ static int keyboard(void)
 	case 'n':
 		mp_normalization_toggle();
 		break;
+	case 'c':
+		classic_toggle();
+		break;
 	case 'b':
 		bboard_toggle();
 		break;
@@ -1537,6 +1624,11 @@ static int run_iface(struct xwii_iface *iface)
 			case XWII_EVENT_MOTION_PLUS:
 				if (mode != MODE_ERROR)
 					mp_show(&event);
+				break;
+			case XWII_EVENT_CLASSIC_CONTROLLER_KEY:
+			case XWII_EVENT_CLASSIC_CONTROLLER_MOVE:
+				if (mode == MODE_EXTENDED)
+					classic_show_ext(&event);
 				break;
 			case XWII_EVENT_BALANCE_BOARD:
 				if (mode == MODE_EXTENDED)
@@ -1662,6 +1754,7 @@ int main(int argc, char **argv)
 			accel_clear();
 			ir_clear();
 			mp_clear();
+			classic_clear();
 			bboard_clear();
 			pro_clear();
 			refresh_all();
