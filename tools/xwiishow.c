@@ -738,6 +738,458 @@ static void mp_refresh(void)
 	mp_do_refresh = true;
 }
 
+/* nunchuk */
+
+static void nunchuk_show_ext_x(double val)
+{
+	if (val < -10)
+		mvprintw(30, 2, "<=========##          ");
+	else if (val < -9)
+		mvprintw(30, 2, " <========##          ");
+	else if (val < -8)
+		mvprintw(30, 2, "  <=======##          ");
+	else if (val < -7)
+		mvprintw(30, 2, "   <======##          ");
+	else if (val < -6)
+		mvprintw(30, 2, "    <=====##          ");
+	else if (val < -5)
+		mvprintw(30, 2, "     <====##          ");
+	else if (val < -4)
+		mvprintw(30, 2, "      <===##          ");
+	else if (val < -3)
+		mvprintw(30, 2, "       <==##          ");
+	else if (val < -2)
+		mvprintw(30, 2, "        <=##          ");
+	else if (val < -0.3)
+		mvprintw(30, 2, "         <##          ");
+	else if (val < 0.3)
+		mvprintw(30, 2, "          ##          ");
+	else if (val < 2)
+		mvprintw(30, 2, "          ##>         ");
+	else if (val < 3)
+		mvprintw(30, 2, "          ##=>        ");
+	else if (val < 4)
+		mvprintw(30, 2, "          ##==>       ");
+	else if (val < 5)
+		mvprintw(30, 2, "          ##===>      ");
+	else if (val < 6)
+		mvprintw(30, 2, "          ##====>     ");
+	else if (val < 7)
+		mvprintw(30, 2, "          ##=====>    ");
+	else if (val < 8)
+		mvprintw(30, 2, "          ##======>   ");
+	else if (val < 9)
+		mvprintw(30, 2, "          ##=======>  ");
+	else if (val < 10)
+		mvprintw(30, 2, "          ##========> ");
+	else
+		mvprintw(30, 2, "          ##=========>");
+}
+
+static void nunchuk_show_ext_y(double val)
+{
+
+	if (val > 5) {
+		mvprintw(25, 14, "   __.");
+		mvprintw(26, 14, "   //|");
+		mvprintw(27, 14, "  // ");
+		mvprintw(28, 14, " // ");
+		mvprintw(29, 14, "// ");
+		mvprintw(31,  7, "     ");
+		mvprintw(32,  7, "     ");
+		mvprintw(33,  7, "    ");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > 4) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "  __. ");
+		mvprintw(27, 14, "  //|");
+		mvprintw(28, 14, " // ");
+		mvprintw(29, 14, "// ");
+		mvprintw(31,  7, "     ");
+		mvprintw(32,  7, "     ");
+		mvprintw(33,  7, "    ");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > 3) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, " __. ");
+		mvprintw(28, 14, " //|");
+		mvprintw(29, 14, "// ");
+		mvprintw(31,  7, "     ");
+		mvprintw(32,  7, "     ");
+		mvprintw(33,  7, "    ");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > 2) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, "     ");
+		mvprintw(28, 14, "__. ");
+		mvprintw(29, 14, "//|");
+		mvprintw(31,  7, "     ");
+		mvprintw(32,  7, "     ");
+		mvprintw(33,  7, "    ");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > 0.3) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, "     ");
+		mvprintw(28, 14, "    ");
+		mvprintw(29, 14, "-. ");
+		mvprintw(31,  7, "     ");
+		mvprintw(32,  7, "     ");
+		mvprintw(33,  7, "    ");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > -0.3) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, "     ");
+		mvprintw(28, 14, "    ");
+		mvprintw(29, 14, "   ");
+		mvprintw(31,  7, "     ");
+		mvprintw(32,  7, "     ");
+		mvprintw(33,  7, "    ");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > -2) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, "     ");
+		mvprintw(28, 14, "    ");
+		mvprintw(29, 14, "   ");
+		mvprintw(31,  7, "    *");
+		mvprintw(32,  7, "     ");
+		mvprintw(33,  7, "    ");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > -3) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, "     ");
+		mvprintw(28, 14, "    ");
+		mvprintw(29, 14, "   ");
+		mvprintw(31,  7, "   |//");
+		mvprintw(32,  7, "   *-");
+		mvprintw(33,  7, "    ");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > -4) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, "     ");
+		mvprintw(28, 14, "    ");
+		mvprintw(29, 14, "   ");
+		mvprintw(31,  7, "    //");
+		mvprintw(32,  7, "  |//");
+		mvprintw(33,  7, "  *-");
+		mvprintw(34,  7, "   ");
+		mvprintw(35,  7, "  ");
+	} else if (val > -5) {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, "     ");
+		mvprintw(28, 14, "    ");
+		mvprintw(29, 14, "   ");
+		mvprintw(31,  7, "    //");
+		mvprintw(32,  7, "   //");
+		mvprintw(33,  7, " |//");
+		mvprintw(34,  7, " *-");
+		mvprintw(35,  7, "  ");
+	} else {
+		mvprintw(25, 14, "      ");
+		mvprintw(26, 14, "      ");
+		mvprintw(27, 14, "     ");
+		mvprintw(28, 14, "    ");
+		mvprintw(29, 14, "   ");
+		mvprintw(31,  7, "    //");
+		mvprintw(32,  7, "   //");
+		mvprintw(33,  7, "  //");
+		mvprintw(34,  7, "|//");
+		mvprintw(35,  7, "*-");
+	}
+}
+
+static void nunchuk_show_ext_z(double val)
+{
+	if (val < -5) {
+		mvprintw(25, 12, "/\\");
+		mvprintw(26, 12, "||");
+		mvprintw(27, 12, "||");
+		mvprintw(28, 12, "||");
+		mvprintw(29, 12, "||");
+		mvprintw(31, 12, "  ");
+		mvprintw(32, 12, "  ");
+		mvprintw(33, 12, "  ");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < -4) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "/\\");
+		mvprintw(27, 12, "||");
+		mvprintw(28, 12, "||");
+		mvprintw(29, 12, "||");
+		mvprintw(31, 12, "  ");
+		mvprintw(32, 12, "  ");
+		mvprintw(33, 12, "  ");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < -3) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "/\\");
+		mvprintw(28, 12, "||");
+		mvprintw(29, 12, "||");
+		mvprintw(31, 12, "  ");
+		mvprintw(32, 12, "  ");
+		mvprintw(33, 12, "  ");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < -2) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "  ");
+		mvprintw(28, 12, "/\\");
+		mvprintw(29, 12, "||");
+		mvprintw(31, 12, "  ");
+		mvprintw(32, 12, "  ");
+		mvprintw(33, 12, "  ");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < -0.3) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "  ");
+		mvprintw(28, 12, "  ");
+		mvprintw(29, 12, "/\\");
+		mvprintw(31, 12, "  ");
+		mvprintw(32, 12, "  ");
+		mvprintw(33, 12, "  ");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < 0.3) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "  ");
+		mvprintw(28, 12, "  ");
+		mvprintw(29, 12, "  ");
+		mvprintw(31, 12, "  ");
+		mvprintw(32, 12, "  ");
+		mvprintw(33, 12, "  ");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < 2) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "  ");
+		mvprintw(28, 12, "  ");
+		mvprintw(29, 12, "  ");
+		mvprintw(31, 12, "\\/");
+		mvprintw(32, 12, "  ");
+		mvprintw(33, 12, "  ");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < 3) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "  ");
+		mvprintw(28, 12, "  ");
+		mvprintw(29, 12, "  ");
+		mvprintw(31, 12, "||");
+		mvprintw(32, 12, "\\/");
+		mvprintw(33, 12, "  ");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < 4) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "  ");
+		mvprintw(28, 12, "  ");
+		mvprintw(29, 12, "  ");
+		mvprintw(31, 12, "||");
+		mvprintw(32, 12, "||");
+		mvprintw(33, 12, "\\/");
+		mvprintw(34, 12, "  ");
+		mvprintw(35, 12, "  ");
+	} else if (val < 5) {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "  ");
+		mvprintw(28, 12, "  ");
+		mvprintw(29, 12, "  ");
+		mvprintw(31, 12, "||");
+		mvprintw(32, 12, "||");
+		mvprintw(33, 12, "||");
+		mvprintw(34, 12, "\\/");
+		mvprintw(35, 12, "  ");
+	} else {
+		mvprintw(25, 12, "  ");
+		mvprintw(26, 12, "  ");
+		mvprintw(27, 12, "  ");
+		mvprintw(28, 12, "  ");
+		mvprintw(29, 12, "  ");
+		mvprintw(31, 12, "||");
+		mvprintw(32, 12, "||");
+		mvprintw(33, 12, "||");
+		mvprintw(34, 12, "||");
+		mvprintw(35, 12, "\\/");
+	}
+}
+
+static void nunchuk_show_ext(const struct xwii_event *event)
+{
+	double val;
+	const char *str = " ";
+	int32_t v;
+
+	if (event->type == XWII_EVENT_NUNCHUK_MOVE) {
+		/* pow(val, 1/4) for smoother interpolation around the origin */
+
+		val = event->v.abs[1].x;
+		val /= 512;
+		if (val >= 0)
+			val = 10 * pow(val, 0.25);
+		else
+			val = -10 * pow(-val, 0.25);
+		nunchuk_show_ext_x(val);
+
+		val = event->v.abs[1].z;
+		val /= 512;
+		if (val >= 0)
+			val = 5 * pow(val, 0.25);
+		else
+			val = -5 * pow(-val, 0.25);
+		nunchuk_show_ext_z(val);
+
+		val = event->v.abs[1].y;
+		val /= 512;
+		if (val >= 0)
+			val = 5 * pow(val, 0.25);
+		else
+			val = -5 * pow(-val, 0.25);
+		nunchuk_show_ext_y(val);
+
+		v = event->v.abs[0].x * 12;
+		mvprintw(26, 24, "%5d", v);
+		if (v > 1000) {
+			mvprintw(28, 26, "     ");
+			mvprintw(28, 32, "#####");
+		} else if (v > 800) {
+			mvprintw(28, 26, "     ");
+			mvprintw(28, 32, "#### ");
+		} else if (v > 600) {
+			mvprintw(28, 26, "     ");
+			mvprintw(28, 32, "###  ");
+		} else if (v > 400) {
+			mvprintw(28, 26, "     ");
+			mvprintw(28, 32, "##   ");
+		} else if (v > 200) {
+			mvprintw(28, 26, "     ");
+			mvprintw(28, 32, "#    ");
+		} else if (v > -200) {
+			mvprintw(28, 26, "     ");
+			mvprintw(28, 32, "     ");
+		} else if (v > -400) {
+			mvprintw(28, 26, "    #");
+			mvprintw(28, 32, "     ");
+		} else if (v > -600) {
+			mvprintw(28, 26, "   ##");
+			mvprintw(28, 32, "     ");
+		} else if (v > -800) {
+			mvprintw(28, 26, "  ###");
+			mvprintw(28, 32, "     ");
+		} else if (v > -1000) {
+			mvprintw(28, 26, " ####");
+			mvprintw(28, 32, "     ");
+		} else {
+			mvprintw(28, 26, "#####");
+			mvprintw(28, 32, "     ");
+		}
+
+		v = event->v.abs[0].y * 12;
+		mvprintw(26, 33, "%5d", v);
+		if (v > 1000) {
+			mvprintw(26, 31, "#");
+			mvprintw(27, 31, "#");
+			mvprintw(29, 31, " ");
+			mvprintw(30, 31, " ");
+		} else if (v > 200) {
+			mvprintw(26, 31, " ");
+			mvprintw(27, 31, "#");
+			mvprintw(29, 31, " ");
+			mvprintw(30, 31, " ");
+		} else if (v > -200) {
+			mvprintw(26, 31, " ");
+			mvprintw(27, 31, " ");
+			mvprintw(29, 31, " ");
+			mvprintw(30, 31, " ");
+		} else if (v > -1000) {
+			mvprintw(26, 31, " ");
+			mvprintw(27, 31, " ");
+			mvprintw(29, 31, "#");
+			mvprintw(30, 31, " ");
+		} else {
+			mvprintw(26, 31, " ");
+			mvprintw(27, 31, " ");
+			mvprintw(29, 31, "#");
+			mvprintw(30, 31, "#");
+		}
+	}
+
+	if (event->type == XWII_EVENT_NUNCHUK_KEY) {
+		if (event->v.key.code == XWII_KEY_C) {
+			if (event->v.key.state)
+				str = "C";
+			mvprintw(37, 6, "%s", str);
+		} else if (event->v.key.code == XWII_KEY_Z) {
+			if (event->v.key.state)
+				str = "Z";
+			mvprintw(37, 18, "%s", str);
+		}
+	}
+}
+
+static void nunchuk_clear(void)
+{
+	struct xwii_event ev;
+
+	ev.type = XWII_EVENT_NUNCHUK_MOVE;
+	ev.v.abs[0].x = 0;
+	ev.v.abs[0].y = 0;
+	ev.v.abs[1].x = 0;
+	ev.v.abs[1].y = 0;
+	ev.v.abs[1].z = 0;
+	nunchuk_show_ext(&ev);
+
+	ev.type = XWII_EVENT_NUNCHUK_KEY;
+	ev.v.key.state = 0;
+	ev.v.key.code = XWII_KEY_C;
+	nunchuk_show_ext(&ev);
+	ev.v.key.code = XWII_KEY_Z;
+	nunchuk_show_ext(&ev);
+}
+
+static void nunchuk_toggle(void)
+{
+	int ret;
+
+	if (xwii_iface_opened(iface) & XWII_IFACE_NUNCHUK) {
+		xwii_iface_close(iface, XWII_IFACE_NUNCHUK);
+		nunchuk_clear();
+		print_info("Info: Disable Nunchuk");
+	} else {
+		ret = xwii_iface_open(iface, XWII_IFACE_NUNCHUK);
+		if (ret)
+			print_error("Error: Cannot enable Nunchuk: %d",
+				    ret);
+		else
+			print_error("Info: Enable Nunchuk");
+	}
+}
+
 /* balance board */
 
 static void bboard_show_ext(const struct xwii_event *event)
@@ -1420,21 +1872,21 @@ static void setup_ext_window(void)
 	mvprintw(i++, 80, " +---------------------+ +-----------------------------------------------------+");
 
 	i = 24;
-	mvprintw(i++, 0,  "+-------------------+----------------------------------------------------------+");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "+- Nunchuk ---------+-----------------+----------------------------------------+");
+	mvprintw(i++, 0,  "|                             +-+     |                                        |");
+	mvprintw(i++, 0,  "|                    Z        | |     |                                        |");
+	mvprintw(i++, 0,  "|                        +---     ---+|                                        |");
+	mvprintw(i++, 0,  "|                        |     +     ||                                        |");
+	mvprintw(i++, 0,  "|                        +---     ---+|                                        |");
+	mvprintw(i++, 0,  "|           ##                | |     |                                        |");
+	mvprintw(i++, 0,  "| X                           +-+     |                                        |");
+	mvprintw(i++, 0,  "|                       +-------------+                                        |");
+	mvprintw(i++, 0,  "|                       |                                                      |");
+	mvprintw(i++, 0,  "|                       |                                                      |");
+	mvprintw(i++, 0,  "|              Y        |                                                      |");
+	mvprintw(i++, 0,  "+-----------------------+                                                      |");
+	mvprintw(i++, 0,  "|    | |         | |    |                                                      |");
+	mvprintw(i++, 0,  "|    (C)         (Z)    |                                                      |");
 	mvprintw(i++, 0,  "+------------------------------------------------------------------------------+");
 
 	i = 24;
@@ -1530,6 +1982,9 @@ static int keyboard(void)
 	case 'n':
 		mp_normalization_toggle();
 		break;
+	case 'N':
+		nunchuk_toggle();
+		break;
 	case 'c':
 		classic_toggle();
 		break;
@@ -1624,6 +2079,11 @@ static int run_iface(struct xwii_iface *iface)
 			case XWII_EVENT_MOTION_PLUS:
 				if (mode != MODE_ERROR)
 					mp_show(&event);
+				break;
+			case XWII_EVENT_NUNCHUK_KEY:
+			case XWII_EVENT_NUNCHUK_MOVE:
+				if (mode == MODE_EXTENDED)
+					nunchuk_show_ext(&event);
 				break;
 			case XWII_EVENT_CLASSIC_CONTROLLER_KEY:
 			case XWII_EVENT_CLASSIC_CONTROLLER_MOVE:
@@ -1754,6 +2214,7 @@ int main(int argc, char **argv)
 			accel_clear();
 			ir_clear();
 			mp_clear();
+			nunchuk_clear();
 			classic_clear();
 			bboard_clear();
 			pro_clear();
