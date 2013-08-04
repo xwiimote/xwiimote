@@ -54,6 +54,7 @@ static void print_info(const char *format, ...)
 
 	mvprintw(22, 22, "                                                          ");
 	mvprintw(22, 22, "%s", str);
+	refresh();
 }
 
 static void print_error(const char *format, ...)
@@ -73,6 +74,7 @@ static void print_error(const char *format, ...)
 	if (mode == MODE_EXTENDED)
 		mvprintw(23, 80, "                                                                                ");
 	mvprintw(23, 22, "%s", str);
+	refresh();
 }
 
 /* key events */
@@ -1484,16 +1486,6 @@ static int run_iface(struct xwii_iface *iface)
 	int ret = 0;
 	struct pollfd fds[2];
 
-	handle_resize();
-	key_clear();
-	accel_clear();
-	ir_clear();
-	mp_clear();
-	bboard_clear();
-	pro_clear();
-	refresh_all();
-	refresh();
-
 	memset(fds, 0, sizeof(fds));
 	fds[0].fd = 0;
 	fds[0].events = POLLIN;
@@ -1664,6 +1656,16 @@ int main(int argc, char **argv)
 			raw();
 			noecho();
 			timeout(0);
+
+			handle_resize();
+			key_clear();
+			accel_clear();
+			ir_clear();
+			mp_clear();
+			bboard_clear();
+			pro_clear();
+			refresh_all();
+			refresh();
 
 			ret = xwii_iface_open(iface,
 					      xwii_iface_available(iface) |
