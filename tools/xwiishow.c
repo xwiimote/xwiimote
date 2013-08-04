@@ -158,7 +158,7 @@ static void key_toggle(void)
 		if (ret)
 			print_error("Error: Cannot enable key events: %d", ret);
 		else
-			print_error("Info: Enable key events");
+			print_info("Info: Enable key events");
 	}
 }
 
@@ -527,7 +527,7 @@ static void accel_toggle(void)
 			print_error("Error: Cannot enable accelerometer: %d",
 				    ret);
 		else
-			print_error("Info: Enable accelerometer");
+			print_info("Info: Enable accelerometer");
 	}
 }
 
@@ -655,7 +655,7 @@ static void ir_toggle(void)
 			print_error("Error: Cannot enable IR: %d",
 				    ret);
 		else
-			print_error("Info: Enable IR");
+			print_info("Info: Enable IR");
 	}
 }
 
@@ -1186,7 +1186,7 @@ static void nunchuk_toggle(void)
 			print_error("Error: Cannot enable Nunchuk: %d",
 				    ret);
 		else
-			print_error("Info: Enable Nunchuk");
+			print_info("Info: Enable Nunchuk");
 	}
 }
 
@@ -1233,7 +1233,7 @@ static void bboard_toggle(void)
 			print_error("Error: Cannot enable Balance Board: %d",
 				    ret);
 		else
-			print_error("Info: Enable Balance Board");
+			print_info("Info: Enable Balance Board");
 	}
 }
 
@@ -1492,7 +1492,7 @@ static void pro_toggle(void)
 			print_error("Error: Cannot enable Pro Controller: %d",
 				    ret);
 		else
-			print_error("Info: Enable Pro Controller");
+			print_info("Info: Enable Pro Controller");
 	}
 }
 
@@ -1576,7 +1576,7 @@ static void classic_toggle(void)
 			print_error("Error: Cannot enable Classic Controller: %d",
 				    ret);
 		else
-			print_error("Info: Enable Classic Controller");
+			print_info("Info: Enable Classic Controller");
 	}
 }
 
