@@ -470,6 +470,27 @@ enum xwii_event_types {
 	XWII_EVENT_CLASSIC_CONTROLLER_MOVE,
 
 	/**
+	 * Nunchuk key event
+	 *
+	 * Button events of the nunchuk controller are reported via this
+	 * interface and not via the core-interface (which only reports
+	 * core-buttons).
+	 * Valid buttons include: C, Z
+	 * Payload type is struct xwii_event_key.
+	 */
+	XWII_EVENT_NUNCHUK_KEY,
+
+	/**
+	 * Nunchuk movement event
+	 *
+	 * Movement events of the nunchuk controller are reported via this
+	 * interface. Payload is of type struct xwii_event_abs. The first array
+	 * element contains the x/y positions of the analog stick. The second
+	 * array element contains the accelerometer information.
+	 */
+	XWII_EVENT_NUNCHUK_MOVE,
+
+	/**
 	 * Number of available event types
 	 *
 	 * The value of this constant may increase on each new library revision.
@@ -528,6 +549,24 @@ enum xwii_event_keys {
 	 * that report this event.
 	 */
 	XWII_KEY_THUMBR,
+
+	/**
+	 * Extra C button
+	 *
+	 * This button is not part of the standard action pad but reported by
+	 * extension controllers like the Nunchuk. It is supposed to extend the
+	 * standard A and B buttons.
+	 */
+	XWII_KEY_C,
+
+	/**
+	 * Extra Z button
+	 *
+	 * This button is not part of the standard action pad but reported by
+	 * extension controllers like the Nunchuk. It is supposed to extend the
+	 * standard X and Y buttons.
+	 */
+	XWII_KEY_Z,
 
 	/**
 	 * Number of key identifiers
