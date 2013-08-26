@@ -304,6 +304,28 @@ extern "C" {
  *
  * TODO: Describe the provided interface
  *
+ * Input: Drums Controller
+ * ---------------------
+ *
+ * Drums controller extension input device. Available as
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_DRUMS.
+ * The different available devices are handled by the kernel and provided as
+ * vendor-generic controller.
+ *
+ * TODO: Describe the provided interface
+ *
+ * Input: Guitar Controller
+ * ---------------------
+ *
+ * Guitar controller extension input device. Available as
+ * `/sys/bus/hid/device/[dev]/input/input[num]/` and can be detected via the
+ * device name @ref XWII_NAME_GUITAR.
+ * The different available devices are handled by the kernel and provided as
+ * vendor-generic controller.
+ *
+ * TODO: Describe the provided interface
+ *
  * @{
  */
 
@@ -326,6 +348,10 @@ extern "C" {
 #define XWII_NAME_BALANCE_BOARD		XWII__NAME " Balance Board"
 /** Name of the pro-controller input device */
 #define XWII_NAME_PRO_CONTROLLER	XWII__NAME " Pro Controller"
+/** Name of the drums-controller input device */
+#define XWII_NAME_DRUMS			XWII__NAME " Drums"
+/** Name of the guitar-controller input device */
+#define XWII_NAME_GUITAR		XWII__NAME " Guitar"
 
 /** @} */
 
@@ -491,6 +517,47 @@ enum xwii_event_types {
 	XWII_EVENT_NUNCHUK_MOVE,
 
 	/**
+	 * Drums key event
+	 *
+	 * Button events for drums controllers. Valid buttons are PLUS and MINUS
+	 * for the +/- buttons on the center-bar.
+	 * Payload type is struct xwii_event_key.
+	 */
+	XWII_EVENT_DRUMS_KEY,
+
+	/**
+	 * Drums movement event
+	 *
+	 * Movement and pressure events for drums controllers. Payload is of
+	 * type struct xwii_event_abs. The indices are describe as
+	 * enum xwii_drums_abs and each of them contains the corresponding
+	 * stick-movement or drum-pressure values.
+	 */
+	XWII_EVENT_DRUMS_MOVE,
+
+	/**
+	 * Guitar key event
+	 *
+	 * Button events for guitar controllers. Valid buttons are HOME and PLUS
+	 * for the StarPower/Home button and the + button. Furthermore, you get
+	 * FRET_FAR_UP, FRET_UP, FRET_MID, FRET_LOW, FRET_FAR_LOW for fret
+	 * activity and STRUM_BAR_UP and STRUM_BAR_LOW for the strum bar.
+	 * Payload type is struct xwii_event_key.
+	 */
+	XWII_EVENT_GUITAR_KEY,
+
+	/**
+	 * Guitar movement event
+	 *
+	 * Movement information for guitar controllers. Payload is of type
+	 * struct xwii_event_abs. The first element contains X and Y direction
+	 * of the analog stick. The second element contains whammy-bar movement
+	 * information as x-value. The third element contains fret-bar absolute
+	 * positioning information as x-value.
+	 */
+	XWII_EVENT_GUITAR_MOVE,
+
+	/**
 	 * Number of available event types
 	 *
 	 * The value of this constant may increase on each new library revision.
@@ -569,6 +636,55 @@ enum xwii_event_keys {
 	XWII_KEY_Z,
 
 	/**
+	 * Guitar Strum-bar-up event
+	 *
+	 * Emitted by guitars if the strum-bar is moved up.
+	 */
+	XWII_KEY_STRUM_BAR_UP,
+
+	/**
+	 * Guitar Strum-bar-down event
+	 *
+	 * Emitted by guitars if the strum-bar is moved down.
+	 */
+	XWII_KEY_STRUM_BAR_DOWN,
+
+	/**
+	 * Guitar Fret-Far-Up event
+	 *
+	 * Emitted by guitars if the upper-most fret-bar is pressed.
+	 */
+	XWII_KEY_FRET_FAR_UP,
+
+	/**
+	 * Guitar Fret-Up event
+	 *
+	 * Emitted by guitars if the second-upper fret-bar is pressed.
+	 */
+	XWII_KEY_FRET_UP,
+
+	/**
+	 * Guitar Fret-Mid event
+	 *
+	 * Emitted by guitars if the mid fret-bar is pressed.
+	 */
+	XWII_KEY_FRET_MID,
+
+	/**
+	 * Guitar Fret-Low event
+	 *
+	 * Emitted by guitars if the second-lowest fret-bar is pressed.
+	 */
+	XWII_KEY_FRET_LOW,
+
+	/**
+	 * Guitar Fret-Far-Low event
+	 *
+	 * Emitted by guitars if the lower-most fret-bar is pressed.
+	 */
+	XWII_KEY_FRET_FAR_LOW,
+
+	/**
 	 * Number of key identifiers
 	 *
 	 * This defines the number of available key-identifiers. It is not
@@ -603,6 +719,39 @@ struct xwii_event_abs {
 };
 
 /**
+ * Absolute Drum-Motion Indices
+ *
+ * A drum-payload can contain a lot of different absolute motion events all in
+ * a single object. Depending on the event-type, the array offsets for
+ * absolute-motion events are different. This enum describes the indices used
+ * for drums.
+ *
+ * Note that these mimic the kernel API. If new drums with more tom-toms or
+ * cymbals are supported, the corresponding TOM and CYMBAL values will be added.
+ * That's also why there is no TOM_MID, but only TOM_FAR_RIGHT so far.
+ */
+enum xwii_drums_abs {
+	/** Control pad motion. X and Y direction available. */
+	XWII_DRUMS_ABS_PAD,
+	/** Cymbal pressure, just X direction. */
+	XWII_DRUMS_ABS_CYMBAL_LEFT,
+	/** Cymbal pressure, just X direction. */
+	XWII_DRUMS_ABS_CYMBAL_RIGHT,
+	/** Mid-left tom pressure, just X direction. */
+	XWII_DRUMS_ABS_TOM_LEFT,
+	/** Mid-right tom pressure, just X direction. */
+	XWII_DRUMS_ABS_TOM_RIGHT,
+	/** Right-most tom pressure, just X direction. */
+	XWII_DRUMS_ABS_TOM_FAR_RIGHT,
+	/** Bass pressure, just X direction. */
+	XWII_DRUMS_ABS_BASS,
+	/** Hi-Hat pressure, just X direction. */
+	XWII_DRUMS_ABS_HI_HAT,
+	/** Number of drums payloads, may get increased for new ones. */
+	XWII_DRUMS_ABS_NUM,
+};
+
+/**
  * Event Payload
  *
  * Payload of event objects.
@@ -611,7 +760,7 @@ union xwii_event_union {
 	/** key event payload */
 	struct xwii_event_key key;
 	/** absolute motion event payload */
-	struct xwii_event_abs abs[4];
+	struct xwii_event_abs abs[8];
 	/** reserved; do not use! */
 	uint8_t reserved[128];
 };
@@ -720,6 +869,10 @@ enum xwii_iface_type {
 	XWII_IFACE_BALANCE_BOARD	= 0x000800,
 	/** ProController extension interface */
 	XWII_IFACE_PRO_CONTROLLER	= 0x001000,
+	/** Drums extension interface */
+	XWII_IFACE_DRUMS		= 0x002000,
+	/** Guitar extension interface */
+	XWII_IFACE_GUITAR		= 0x004000,
 
 	/** Special flag ORed with all valid interfaces */
 	XWII_IFACE_ALL			= XWII_IFACE_CORE |
@@ -729,7 +882,9 @@ enum xwii_iface_type {
 					  XWII_IFACE_NUNCHUK |
 					  XWII_IFACE_CLASSIC_CONTROLLER |
 					  XWII_IFACE_BALANCE_BOARD |
-					  XWII_IFACE_PRO_CONTROLLER,
+					  XWII_IFACE_PRO_CONTROLLER |
+					  XWII_IFACE_DRUMS |
+					  XWII_IFACE_GUITAR,
 	/** Special flag which causes the interfaces to be opened writable */
 	XWII_IFACE_WRITABLE		= 0x010000,
 };

@@ -31,6 +31,8 @@ enum xwii_if_base_idx {
 	XWII_IF_CLASSIC_CONTROLLER,
 	XWII_IF_BALANCE_BOARD,
 	XWII_IF_PRO_CONTROLLER,
+	XWII_IF_DRUMS,
+	XWII_IF_GUITAR,
 
 	XWII_IF_NUM,
 };
@@ -90,6 +92,10 @@ struct xwii_iface {
 	struct xwii_event_abs classic_cache[3];
 	/* nunchuk cache */
 	struct xwii_event_abs nunchuk_cache[2];
+	/* drums cache */
+	struct xwii_event_abs drums_cache[XWII_DRUMS_ABS_NUM];
+	/* guitar cache */
+	struct xwii_event_abs guitar_cache[2];
 };
 
 /* table to convert interface to name */
@@ -102,6 +108,8 @@ static const char *if_to_name_table[] = {
 	[XWII_IF_CLASSIC_CONTROLLER] = XWII_NAME_CLASSIC_CONTROLLER,
 	[XWII_IF_BALANCE_BOARD] = XWII_NAME_BALANCE_BOARD,
 	[XWII_IF_PRO_CONTROLLER] = XWII_NAME_PRO_CONTROLLER,
+	[XWII_IF_DRUMS] = XWII_NAME_DRUMS,
+	[XWII_IF_GUITAR] = XWII_NAME_GUITAR,
 	[XWII_IF_NUM] = NULL,
 };
 
@@ -127,6 +135,8 @@ static unsigned int if_to_iface_table[] = {
 	[XWII_IF_CLASSIC_CONTROLLER] = XWII_IFACE_CLASSIC_CONTROLLER,
 	[XWII_IF_BALANCE_BOARD] = XWII_IFACE_BALANCE_BOARD,
 	[XWII_IF_PRO_CONTROLLER] = XWII_IFACE_PRO_CONTROLLER,
+	[XWII_IF_DRUMS] = XWII_IFACE_DRUMS,
+	[XWII_IF_GUITAR] = XWII_IFACE_GUITAR,
 	[XWII_IF_NUM] = 0,
 };
 
@@ -626,6 +636,22 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 			err = ret;
 	}
 
+	if (ifaces & XWII_IFACE_DRUMS) {
+		ret = xwii_iface_open_if(dev, XWII_IF_DRUMS, wr);
+		if (!ret)
+			dev->ifaces |= XWII_IFACE_DRUMS;
+		else
+			err = ret;
+	}
+
+	if (ifaces & XWII_IFACE_GUITAR) {
+		ret = xwii_iface_open_if(dev, XWII_IF_GUITAR, wr);
+		if (!ret)
+			dev->ifaces |= XWII_IFACE_GUITAR;
+		else
+			err = ret;
+	}
+
 	return err;
 }
 
@@ -667,6 +693,10 @@ void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces)
 		xwii_iface_close_if(dev, XWII_IF_BALANCE_BOARD);
 	if (ifaces & XWII_IFACE_PRO_CONTROLLER)
 		xwii_iface_close_if(dev, XWII_IF_PRO_CONTROLLER);
+	if (ifaces & XWII_IFACE_DRUMS)
+		xwii_iface_close_if(dev, XWII_IF_DRUMS);
+	if (ifaces & XWII_IFACE_GUITAR)
+		xwii_iface_close_if(dev, XWII_IF_GUITAR);
 
 	dev->ifaces &= ~ifaces;
 }
@@ -1339,6 +1369,213 @@ try_again:
 	goto try_again;
 }
 
+static int read_drums(struct xwii_iface *dev, struct xwii_event *ev)
+{
+	int ret, fd;
+	struct input_event input;
+	unsigned int key;
+
+	fd = dev->ifs[XWII_IF_DRUMS].fd;
+	if (fd < 0)
+		return -EAGAIN;
+
+try_again:
+	ret = read_event(fd, &input);
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret < 0) {
+		xwii_iface_close(dev, XWII_IFACE_DRUMS);
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
+		return 0;
+	}
+
+	if (input.type == EV_KEY) {
+		if (input.value < 0 || input.value > 2)
+			goto try_again;
+
+		switch (input.code) {
+		case BTN_START:
+			key = XWII_KEY_PLUS;
+			break;
+		case BTN_SELECT:
+			key = XWII_KEY_MINUS;
+			break;
+		default:
+			goto try_again;
+		}
+
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		ev->type = XWII_EVENT_DRUMS_KEY;
+		ev->v.key.code = key;
+		ev->v.key.state = input.value;
+		return 0;
+	} else if (input.type == EV_ABS) {
+		if (input.code == ABS_X)
+			dev->drums_cache[XWII_DRUMS_ABS_PAD].x = input.value;
+		else if (input.code == ABS_Y)
+			dev->drums_cache[XWII_DRUMS_ABS_PAD].y = input.value;
+#ifndef ABS_CYMBAL_LEFT
+#define ABS_CYMBAL_LEFT 0x45
+#endif
+		else if (input.code == ABS_CYMBAL_LEFT)
+			dev->drums_cache[XWII_DRUMS_ABS_CYMBAL_LEFT].x = input.value;
+#ifndef ABS_CYMBAL_RIGHT
+#define ABS_CYMBAL_RIGHT 0x46
+#endif
+		else if (input.code == ABS_CYMBAL_RIGHT)
+			dev->drums_cache[XWII_DRUMS_ABS_CYMBAL_RIGHT].x = input.value;
+#ifndef ABS_TOM_LEFT
+#define ABS_TOM_LEFT 0x41
+#endif
+		else if (input.code == ABS_TOM_LEFT)
+			dev->drums_cache[XWII_DRUMS_ABS_TOM_LEFT].x = input.value;
+#ifndef ABS_TOM_RIGHT
+#define ABS_TOM_RIGHT 0x42
+#endif
+		else if (input.code == ABS_TOM_RIGHT)
+			dev->drums_cache[XWII_DRUMS_ABS_TOM_RIGHT].x = input.value;
+#ifndef ABS_TOM_FAR_RIGHT
+#define ABS_TOM_FAR_RIGHT 0x43
+#endif
+		else if (input.code == ABS_TOM_FAR_RIGHT)
+			dev->drums_cache[XWII_DRUMS_ABS_TOM_FAR_RIGHT].x = input.value;
+#ifndef ABS_BASS
+#define ABS_BASS 0x48
+#endif
+		else if (input.code == ABS_BASS)
+			dev->drums_cache[XWII_DRUMS_ABS_BASS].x = input.value;
+#ifndef ABS_HI_HAT
+#define ABS_HI_HAT 0x49
+#endif
+		else if (input.code == ABS_HI_HAT)
+			dev->drums_cache[XWII_DRUMS_ABS_HI_HAT].x = input.value;
+	} else if (input.type == EV_SYN) {
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		memcpy(&ev->v.abs, dev->drums_cache,
+		       sizeof(dev->drums_cache));
+		ev->type = XWII_EVENT_DRUMS_MOVE;
+		return 0;
+	}
+
+	goto try_again;
+}
+
+static int read_guitar(struct xwii_iface *dev, struct xwii_event *ev)
+{
+	int ret, fd;
+	struct input_event input;
+	unsigned int key;
+
+	fd = dev->ifs[XWII_IF_GUITAR].fd;
+	if (fd < 0)
+		return -EAGAIN;
+
+try_again:
+	ret = read_event(fd, &input);
+	if (ret == -EAGAIN) {
+		return -EAGAIN;
+	} else if (ret < 0) {
+		xwii_iface_close(dev, XWII_IFACE_GUITAR);
+		memset(ev, 0, sizeof(*ev));
+		ev->type = XWII_EVENT_WATCH;
+		xwii_iface_read_nodes(dev);
+		return 0;
+	}
+
+	if (input.type == EV_KEY) {
+		if (input.value < 0 || input.value > 2)
+			goto try_again;
+
+		switch (input.code) {
+#ifndef BTN_FRET_FAR_UP
+#define BTN_FRET_FAR_UP 0x224
+#endif
+		case BTN_FRET_FAR_UP:
+			key = XWII_KEY_FRET_FAR_UP;
+			break;
+#ifndef BTN_FRET_UP
+#define BTN_FRET_UP 0x225
+#endif
+		case BTN_FRET_UP:
+			key = XWII_KEY_FRET_UP;
+			break;
+#ifndef BTN_FRET_MID
+#define BTN_FRET_MID 0x226
+#endif
+		case BTN_FRET_MID:
+			key = XWII_KEY_FRET_MID;
+			break;
+#ifndef BTN_FRET_LOW
+#define BTN_FRET_LOW 0x227
+#endif
+		case BTN_FRET_LOW:
+			key = XWII_KEY_FRET_LOW;
+			break;
+#ifndef BTN_FRET_FAR_LOW
+#define BTN_FRET_FAR_LOW 0x228
+#endif
+		case BTN_FRET_FAR_LOW:
+			key = XWII_KEY_FRET_FAR_LOW;
+			break;
+#ifndef BTN_STRUM_BAR_UP
+#define BTN_STRUM_BAR_UP 0x229
+#endif
+		case BTN_STRUM_BAR_UP:
+			key = XWII_KEY_STRUM_BAR_UP;
+			break;
+#ifndef BTN_STRUM_BAR_DOWN
+#define BTN_STRUM_BAR_DOWN 0x22a
+#endif
+		case BTN_STRUM_BAR_DOWN:
+			key = XWII_KEY_STRUM_BAR_DOWN;
+			break;
+		case BTN_START:
+			key = XWII_KEY_PLUS;
+			break;
+		case BTN_MODE:
+			key = XWII_KEY_HOME;
+			break;
+		default:
+			goto try_again;
+		}
+
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		ev->type = XWII_EVENT_GUITAR_KEY;
+		ev->v.key.code = key;
+		ev->v.key.state = input.value;
+		return 0;
+	} else if (input.type == EV_ABS) {
+		if (input.code == ABS_X)
+			dev->guitar_cache[0].x = input.value;
+		else if (input.code == ABS_Y)
+			dev->guitar_cache[0].y = input.value;
+#ifndef ABS_WHAMMY_BAR
+#define ABS_WHAMMY_BAR 0x4b
+#endif
+		else if (input.code == ABS_WHAMMY_BAR)
+			dev->guitar_cache[1].x = input.value;
+#ifndef ABS_FRET_BOARD
+#define ABS_FRET_BOARD 0x4a
+#endif
+		else if (input.code == ABS_FRET_BOARD)
+			dev->guitar_cache[2].x = input.value;
+	} else if (input.type == EV_SYN) {
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		memcpy(&ev->v.abs, dev->guitar_cache,
+		       sizeof(dev->guitar_cache));
+		ev->type = XWII_EVENT_GUITAR_MOVE;
+		return 0;
+	}
+
+	goto try_again;
+}
+
 static int dispatch_event(struct xwii_iface *dev, struct epoll_event *ep,
 			  struct xwii_event *ev)
 {
@@ -1360,6 +1597,10 @@ static int dispatch_event(struct xwii_iface *dev, struct epoll_event *ep,
 		return read_bboard(dev, ev);
 	else if (ep->data.ptr == &dev->ifs[XWII_IF_PRO_CONTROLLER])
 		return read_pro(dev, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_DRUMS])
+		return read_drums(dev, ev);
+	else if (ep->data.ptr == &dev->ifs[XWII_IF_GUITAR])
+		return read_guitar(dev, ev);
 
 	return -EAGAIN;
 }
