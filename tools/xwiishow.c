@@ -1580,6 +1580,514 @@ static void classic_toggle(void)
 	}
 }
 
+/* guitar */
+static void guit_show_ext(const struct xwii_event *event)
+{
+	uint16_t code = event->v.key.code;
+	bool pressed = event->v.key.state;
+	int32_t v;
+
+	if (event->type == XWII_EVENT_GUITAR_MOVE) {
+		v = event->v.abs[1].x;
+		switch (v) {
+		case 0:
+			mvprintw(33, 86, "         ___ ");
+			break;
+		case 1:
+			mvprintw(33, 86, ">        ___ ");
+			break;
+		case 2:
+			mvprintw(33, 86, ">>       ___ ");
+			break;
+		case 3:
+			mvprintw(33, 86, ">>>      ___ ");
+			break;
+		case 4:
+			mvprintw(33, 86, ">>>>     ___ ");
+			break;
+		case 5:
+			mvprintw(33, 86, ">>>>>    ___ ");
+			break;
+		case 6:
+			mvprintw(33, 86, ">>>>>>   ___ ");
+			break;
+		case 7:
+			mvprintw(33, 86, ">>>>>>>  ___ ");
+			break;
+		case 8:
+			mvprintw(33, 86, ">>>>>>>> ___ ");
+			break;
+		case 9:
+			mvprintw(33, 86, ">>>>>>>>>___ ");
+			break;
+		case 10:
+			mvprintw(33, 86, ">>>>>>>>>>__ ");
+			break;
+		case 11:
+			mvprintw(33, 86, ">>>>>>>>>>>_ ");
+			break;
+		case 12:
+			mvprintw(33, 86, ">>>>>>>>>>>> ");
+			break;
+		case 13:
+			mvprintw(33, 86, ">>>>>>>>>>>>>");
+			break;
+		}
+
+		v = event->v.abs[0].x;
+		mvprintw(38, 84, "%3d", v);
+		if (v > 25) {
+			mvprintw(40, 84, "     ");
+			mvprintw(40, 90, "#####");
+		} else if (v > 20) {
+			mvprintw(40, 84, "     ");
+			mvprintw(40, 90, "#### ");
+		} else if (v > 15) {
+			mvprintw(40, 84, "     ");
+			mvprintw(40, 90, "###  ");
+		} else if (v > 10) {
+			mvprintw(40, 84, "     ");
+			mvprintw(40, 90, "##   ");
+		} else if (v > 5) {
+			mvprintw(40, 84, "     ");
+			mvprintw(40, 90, "#    ");
+		} else if (v > -5) {
+			mvprintw(40, 84, "     ");
+			mvprintw(40, 90, "     ");
+		} else if (v > -10) {
+			mvprintw(40, 84, "    #");
+			mvprintw(40, 90, "     ");
+		} else if (v > -15) {
+			mvprintw(40, 84, "   ##");
+			mvprintw(40, 90, "     ");
+		} else if (v > -20) {
+			mvprintw(40, 84, "  ###");
+			mvprintw(40, 90, "     ");
+		} else if (v > -25) {
+			mvprintw(40, 84, " ####");
+			mvprintw(40, 90, "     ");
+		} else {
+			mvprintw(40, 84, "#####");
+			mvprintw(40, 90, "     ");
+		}
+
+		v = event->v.abs[0].y;
+		mvprintw(38, 93, "%3d", v);
+		if (v > 20) {
+			mvprintw(38, 89, "#");
+			mvprintw(39, 89, "#");
+			mvprintw(41, 89, " ");
+			mvprintw(42, 89, " ");
+		} else if (v > 10) {
+			mvprintw(38, 89, " ");
+			mvprintw(39, 89, "#");
+			mvprintw(41, 89, " ");
+			mvprintw(42, 89, " ");
+		} else if (v > -10) {
+			mvprintw(38, 89, " ");
+			mvprintw(39, 89, " ");
+			mvprintw(41, 89, " ");
+			mvprintw(42, 89, " ");
+		} else if (v > -20) {
+			mvprintw(38, 89, " ");
+			mvprintw(39, 89, " ");
+			mvprintw(41, 89, "#");
+			mvprintw(42, 89, " ");
+		} else {
+			mvprintw(38, 89, " ");
+			mvprintw(39, 89, " ");
+			mvprintw(41, 89, "#");
+			mvprintw(42, 89, "#");
+		}
+
+	} else if (event->type == XWII_EVENT_GUITAR_KEY) {
+		switch (code) {
+		case XWII_KEY_FRET_FAR_UP:
+			if (pressed) {
+				mvprintw(30, 141, "X");
+				mvprintw(31, 141, "X");
+			} else {
+				mvprintw(30, 141, " ");
+				mvprintw(31, 141, "_");
+			}
+			break;
+		case XWII_KEY_FRET_UP:
+			if (pressed) {
+				mvprintw(30, 137, "X");
+				mvprintw(31, 137, "X");
+			} else {
+				mvprintw(30, 137, " ");
+				mvprintw(31, 137, "_");
+			}
+			break;
+		case XWII_KEY_FRET_MID:
+			if (pressed) {
+				mvprintw(30, 133, "X");
+				mvprintw(31, 133, "X");
+			} else {
+				mvprintw(30, 133, " ");
+				mvprintw(31, 133, "_");
+			}
+			break;
+		case XWII_KEY_FRET_LOW:
+			if (pressed) {
+				mvprintw(30, 129, "X");
+				mvprintw(31, 129, "X");
+			} else {
+				mvprintw(30, 129, " ");
+				mvprintw(31, 129, "_");
+			}
+			break;
+		case XWII_KEY_FRET_FAR_LOW:
+			if (pressed) {
+				mvprintw(30, 125, "X");
+				mvprintw(31, 125, "X");
+			} else {
+				mvprintw(30, 125, " ");
+				mvprintw(31, 125, "_");
+			}
+			break;
+		case XWII_KEY_STRUM_BAR_UP:
+			if (pressed)
+				mvprintw(30, 98, "---------");
+			else
+				mvprintw(30, 98, "_________");
+			break;
+		case XWII_KEY_STRUM_BAR_DOWN:
+			if (pressed) {
+				mvprintw(29, 97, "          ");
+				mvprintw(30, 97, " _________  ");
+				mvprintw(31, 98, "\\--------\\");
+			} else {
+				mvprintw(29, 97, "__________");
+				mvprintw(30, 97, "\\_________\\");
+				mvprintw(31, 98, "          ");
+			}
+			break;
+		case XWII_KEY_HOME:
+			if (pressed) {
+				mvprintw(29, 89, "X");
+				mvprintw(30, 89, "X");
+			} else {
+				mvprintw(29, 89, " ");
+				mvprintw(30, 89, "_");
+			}
+			break;
+		case XWII_KEY_PLUS:
+			if (pressed) {
+				mvprintw(28, 89, "+");
+				mvprintw(31, 89, "+");
+			} else {
+				mvprintw(28, 89, "_");
+				mvprintw(31, 89, "_");
+			}
+			break;
+		}
+	}
+}
+
+static void guit_clear(void)
+{
+	struct xwii_event ev;
+	unsigned int i;
+
+	memset(&ev, 0, sizeof(ev));
+	ev.type = XWII_EVENT_GUITAR_MOVE;
+	guit_show_ext(&ev);
+
+	ev.type = XWII_EVENT_GUITAR_KEY;
+	ev.v.key.state = 0;
+	for (i = 0; i < XWII_KEY_NUM; ++i) {
+		ev.v.key.code = i;
+		guit_show_ext(&ev);
+	}
+}
+
+static void guit_toggle(void)
+{
+	int ret;
+
+	if (xwii_iface_opened(iface) & XWII_IFACE_GUITAR) {
+		xwii_iface_close(iface, XWII_IFACE_GUITAR);
+		guit_clear();
+		print_info("Info: Disable Guitar Controller");
+	} else {
+		ret = xwii_iface_open(iface, XWII_IFACE_GUITAR);
+		if (ret)
+			print_error("Error: Cannot enable Guitar Controller: %d",
+				    ret);
+		else
+			print_error("Info: Enable Guitar Controller");
+	}
+}
+
+/* guitar hero drums */
+static void drums_show_ext(const struct xwii_event *event)
+{
+	uint16_t code = event->v.key.code;
+	bool pressed = event->v.key.state;
+	int32_t v;
+	int i, j, n;
+
+	if (event->type == XWII_EVENT_DRUMS_KEY) {
+		switch (code) {
+		case XWII_KEY_MINUS:
+			if (pressed)
+				mvprintw(45, 147, "-");
+			else
+				mvprintw(45, 147, " ");
+			break;
+		case XWII_KEY_PLUS:
+			if (pressed)
+				mvprintw(45, 153, "+");
+			else
+				mvprintw(45, 153, " ");
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (event->type != XWII_EVENT_DRUMS_MOVE)
+		return;
+
+	v = event->v.abs[XWII_DRUMS_ABS_PAD].x;
+	mvprintw(38, 145, "%3d", v);
+	if (v > 25) {
+		mvprintw(40, 145, "     ");
+		mvprintw(40, 151, "#####");
+	} else if (v > 20) {
+		mvprintw(40, 145, "     ");
+		mvprintw(40, 151, "#### ");
+	} else if (v > 15) {
+		mvprintw(40, 145, "     ");
+		mvprintw(40, 151, "###  ");
+	} else if (v > 10) {
+		mvprintw(40, 145, "     ");
+		mvprintw(40, 151, "##   ");
+	} else if (v > 5) {
+		mvprintw(40, 145, "     ");
+		mvprintw(40, 151, "#    ");
+	} else if (v > -5) {
+		mvprintw(40, 145, "     ");
+		mvprintw(40, 151, "     ");
+	} else if (v > -10) {
+		mvprintw(40, 145, "    #");
+		mvprintw(40, 151, "     ");
+	} else if (v > -15) {
+		mvprintw(40, 145, "   ##");
+		mvprintw(40, 151, "     ");
+	} else if (v > -20) {
+		mvprintw(40, 145, "  ###");
+		mvprintw(40, 151, "     ");
+	} else if (v > -25) {
+		mvprintw(40, 145, " ####");
+		mvprintw(40, 151, "     ");
+	} else {
+		mvprintw(40, 145, "#####");
+		mvprintw(40, 151, "     ");
+	}
+
+	v = event->v.abs[XWII_DRUMS_ABS_PAD].y;
+	mvprintw(38, 154, "%3d", v);
+	if (v > 20) {
+		mvprintw(38, 150, "#");
+		mvprintw(39, 150, "#");
+		mvprintw(41, 150, " ");
+		mvprintw(42, 150, " ");
+	} else if (v > 10) {
+		mvprintw(38, 150, " ");
+		mvprintw(39, 150, "#");
+		mvprintw(41, 150, " ");
+		mvprintw(42, 150, " ");
+	} else if (v > -10) {
+		mvprintw(38, 150, " ");
+		mvprintw(39, 150, " ");
+		mvprintw(41, 150, " ");
+		mvprintw(42, 150, " ");
+	} else if (v > -20) {
+		mvprintw(38, 150, " ");
+		mvprintw(39, 150, " ");
+		mvprintw(41, 150, "#");
+		mvprintw(42, 150, " ");
+	} else {
+		mvprintw(38, 150, " ");
+		mvprintw(39, 150, " ");
+		mvprintw(41, 150, "#");
+		mvprintw(42, 150, "#");
+	}
+
+	for (n = 0; n < XWII_DRUMS_ABS_NUM; ++n) {
+		if (n == XWII_DRUMS_ABS_BASS) {
+			v = event->v.abs[n].x;
+			switch (v) {
+			case 0:
+				mvprintw(44, 100, "   ");
+				break;
+			case 1:
+				mvprintw(44, 100, " . ");
+				break;
+			case 2:
+				mvprintw(44, 100, "...");
+				break;
+			case 3:
+				mvprintw(44, 100, ".+.");
+				break;
+			case 4:
+				mvprintw(44, 100, "+++");
+				break;
+			case 5:
+				mvprintw(44, 100, "+#+");
+				break;
+			case 6:
+				mvprintw(44, 100, "*#*");
+				break;
+			case 7:
+				mvprintw(44, 100, "###");
+				break;
+			}
+			mvprintw(45, 100, "<%1d>", v);
+		} else {
+			i = j = 0;
+			switch (n) {
+			case XWII_DRUMS_ABS_CYMBAL_RIGHT:
+				i = 35;
+				j = 125;
+				break;
+			case XWII_DRUMS_ABS_TOM_LEFT:
+				i = 41;
+				j = 107;
+				break;
+			case XWII_DRUMS_ABS_CYMBAL_LEFT:
+				i = 35;
+				j = 113;
+				break;
+			case XWII_DRUMS_ABS_TOM_FAR_RIGHT:
+				i = 41;
+				j = 131;
+				break;
+			case XWII_DRUMS_ABS_TOM_RIGHT:
+				i = 41;
+				j = 119;
+				break;
+			}
+
+			switch(n) {
+			case XWII_DRUMS_ABS_CYMBAL_RIGHT:
+			case XWII_DRUMS_ABS_TOM_LEFT:
+			case XWII_DRUMS_ABS_CYMBAL_LEFT:
+			case XWII_DRUMS_ABS_TOM_FAR_RIGHT:
+			case XWII_DRUMS_ABS_TOM_RIGHT:
+				v = event->v.abs[n].x;
+				switch(v) {
+				case 0:
+					mvprintw(i,   j, "  ______  ");
+					mvprintw(i+1, j, " /      \\ ");
+					mvprintw(i+2, j, "/        \\");
+					mvprintw(i+3, j, "|   ++   |");
+					mvprintw(i+4, j, "\\        /");
+					mvprintw(i+5, j, " \\______/ ");
+					break;
+				case 1:
+					mvprintw(i,   j, "  ______  ");
+					mvprintw(i+1, j, " /      \\ ");
+					mvprintw(i+2, j, "/   ..   \\");
+					mvprintw(i+3, j, "|  .+1.  |");
+					mvprintw(i+4, j, "\\   ..   /");
+					mvprintw(i+5, j, " \\______/ ");
+					break;
+				case 2:
+					mvprintw(i,   j, "  ______  ");
+					mvprintw(i+1, j, " /      \\ ");
+					mvprintw(i+2, j, "/  ....  \\");
+					mvprintw(i+3, j, "|  .+2.  |");
+					mvprintw(i+4, j, "\\  ....  /");
+					mvprintw(i+5, j, " \\______/ ");
+					break;
+				case 3:
+					mvprintw(i,   j, "  ______  ");
+					mvprintw(i+1, j, " /      \\ ");
+					mvprintw(i+2, j, "/ ...... \\");
+					mvprintw(i+3, j, "| ..+3.. |");
+					mvprintw(i+4, j, "\\ ...... /");
+					mvprintw(i+5, j, " \\______/ ");
+					break;
+				case 4:
+					mvprintw(i,   j, "  ______  ");
+					mvprintw(i+1, j, " /      \\ ");
+					mvprintw(i+2, j, "/........\\");
+					mvprintw(i+3, j, "|...+4...|");
+					mvprintw(i+4, j, "\\......../");
+					mvprintw(i+5, j, " \\______/ ");
+					break;
+				case 5:
+					mvprintw(i,   j, "  ______  ");
+					mvprintw(i+1, j, " /  ..  \\ ");
+					mvprintw(i+2, j, "/........\\");
+					mvprintw(i+3, j, "|...+5...|");
+					mvprintw(i+4, j, "\\......../");
+					mvprintw(i+5, j, " \\______/ ");
+					break;
+				case 6:
+					mvprintw(i,   j, "  ______  ");
+					mvprintw(i+1, j, " / .... \\ ");
+					mvprintw(i+2, j, "/........\\");
+					mvprintw(i+3, j, "|...+6...|");
+					mvprintw(i+4, j, "\\......../");
+					mvprintw(i+5, j, " \\_...._/ ");
+					break;
+				case 7:
+					mvprintw(i,   j, "  ______  ");
+					mvprintw(i+1, j, " /......\\ ");
+					mvprintw(i+2, j, "/........\\");
+					mvprintw(i+3, j, "|...+7...|");
+					mvprintw(i+4, j, "\\......../");
+					mvprintw(i+5, j, " \\....../ ");
+					break;
+				}
+			}
+		}
+	}
+}
+
+static void drums_clear(void)
+{
+	struct xwii_event ev;
+	unsigned int i;
+
+	ev.type = XWII_EVENT_DRUMS_MOVE;
+	for (i = 0; i < XWII_DRUMS_ABS_NUM; ++i) {
+		ev.v.abs[i].x = 0;
+		ev.v.abs[i].y = 0;
+	}
+	drums_show_ext(&ev);
+
+	ev.type = XWII_EVENT_DRUMS_KEY;
+	ev.v.key.state = 0;
+	for (i = 0; i < XWII_KEY_NUM; ++i) {
+		ev.v.key.code = i;
+		drums_show_ext(&ev);
+	}
+}
+
+static void drums_toggle(void)
+{
+	int ret;
+
+	if (xwii_iface_opened(iface) & XWII_IFACE_DRUMS) {
+		xwii_iface_close(iface, XWII_IFACE_DRUMS);
+		drums_clear();
+		print_info("Info: Disable Drums Controller");
+	} else {
+		ret = xwii_iface_open(iface, XWII_IFACE_DRUMS);
+		if (ret)
+			print_error("Error: Cannot enable Drums Controller: %d",
+				    ret);
+		else
+			print_error("Info: Enable Drums Controller");
+	}
+}
+
 /* rumble events */
 
 static void rumble_show(bool on)
@@ -1846,7 +2354,7 @@ static void setup_ext_window(void)
 	size_t i;
 
 	i = 0;
-	/* 160x40 Box */
+	/* 160x48 Box */
 	mvprintw(i++, 80, " +- Accel -------------+ +- IR ---------------------+--------------------------+");
 	mvprintw(i++, 80, "                       | |                          |                          |");
 	mvprintw(i++, 80, "                    Z  | |                                                     |");
@@ -1887,25 +2395,41 @@ static void setup_ext_window(void)
 	mvprintw(i++, 0,  "+-----------------------+                                                      |");
 	mvprintw(i++, 0,  "|    | |         | |    |                                                      |");
 	mvprintw(i++, 0,  "|    (C)         (Z)    |                                                      |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
+	mvprintw(i++, 0,  "|                                                                              |");
 	mvprintw(i++, 0,  "+------------------------------------------------------------------------------+");
 
 	i = 24;
-	mvprintw(i++, 80, " +-----------------------------------------------------------------------------+");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, "                                                                               |");
-	mvprintw(i++, 80, " +-----------------------------------------------------------------------------+");
+	mvprintw(i++, 80, "+- Guitar / Drums -------------------------------------------------------------+");
+	mvprintw(i++, 80, "|   __________      __________________                                         |");
+	mvprintw(i++, 80, "|  /          \\____/             ____/                                         |");
+	mvprintw(i++, 80, "| |      _                     _/                                         _    |");
+	mvprintw(i++, 80, "| |     /_\\                   /                                   /\\_____/ \\_  |");
+	mvprintw(i++, 80, "| |     | |      __________   \\__________________________________/  + + +    \\ |");
+	mvprintw(i++, 80, "| |     |_|      \\________\\                 | |.| |.| |.| |.| |              | |");
+	mvprintw(i++, 80, "| |     \\_/                   ______________|_|.|_|.|_|.|_|.|_|___  + +__+___/ |");
+	mvprintw(i++, 80, "| |   _____________           \\_                                  \\___/        |");
+	mvprintw(i++, 80, "| |            ___              \\                                              |");
+	mvprintw(i++, 80, "|  \\__________/   \\______________\\                                             |");
+	mvprintw(i++, 80, "|                                  ______      ______                          |");
+	mvprintw(i++, 80, "|                                 /      \\    /      \\                         |");
+	mvprintw(i++, 80, "|       +-+                      /        \\  /        \\              +-+       |");
+	mvprintw(i++, 80, "|       | |                      |   ++   |  |   ++   |              | |       |");
+	mvprintw(i++, 80, "|  +---     ---+                 \\        /  \\        /         +---     ---+  |");
+	mvprintw(i++, 80, "|  |     +     |                  \\______/    \\______/          |     +     |  |");
+	mvprintw(i++, 80, "|  +---     ---+             ______      ______      ______     +---     ---+  |");
+	mvprintw(i++, 80, "|       | |         ___     /      \\    /      \\    /      \\         | |       |");
+	mvprintw(i++, 80, "|       +-+        /---\\   /        \\  /        \\  /        \\        +-+       |");
+	mvprintw(i++, 80, "|                  |   |   |   ++   |  |   ++   |  |   ++   |      _     _     |");
+	mvprintw(i++, 80, "|                  |   |   \\        /  \\        /  \\        /     | |   | |    |");
+	mvprintw(i++, 80, "|                  \\___/    \\______/    \\______/    \\______/      |_|   |_|    |");
+	mvprintw(i++, 80, "+------------------------------------------------------------------------------+");
 }
 
 static void handle_resize(void)
@@ -1914,12 +2438,12 @@ static void handle_resize(void)
 		mode = MODE_ERROR;
 		erase();
 		mvprintw(0, 0, "Error: Screen smaller than 80x24; no view");
-	} else if (LINES < 40 || COLS < 160) {
+	} else if (LINES < 48 || COLS < 160) {
 		mode = MODE_NORMAL;
 		erase();
 		setup_window();
 		refresh_all();
-		print_info("Info: Screen smaller than 160x40; limited view");
+		print_info("Info: Screen smaller than 160x48; limited view");
 	} else {
 		mode = MODE_EXTENDED;
 		erase();
@@ -1993,6 +2517,12 @@ static int keyboard(void)
 		break;
 	case 'p':
 		pro_toggle();
+		break;
+	case 'g':
+		guit_toggle();
+		break;
+	case 'd':
+		drums_toggle();
 		break;
 	case 'r':
 		rumble_toggle();
@@ -2099,6 +2629,16 @@ static int run_iface(struct xwii_iface *iface)
 				if (mode == MODE_EXTENDED)
 					pro_show_ext(&event);
 				break;
+			case XWII_EVENT_GUITAR_KEY:
+			case XWII_EVENT_GUITAR_MOVE:
+				if (mode == MODE_EXTENDED)
+					guit_show_ext(&event);
+				break;
+			case XWII_EVENT_DRUMS_KEY:
+			case XWII_EVENT_DRUMS_MOVE:
+				if (mode == MODE_EXTENDED)
+					drums_show_ext(&event);
+				break;
 			}
 		}
 
@@ -2183,6 +2723,8 @@ int main(int argc, char **argv)
 		printf("\tn: Toggle normalization for motion plus\n");
 		printf("\tb: Toggle balance board\n");
 		printf("\tp: Toggle pro controller\n");
+		printf("\tg: Toggle guitar controller\n");
+		printf("\td: Toggle drums controller\n");
 		printf("\t1: Toggle LED 1\n");
 		printf("\t2: Toggle LED 2\n");
 		printf("\t3: Toggle LED 3\n");
@@ -2218,6 +2760,8 @@ int main(int argc, char **argv)
 			classic_clear();
 			bboard_clear();
 			pro_clear();
+			guit_clear();
+			drums_clear();
 			refresh_all();
 			refresh();
 
