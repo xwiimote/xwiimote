@@ -95,7 +95,7 @@ struct xwii_iface {
 	/* drums cache */
 	struct xwii_event_abs drums_cache[XWII_DRUMS_ABS_NUM];
 	/* guitar cache */
-	struct xwii_event_abs guitar_cache[2];
+	struct xwii_event_abs guitar_cache[3];
 };
 
 /* table to convert interface to name */
