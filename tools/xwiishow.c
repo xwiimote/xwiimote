@@ -2112,128 +2112,35 @@ static void rumble_toggle(void)
 
 /* LEDs */
 
-static bool led1_state;
+static bool led_state[4];
 
-static void led1_show(bool on)
+static void led_show(int n, bool on)
 {
-	mvprintw(5, 59, on ? "(#1)" : " -1 ");
+	mvprintw(5, 59 + n*5, on ? "(#%i)" : " -%i ", n+1);
 }
 
-static void led1_toggle(void)
+static void led_toggle(int n)
 {
 	int ret;
 
-	led1_state = !led1_state;
-	ret = xwii_iface_set_led(iface, XWII_LED(1), led1_state);
+	led_state[n] = !led_state[n];
+	ret = xwii_iface_set_led(iface, XWII_LED(n+1), led_state[n]);
 	if (ret) {
-		print_error("Error: Cannot toggle LED 1: %d", ret);
-		led1_state = !led1_state;
+		print_error("Error: Cannot toggle LED %i: %d", n+1, ret);
+		led_state[n] = !led_state[n];
 	}
-	led1_show(led1_state);
+	led_show(n, led_state[n]);
 }
 
-static void led1_refresh(void)
+static void led_refresh(int n)
 {
 	int ret;
 
-	ret = xwii_iface_get_led(iface, XWII_LED(1), &led1_state);
+	ret = xwii_iface_get_led(iface, XWII_LED(n+1), &led_state[n]);
 	if (ret)
 		print_error("Error: Cannot read LED state");
 	else
-		led1_show(led1_state);
-}
-
-static bool led2_state;
-
-static void led2_show(bool on)
-{
-	mvprintw(5, 64, on ? "(#2)" : " -2 ");
-}
-
-static void led2_toggle(void)
-{
-	int ret;
-
-	led2_state = !led2_state;
-	ret = xwii_iface_set_led(iface, XWII_LED(2), led2_state);
-	if (ret) {
-		print_error("Error: Cannot toggle LED 2: %d", ret);
-		led2_state = !led2_state;
-	}
-	led2_show(led2_state);
-}
-
-static void led2_refresh(void)
-{
-	int ret;
-
-	ret = xwii_iface_get_led(iface, XWII_LED(2), &led2_state);
-	if (ret)
-		print_error("Error: Cannot read LED state");
-	else
-		led2_show(led2_state);
-}
-
-static bool led3_state;
-
-static void led3_show(bool on)
-{
-	mvprintw(5, 69, on ? "(#3)" : " -3 ");
-}
-
-static void led3_toggle(void)
-{
-	int ret;
-
-	led3_state = !led3_state;
-	ret = xwii_iface_set_led(iface, XWII_LED(3), led3_state);
-	if (ret) {
-		print_error("Error: Cannot toggle LED 3: %d", ret);
-		led3_state = !led3_state;
-	}
-	led3_show(led3_state);
-}
-
-static void led3_refresh(void)
-{
-	int ret;
-
-	ret = xwii_iface_get_led(iface, XWII_LED(3), &led3_state);
-	if (ret)
-		print_error("Error: Cannot read LED state");
-	else
-		led3_show(led3_state);
-}
-
-static bool led4_state;
-
-static void led4_show(bool on)
-{
-	mvprintw(5, 74, on ? "(#4)" : " -4 ");
-}
-
-static void led4_toggle(void)
-{
-	int ret;
-
-	led4_state = !led4_state;
-	ret = xwii_iface_set_led(iface, XWII_LED(4), led4_state);
-	if (ret) {
-		print_error("Error: Cannot toggle LED 4: %d", ret);
-		led4_state = !led4_state;
-	}
-	led4_show(led4_state);
-}
-
-static void led4_refresh(void)
-{
-	int ret;
-
-	ret = xwii_iface_get_led(iface, XWII_LED(4), &led4_state);
-	if (ret)
-		print_error("Error: Cannot read LED state");
-	else
-		led4_show(led4_state);
+		led_show(n, led_state[n]);
 }
 
 /* battery status */
@@ -2305,10 +2212,10 @@ static void extension_refresh(void)
 static void refresh_all(void)
 {
 	battery_refresh();
-	led1_refresh();
-	led2_refresh();
-	led3_refresh();
-	led4_refresh();
+	led_refresh(0);
+	led_refresh(1);
+	led_refresh(2);
+	led_refresh(3);
 	devtype_refresh();
 	extension_refresh();
 	mp_refresh();
@@ -2528,16 +2435,16 @@ static int keyboard(void)
 		rumble_toggle();
 		break;
 	case '1':
-		led1_toggle();
+		led_toggle(0);
 		break;
 	case '2':
-		led2_toggle();
+		led_toggle(1);
 		break;
 	case '3':
-		led3_toggle();
+		led_toggle(2);
 		break;
 	case '4':
-		led4_toggle();
+		led_toggle(3);
 		break;
 	case 'f':
 		freeze_toggle();
