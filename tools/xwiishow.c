@@ -665,7 +665,8 @@ static bool mp_do_refresh;
 
 static void mp_show(const struct xwii_event *event)
 {
-	int32_t x, y, z, factor;
+	static int32_t mp_x, mp_y;
+	int32_t x, y, z, factor, i;
 
 	if (mp_do_refresh) {
 		xwii_iface_get_mp_normalization(iface, &x, &y, &z, &factor);
@@ -689,6 +690,34 @@ static void mp_show(const struct xwii_event *event)
 	mvprintw(5, 25, " %6d", (int16_t)x);
 	mvprintw(5, 35, " %6d", (int16_t)y);
 	mvprintw(5, 45, " %6d", (int16_t)z);
+
+	/* draw movement hud */
+
+	i = 39;
+	mvprintw(i++, 1,  "                       ");
+	mvprintw(i++, 1,  "           |           ");
+	mvprintw(i++, 1,  "                       ");
+	mvprintw(i++, 1,  "_ _ _ _ _ _|_ _ _ _ _ _");
+	mvprintw(i++, 1,  "           |           ");
+	mvprintw(i++, 1,  "                       ");
+	mvprintw(i++, 1,  "           |           ");
+	mvprintw(i++, 1,  "                       ");
+	mvprintw(i++, 1,  "-----------------------");
+
+	/* use x value unchanged for X-direction */
+	mp_x += x / 100;
+	mp_x = (mp_x < 0) ? 0 : ((mp_x > 10000) ? 10000 : mp_x);
+	/* use z value unchanged for Z-direction */
+	mp_y += z / 100;
+	mp_y = (mp_y < 0) ? 0 : ((mp_y > 10000) ? 10000 : mp_y);
+
+	x = mp_x * 22 / 10000;
+	x = (x < 0) ? 0 : ((x > 22) ? 22 : x);
+	y = mp_y * 7 / 10000;
+	y = (y < 0) ? 0 : ((y > 7) ? 7 : y);
+
+	mvprintw(39 + y, 1 + x, "X");
+	mvprintw(47, 2,  " %d %d ", mp_x, mp_y);
 }
 
 static void mp_clear(void)
@@ -2303,16 +2332,16 @@ static void setup_ext_window(void)
 	mvprintw(i++, 0,  "|              Y        |                                                      |");
 	mvprintw(i++, 0,  "+-----------------------+                                                      |");
 	mvprintw(i++, 0,  "|    | |         | |    |                                                      |");
-	mvprintw(i++, 0,  "|    (C)         (Z)    |                                                      |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "|                                                                              |");
-	mvprintw(i++, 0,  "+------------------------------------------------------------------------------+");
+	mvprintw(i++, 0,  "+- Motion+ -+-----------+                                                      |");
+	mvprintw(i++, 0,  "|                       |                                                      |");
+	mvprintw(i++, 0,  "|           |           |                                                      |");
+	mvprintw(i++, 0,  "|                       |                                                      |");
+	mvprintw(i++, 0,  "|_ _ _ _ _ _|_ _ _ _ _ _|                                                      |");
+	mvprintw(i++, 0,  "|           |           |                                                      |");
+	mvprintw(i++, 0,  "|                       |                                                      |");
+	mvprintw(i++, 0,  "|           |           |                                                      |");
+	mvprintw(i++, 0,  "|                       |                                                      |");
+	mvprintw(i++, 0,  "+-----------+-----------+------------------------------------------------------+");
 
 	i = 24;
 	mvprintw(i++, 80, "+- Guitar / Drums -------------------------------------------------------------+");
