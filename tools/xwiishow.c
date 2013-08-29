@@ -673,16 +673,18 @@ static void mp_show(const struct xwii_event *event)
 		y = event->v.abs[0].y + y;
 		z = event->v.abs[0].z + z;
 		xwii_iface_set_mp_normalization(iface, x, y, z, factor);
-
-		/* try to stabilize calibration as MP tends to report huge
-		 * values during initialization for 1-2s. */
-		if (x < 5000 && y < 5000 && z < 5000)
-			mp_do_refresh = false;
 	}
 
 	x = event->v.abs[0].x;
 	y = event->v.abs[0].y;
 	z = event->v.abs[0].z;
+
+	if (mp_do_refresh) {
+		/* try to stabilize calibration as MP tends to report huge
+		 * values during initialization for 1-2s. */
+		if (x < 5000 && y < 5000 && z < 5000)
+			mp_do_refresh = false;
+	}
 
 	mvprintw(5, 25, " %6d", (int16_t)x);
 	mvprintw(5, 35, " %6d", (int16_t)y);
