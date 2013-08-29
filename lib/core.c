@@ -426,7 +426,7 @@ int xwii_iface_get_fd(struct xwii_iface *dev)
 XWII__EXPORT
 int xwii_iface_watch(struct xwii_iface *dev, bool watch)
 {
-	int fd, ret;
+	int fd, ret, set;
 	struct epoll_event ep;
 
 	if (!dev)
@@ -475,6 +475,20 @@ int xwii_iface_watch(struct xwii_iface *dev, bool watch)
 	}
 
 	fd = udev_monitor_get_fd(dev->umon);
+
+	set = fcntl(fd, F_GETFL);
+	if (set < 0) {
+		ret = -errno;
+		goto err_mon;
+	}
+
+	set |= O_NONBLOCK;
+	ret = fcntl(fd, F_SETFL, set);
+	if (ret < 0) {
+		ret = -errno;
+		goto err_mon;
+	}
+
 	memset(&ep, 0, sizeof(ep));
 	ep.events = EPOLLIN;
 	ep.data.ptr = dev->umon;
