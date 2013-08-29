@@ -2278,8 +2278,8 @@ static void setup_window(void)
 	mvprintw(i++, 0, "|                 |                                                            |");
 	mvprintw(i++, 0, "|      +++++      |                                                            |");
 	mvprintw(i++, 0, "|      +   +      |                                                            |");
-	mvprintw(i++, 0, "|      +   +      |                                                            |");
-	mvprintw(i++, 0, "|      +++++      |                                                            |");
+	mvprintw(i++, 0, "|      +   +      | +----------------------------------------------------------+");
+	mvprintw(i++, 0, "|      +++++      | HINT: Keep the remote still and press 's' to recalibrate!  |");
 	mvprintw(i++, 0, "|                 | +----------------------------------------------------------+");
 	mvprintw(i++, 0, "|       | |       | |                                                          |");
 	mvprintw(i++, 0, "|       | |       | +----------------------------------------------------------+");
