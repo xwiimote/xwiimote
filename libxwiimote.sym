@@ -4,6 +4,7 @@ global:
 	xwii_iface_ref;
 	xwii_iface_unref;
 
+	xwii_iface_get_syspath;
 	xwii_iface_get_fd;
 	xwii_iface_watch;
 

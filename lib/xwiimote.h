@@ -946,6 +946,19 @@ void xwii_iface_ref(struct xwii_iface *dev);
 void xwii_iface_unref(struct xwii_iface *dev);
 
 /**
+ * Return device syspath
+ *
+ * @param[in] dev Valid device object
+ *
+ * This returns the sysfs path of the underlying device. It is not neccesarily
+ * the same as the one during xwii_iface_new(). However, it is guaranteed to
+ * point at the same device (symlinks may be resolved).
+ *
+ * @returns NULL on failure, otherwise a constant device syspath is returned.
+ */
+const char *xwii_iface_get_syspath(struct xwii_iface *dev);
+
+/**
  * Return file-descriptor
  *
  * @param[in] dev Valid device object

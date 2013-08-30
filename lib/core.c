@@ -415,6 +415,15 @@ void xwii_iface_unref(struct xwii_iface *dev)
 }
 
 XWII__EXPORT
+const char *xwii_iface_get_syspath(struct xwii_iface *dev)
+{
+	if (!dev)
+		return NULL;
+
+	return udev_device_get_syspath(dev->dev);
+}
+
+XWII__EXPORT
 int xwii_iface_get_fd(struct xwii_iface *dev)
 {
 	if (!dev)
