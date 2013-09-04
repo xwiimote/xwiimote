@@ -463,6 +463,9 @@ enum xwii_event_types {
 	 * testing whether all required interfaces are still available.
 	 * Non-hotplug aware devices may discard this event.
 	 *
+	 * This is only returned if you explicitly watched for hotplug events.
+	 * See xwii_iface_watch().
+	 *
 	 * This event is also returned if an interface is closed because the
 	 * kernel closed our file-descriptor (for whatever reason). This is
 	 * returned regardless whether you watch for hotplug events or not.
@@ -556,6 +559,17 @@ enum xwii_event_types {
 	 * positioning information as x-value.
 	 */
 	XWII_EVENT_GUITAR_MOVE,
+
+	/**
+	 * Removal Event
+	 *
+	 * This event is sent whenever the device was removed. No payload is
+	 * provided. Non-hotplug aware applications may discard this event.
+	 *
+	 * This is only returned if you explicitly watched for hotplug events.
+	 * See xwii_iface_watch().
+	 */
+	XWII_EVENT_GONE,
 
 	/**
 	 * Number of available event types

@@ -752,10 +752,11 @@ static int read_umon(struct xwii_iface *dev, struct epoll_event *ep,
 {
 	struct udev_device *ndev, *p;
 	const char *act, *path, *npath, *ppath, *node;
-	bool hotplug;
+	bool hotplug, remove;
 
 	if (ep->events & EPOLLIN) {
 		hotplug = false;
+		remove = false;
 		path = udev_device_get_syspath(dev->dev);
 
 		/* try to merge as many hotplug events as possible */
@@ -764,10 +765,12 @@ static int read_umon(struct xwii_iface *dev, struct epoll_event *ep,
 			if (!ndev)
 				break;
 
-			/* We are interested in two kinds of events:
+			/* We are interested in three kinds of events:
 			 *  1) "change" events on the main HID device notify
 			 *     us of device-detection events.
-			 *  2) "add"/"remove" events on input events (not
+			 *  1) "remove" events on the main HID device notify
+			 *     us of device-removal.
+			 *  3) "add"/"remove" events on input events (not
 			 *     the evdev events with "devnode") notify us
 			 *     of extension changes. */
 
@@ -782,10 +785,21 @@ static int read_umon(struct xwii_iface *dev, struct epoll_event *ep,
 			if (act && !strcmp(act, "change") &&
 			    !strcmp(path, npath))
 				hotplug = true;
+			else if (act && !strcmp(act, "remove") &&
+				 !strcmp(path, npath))
+				remove = true;
 			else if (!node && p && !strcmp(ppath, path))
 				hotplug = true;
 
 			udev_device_unref(ndev);
+		}
+
+		/* notify caller of removals via special event */
+		if (remove) {
+			memset(ev, 0, sizeof(*ev));
+			ev->type = XWII_EVENT_GONE;
+			xwii_iface_read_nodes(dev);
+			return 0;
 		}
 
 		/* notify caller via generic hotplug event */
