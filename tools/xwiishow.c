@@ -2493,7 +2493,7 @@ static int keyboard(void)
 static int run_iface(struct xwii_iface *iface)
 {
 	struct xwii_event event;
-	int ret = 0;
+	int ret = 0, fds_num;
 	struct pollfd fds[2];
 
 	memset(fds, 0, sizeof(fds));
@@ -2501,13 +2501,14 @@ static int run_iface(struct xwii_iface *iface)
 	fds[0].events = POLLIN;
 	fds[1].fd = xwii_iface_get_fd(iface);
 	fds[1].events = POLLIN;
+	fds_num = 2;
 
 	ret = xwii_iface_watch(iface, true);
 	if (ret)
 		print_error("Error: Cannot initialize hotplug watch descriptor");
 
 	while (true) {
-		ret = poll(fds, 2, -1);
+		ret = poll(fds, fds_num, -1);
 		if (ret < 0) {
 			if (errno != EINTR) {
 				ret = -errno;
@@ -2525,6 +2526,12 @@ static int run_iface(struct xwii_iface *iface)
 			}
 		} else if (!freeze) {
 			switch (event.type) {
+			case XWII_EVENT_GONE:
+				print_info("Info: Device gone");
+				fds[1].fd = -1;
+				fds[1].events = 0;
+				fds_num = 1;
+				break;
 			case XWII_EVENT_WATCH:
 				handle_watch();
 				break;
