@@ -75,6 +75,7 @@ struct xwii_iface {
 
 	/* rumble-id for base-core interface force-feedback or -1 */
 	int rumble_id;
+	int rumble_fd;
 	/* accelerometer data cache */
 	struct xwii_event_abs accel_cache;
 	/* IR data cache */
@@ -317,6 +318,7 @@ int xwii_iface_new(struct xwii_iface **dev, const char *syspath)
 	memset(d, 0, sizeof(*d));
 	d->ref = 1;
 	d->rumble_id = -1;
+	d->rumble_fd = -1;
 
 	for (i = 0; i < XWII_IF_NUM; ++i)
 		d->ifs[i].fd = -1;
@@ -563,7 +565,7 @@ static int xwii_iface_open_if(struct xwii_iface *dev, unsigned int tif,
  * Upload the generic rumble event to the device. This may later be used for
  * force-feedback effects. The event id is safed for later use.
  */
-static void xwii_iface_upload_rumble(struct xwii_iface *dev)
+static void xwii_iface_upload_rumble(struct xwii_iface *dev, int fd)
 {
 	struct ff_effect effect = {
 		.type = FF_RUMBLE,
@@ -573,8 +575,10 @@ static void xwii_iface_upload_rumble(struct xwii_iface *dev)
 		.replay.delay = 0,
 	};
 
-	if (ioctl(dev->ifs[XWII_IF_CORE].fd, EVIOCSFF, &effect) != -1)
+	if (ioctl(fd, EVIOCSFF, &effect) != -1) {
 		dev->rumble_id = effect.id;
+		dev->rumble_fd = fd;
+	}
 }
 
 XWII__EXPORT
@@ -597,7 +601,8 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 		ret = xwii_iface_open_if(dev, XWII_IF_CORE, wr);
 		if (!ret) {
 			dev->ifaces |= XWII_IFACE_CORE;
-			xwii_iface_upload_rumble(dev);
+			xwii_iface_upload_rumble(dev,
+						 dev->ifs[XWII_IF_CORE].fd);
 		} else {
 			err = ret;
 		}
@@ -653,10 +658,13 @@ int xwii_iface_open(struct xwii_iface *dev, unsigned int ifaces)
 
 	if (ifaces & XWII_IFACE_PRO_CONTROLLER) {
 		ret = xwii_iface_open_if(dev, XWII_IF_PRO_CONTROLLER, wr);
-		if (!ret)
+		if (!ret) {
 			dev->ifaces |= XWII_IFACE_PRO_CONTROLLER;
-		else
+			xwii_iface_upload_rumble(dev,
+						 dev->ifs[XWII_IF_PRO_CONTROLLER].fd);
+		} else {
 			err = ret;
+		}
 	}
 
 	if (ifaces & XWII_IFACE_DRUMS) {
@@ -699,8 +707,11 @@ void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces)
 		return;
 
 	if (ifaces & XWII_IFACE_CORE) {
+		if (dev->rumble_fd == dev->ifs[XWII_IF_CORE].fd) {
+			dev->rumble_id = -1;
+			dev->rumble_fd = -1;
+		}
 		xwii_iface_close_if(dev, XWII_IF_CORE);
-		dev->rumble_id = -1;
 	}
 	if (ifaces & XWII_IFACE_ACCEL)
 		xwii_iface_close_if(dev, XWII_IF_ACCEL);
@@ -714,8 +725,13 @@ void xwii_iface_close(struct xwii_iface *dev, unsigned int ifaces)
 		xwii_iface_close_if(dev, XWII_IF_CLASSIC_CONTROLLER);
 	if (ifaces & XWII_IFACE_BALANCE_BOARD)
 		xwii_iface_close_if(dev, XWII_IF_BALANCE_BOARD);
-	if (ifaces & XWII_IFACE_PRO_CONTROLLER)
+	if (ifaces & XWII_IFACE_PRO_CONTROLLER) {
+		if (dev->rumble_fd == dev->ifs[XWII_IF_PRO_CONTROLLER].fd) {
+			dev->rumble_id = -1;
+			dev->rumble_fd = -1;
+		}
 		xwii_iface_close_if(dev, XWII_IF_PRO_CONTROLLER);
+	}
 	if (ifaces & XWII_IFACE_DRUMS)
 		xwii_iface_close_if(dev, XWII_IF_DRUMS);
 	if (ifaces & XWII_IFACE_GUITAR)
@@ -1742,18 +1758,17 @@ XWII__EXPORT
 int xwii_iface_rumble(struct xwii_iface *dev, bool on)
 {
 	struct input_event ev;
-	int ret, fd;
+	int ret;
 
 	if (!dev)
 		return -EINVAL;
-	fd = dev->ifs[XWII_IF_CORE].fd;
-	if (fd < 0 || dev->rumble_id < 0)
+	if (dev->rumble_fd < 0 || dev->rumble_id < 0)
 		return -ENODEV;
 
 	ev.type = EV_FF;
 	ev.code = dev->rumble_id;
 	ev.value = on;
-	ret = write(fd, &ev, sizeof(ev));
+	ret = write(dev->rumble_fd, &ev, sizeof(ev));
 
 	if (ret == -1)
 		return -errno;
