@@ -141,10 +141,36 @@ static unsigned int if_to_iface_table[] = {
 	[XWII_IF_NUM] = 0,
 };
 
+/* table to convert public interface to internal interface */
+static int iface_to_if_table[] = {
+	[0 ... XWII_IFACE_ALL] = -1,
+	[XWII_IFACE_CORE] = XWII_IF_CORE,
+	[XWII_IFACE_ACCEL] = XWII_IF_ACCEL,
+	[XWII_IFACE_IR] = XWII_IF_IR,
+	[XWII_IFACE_MOTION_PLUS] = XWII_IF_MOTION_PLUS,
+	[XWII_IFACE_NUNCHUK] = XWII_IF_NUNCHUK,
+	[XWII_IFACE_CLASSIC_CONTROLLER] = XWII_IF_CLASSIC_CONTROLLER,
+	[XWII_IFACE_BALANCE_BOARD] = XWII_IF_BALANCE_BOARD,
+	[XWII_IFACE_PRO_CONTROLLER] = XWII_IF_PRO_CONTROLLER,
+	[XWII_IFACE_DRUMS] = XWII_IF_DRUMS,
+	[XWII_IFACE_GUITAR] = XWII_IF_GUITAR,
+};
+
 /* convert name to interface or -1 */
 static int if_to_iface(unsigned int ifs)
 {
 	return if_to_iface_table[ifs];
+}
+
+XWII__EXPORT
+const char *xwii_get_iface_name(unsigned int iface)
+{
+	if (iface > XWII_IFACE_ALL)
+		return NULL;
+	if (iface_to_if_table[iface] == -1)
+		return NULL;
+
+	return if_to_name_table[iface_to_if_table[iface]];
 }
 
 /*

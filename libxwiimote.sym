@@ -33,3 +33,8 @@ global:
 local:
 	*;
 };
+
+LIBXWIIMOTE_3 {
+global:
+	xwii_get_iface_name;
+} LIBXWIIMOTE_2;

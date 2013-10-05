@@ -904,6 +904,19 @@ enum xwii_iface_type {
 };
 
 /**
+ * Return name of a given interface
+ *
+ * @param[in] iface A single interface of type @ref xwii_iface_type
+ *
+ * Returns the name of a single given interface. If the interface is invalid,
+ * NULL is returned. The returned names are the same as the XWII_NAME_*
+ * constants of the kernel ABI.
+ *
+ * @returns constant string if @p iface is known or NULL if unknown.
+ */
+const char *xwii_get_iface_name(unsigned int iface);
+
+/**
  * LEDs
  *
  * One constant for each Player-LED.
