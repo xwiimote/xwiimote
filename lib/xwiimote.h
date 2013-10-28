@@ -765,6 +765,9 @@ enum xwii_drums_abs {
 	XWII_DRUMS_ABS_NUM,
 };
 
+/** Number of ABS values in an xwii_event_union */
+#define XWII_ABS_NUM 8
+
 /**
  * Event Payload
  *
@@ -774,7 +777,7 @@ union xwii_event_union {
 	/** key event payload */
 	struct xwii_event_key key;
 	/** absolute motion event payload */
-	struct xwii_event_abs abs[8];
+	struct xwii_event_abs abs[XWII_ABS_NUM];
 	/** reserved; do not use! */
 	uint8_t reserved[128];
 };
