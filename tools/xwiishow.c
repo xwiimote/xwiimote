@@ -1315,7 +1315,7 @@ static void pro_show_ext(const struct xwii_event *event)
 			mvprintw(16, 124, "     ");
 		}
 
-		v = event->v.abs[0].y;
+		v = -event->v.abs[0].y;
 		mvprintw(14, 125, "%5d", v);
 		if (v > 1000) {
 			mvprintw(14, 123, "#");
@@ -1381,7 +1381,7 @@ static void pro_show_ext(const struct xwii_event *event)
 			mvprintw(16, 142, "     ");
 		}
 
-		v = event->v.abs[1].y;
+		v = -event->v.abs[1].y;
 		mvprintw(14, 143, "%5d", v);
 		if (v > 1000) {
 			mvprintw(14, 141, "#");
