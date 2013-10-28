@@ -17,6 +17,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADER(config.h)
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
+AC_CANONICAL_HOST
 
 AM_INIT_AUTOMAKE([foreign 1.11 subdir-objects dist-xz no-dist-gzip tar-pax -Wall -Werror -Wno-portability])
 AM_SILENT_RULES([yes])
@@ -27,6 +28,7 @@ AM_SILENT_RULES([yes])
 AC_PROG_CC
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
+AC_PROG_LN_S
 m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 LT_PREREQ(2.2)
