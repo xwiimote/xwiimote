@@ -41,7 +41,7 @@ static void dump(int fd)
 
 	off = 0;
 	while (1) {
-		printf("0x%08lx:", off);
+		printf("0x%08zu:", off);
 
 		for (i = 0; i < 8; ++i) {
 			ret = read(fd, buf, sizeof(buf));
