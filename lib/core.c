@@ -1273,7 +1273,8 @@ static int read_bboard(struct xwii_iface *dev, struct xwii_event *ev)
 {
 	int ret, fd;
 	struct input_event input;
-
+	unsigned int key;
+	
 	fd = dev->ifs[XWII_IF_BALANCE_BOARD].fd;
 	if (fd < 0)
 		return -EAGAIN;
@@ -1290,27 +1291,36 @@ try_again:
 		return 0;
 	}
 
-	if (input.type == EV_SYN) {
+	if (input.type == EV_KEY) {
+		if (input.code != BTN_A && (input.value < 0 || input.value > 2))
+			goto try_again;
+
+		key = XWII_KEY_A;
+		memset(ev, 0, sizeof(*ev));
+		memcpy(&ev->time, &input.time, sizeof(struct timeval));
+		ev->type = XWII_EVENT_BALANCE_BOARD_KEY;
+		ev->v.key.code = key;
+		ev->v.key.state = input.value;
+		return 0;
+	} else if (input.type == EV_ABS) {
+		if (input.code == ABS_HAT0X)
+			dev->bboard_cache[0].x = input.value;
+		else if (input.code == ABS_HAT0Y)
+			dev->bboard_cache[1].x = input.value;
+		else if (input.code == ABS_HAT1X)
+			dev->bboard_cache[2].x = input.value;
+		else if (input.code == ABS_HAT1Y)
+			dev->bboard_cache[3].x = input.value;
+	} else if (input.type == EV_SYN) {
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(&ev->v.abs, dev->bboard_cache,
 		       sizeof(dev->bboard_cache));
 		ev->type = XWII_EVENT_BALANCE_BOARD;
 		return 0;
+	} else {
 	}
-
-	if (input.type != EV_ABS)
-		goto try_again;
-
-	if (input.code == ABS_HAT0X)
-		dev->bboard_cache[0].x = input.value;
-	else if (input.code == ABS_HAT0Y)
-		dev->bboard_cache[1].x = input.value;
-	else if (input.code == ABS_HAT1X)
-		dev->bboard_cache[2].x = input.value;
-	else if (input.code == ABS_HAT1Y)
-		dev->bboard_cache[3].x = input.value;
-
+	
 	goto try_again;
 }
 
