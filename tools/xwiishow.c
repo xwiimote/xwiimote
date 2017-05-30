@@ -2169,7 +2169,7 @@ static void led_refresh(int n)
 
 	ret = xwii_iface_get_led(iface, XWII_LED(n+1), &led_state[n]);
 	if (ret)
-		print_error("Error: Cannot read LED state");
+		print_error("Error: Cannot read LED #%i state",n+1);
 	else
 		led_show(n, led_state[n]);
 }
@@ -2569,6 +2569,9 @@ static int run_iface(struct xwii_iface *iface)
 				if (mode == MODE_EXTENDED)
 					bboard_show_ext(&event);
 				break;
+            case XWII_EVENT_BALANCE_BOARD_KEY:
+                key_show(&event);
+                break;
 			case XWII_EVENT_PRO_CONTROLLER_KEY:
 			case XWII_EVENT_PRO_CONTROLLER_MOVE:
 				if (mode == MODE_EXTENDED)
@@ -2584,6 +2587,7 @@ static int run_iface(struct xwii_iface *iface)
 				if (mode == MODE_EXTENDED)
 					drums_show_ext(&event);
 				break;
+
 			}
 		}
 
