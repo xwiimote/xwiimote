@@ -2569,9 +2569,9 @@ static int run_iface(struct xwii_iface *iface)
 				if (mode == MODE_EXTENDED)
 					bboard_show_ext(&event);
 				break;
-            case XWII_EVENT_BALANCE_BOARD_KEY:
-                key_show(&event);
-                break;
+			case XWII_EVENT_BALANCE_BOARD_KEY:
+				key_show(&event);
+				break;
 			case XWII_EVENT_PRO_CONTROLLER_KEY:
 			case XWII_EVENT_PRO_CONTROLLER_MOVE:
 				if (mode == MODE_EXTENDED)
