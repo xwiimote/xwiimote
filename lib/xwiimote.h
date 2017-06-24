@@ -426,7 +426,7 @@ enum xwii_event_types {
 	 *
 	 * Button event of the Balance-Board are reported via this interface
 	 * and not via the core-interface (which only reports core-buttons).
-	 * Valid button: B
+	 * Valid button: A
 	 * Payload type is struct xwii_event_key.
 	 */
 	XWII_EVENT_BALANCE_BOARD_KEY,

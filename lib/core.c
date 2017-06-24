@@ -1099,6 +1099,7 @@ static int read_nunchuk(struct xwii_iface *dev, struct xwii_event *ev)
 	int ret, fd;
 	struct input_event input;
 	unsigned int key;
+    static bool EV_SYN_KEY = false;
 
 	fd = dev->ifs[XWII_IF_NUNCHUK].fd;
 	if (fd < 0)
@@ -1130,7 +1131,8 @@ try_again:
 			default:
 				goto try_again;
 		}
-
+        
+        EV_SYN_KEY = true;
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		ev->type = XWII_EVENT_NUNCHUK_KEY;
@@ -1149,6 +1151,10 @@ try_again:
 		else if (input.code == ABS_RZ)
 			dev->nunchuk_cache[1].z = input.value;
 	} else if (input.type == EV_SYN) {
+        if(EV_SYN_KEY) {
+            EV_SYN_KEY = false;
+            goto try_again;
+        }
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(&ev->v.abs, dev->nunchuk_cache,
@@ -1166,7 +1172,8 @@ static int read_classic(struct xwii_iface *dev, struct xwii_event *ev)
 	int ret, fd;
 	struct input_event input;
 	unsigned int key;
-
+    static bool EV_SYN_KEY = false;
+    
 	fd = dev->ifs[XWII_IF_CLASSIC_CONTROLLER].fd;
 	if (fd < 0)
 		return -EAGAIN;
@@ -1236,7 +1243,8 @@ try_again:
 			default:
 				goto try_again;
 		}
-
+        
+        EV_SYN_KEY = true;
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		ev->type = XWII_EVENT_CLASSIC_CONTROLLER_KEY;
@@ -1257,6 +1265,10 @@ try_again:
 		else if (input.code == ABS_HAT3Y)
 			dev->classic_cache[2].x = input.value;
 	} else if (input.type == EV_SYN) {
+        if(EV_SYN_KEY) {
+            EV_SYN_KEY = false;
+            return 0;
+        }
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(&ev->v.abs, dev->classic_cache,
@@ -1274,6 +1286,7 @@ static int read_bboard(struct xwii_iface *dev, struct xwii_event *ev)
 	int ret, fd;
 	struct input_event input;
 	unsigned int key;
+    static bool EV_SYN_KEY = false;
 	
 	fd = dev->ifs[XWII_IF_BALANCE_BOARD].fd;
 	if (fd < 0)
@@ -1296,6 +1309,8 @@ try_again:
 			goto try_again;
 
 		key = XWII_KEY_A;
+        
+        EV_SYN_KEY = true;
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		ev->type = XWII_EVENT_BALANCE_BOARD_KEY;
@@ -1312,6 +1327,11 @@ try_again:
 		else if (input.code == ABS_HAT1Y)
 			dev->bboard_cache[3].x = input.value;
 	} else if (input.type == EV_SYN) {
+        if(EV_SYN_KEY) {
+            EV_SYN_KEY = false;
+            return 0;
+        }
+        
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(&ev->v.abs, dev->bboard_cache,
@@ -1329,6 +1349,7 @@ static int read_pro(struct xwii_iface *dev, struct xwii_event *ev)
 	int ret, fd;
 	struct input_event input;
 	unsigned int key;
+    static bool EV_SYN_KEY = false;
 
 	fd = dev->ifs[XWII_IF_PRO_CONTROLLER].fd;
 	if (fd < 0)
@@ -1429,7 +1450,8 @@ try_again:
 			default:
 				goto try_again;
 		}
-
+        
+        EV_SYN_KEY = true;
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		ev->type = XWII_EVENT_PRO_CONTROLLER_KEY;
@@ -1446,6 +1468,11 @@ try_again:
 		else if (input.code == ABS_RY)
 			dev->pro_cache[1].y = input.value;
 	} else if (input.type == EV_SYN) {
+        if(EV_SYN_KEY) {
+            EV_SYN_KEY = false;
+            return 0;
+        }
+        
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(&ev->v.abs, dev->pro_cache,
@@ -1463,6 +1490,7 @@ static int read_drums(struct xwii_iface *dev, struct xwii_event *ev)
 	int ret, fd;
 	struct input_event input;
 	unsigned int key;
+    static bool EV_SYN_KEY = false;
 
 	fd = dev->ifs[XWII_IF_DRUMS].fd;
 	if (fd < 0)
@@ -1494,7 +1522,8 @@ try_again:
 		default:
 			goto try_again;
 		}
-
+        
+        EV_SYN_KEY = true;
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		ev->type = XWII_EVENT_DRUMS_KEY;
@@ -1542,6 +1571,11 @@ try_again:
 		else if (input.code == ABS_HI_HAT)
 			dev->drums_cache[XWII_DRUMS_ABS_HI_HAT].x = input.value;
 	} else if (input.type == EV_SYN) {
+        if(EV_SYN_KEY) {
+            EV_SYN_KEY = false;
+            return 0;
+        }
+        
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(&ev->v.abs, dev->drums_cache,
@@ -1558,6 +1592,7 @@ static int read_guitar(struct xwii_iface *dev, struct xwii_event *ev)
 	int ret, fd;
 	struct input_event input;
 	unsigned int key;
+    static bool EV_SYN_KEY = false;
 
 	fd = dev->ifs[XWII_IF_GUITAR].fd;
 	if (fd < 0)
@@ -1631,7 +1666,8 @@ try_again:
 		default:
 			goto try_again;
 		}
-
+        
+        EV_SYN_KEY = true;
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		ev->type = XWII_EVENT_GUITAR_KEY;
@@ -1654,6 +1690,11 @@ try_again:
 		else if (input.code == ABS_FRET_BOARD)
 			dev->guitar_cache[2].x = input.value;
 	} else if (input.type == EV_SYN) {
+        if(EV_SYN_KEY) {
+            EV_SYN_KEY = false;
+            return 0;
+        }
+        
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
 		memcpy(&ev->v.abs, dev->guitar_cache,
