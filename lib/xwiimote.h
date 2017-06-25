@@ -420,6 +420,16 @@ enum xwii_event_types {
 	 * weight-value.
 	 */
 	XWII_EVENT_BALANCE_BOARD,
+    
+    /**
+	 * Balance-Board key event
+	 *
+	 * Button event of the Balance-Board are reported via this interface
+	 * and not via the core-interface (which only reports core-buttons).
+	 * Valid button: A
+	 * Payload type is struct xwii_event_key.
+	 */
+	XWII_EVENT_BALANCE_BOARD_KEY,
 
 	/**
 	 * Motion-Plus event
