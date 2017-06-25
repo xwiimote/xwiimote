@@ -1267,7 +1267,7 @@ try_again:
 	} else if (input.type == EV_SYN) {
 	    if(EV_SYN_KEY) {
 	        EV_SYN_KEY = false;
-	        return 0;
+	        goto try_again;
 	    }
 		memset(ev, 0, sizeof(*ev));
 		memcpy(&ev->time, &input.time, sizeof(struct timeval));
@@ -1329,7 +1329,7 @@ try_again:
 	} else if (input.type == EV_SYN) {
 	    if(EV_SYN_KEY) {
 	        EV_SYN_KEY = false;
-	        return 0;
+	        goto try_again;
 	    }
 	    
 		memset(ev, 0, sizeof(*ev));
@@ -1470,7 +1470,7 @@ try_again:
 	} else if (input.type == EV_SYN) {
 	    if(EV_SYN_KEY) {
 	        EV_SYN_KEY = false;
-	        return 0;
+	        goto try_again;
 	    }
 	    
 		memset(ev, 0, sizeof(*ev));
@@ -1573,7 +1573,7 @@ try_again:
 	} else if (input.type == EV_SYN) {
 	    if(EV_SYN_KEY) {
 	        EV_SYN_KEY = false;
-	        return 0;
+	        goto try_again;
 	    }
 	    
 		memset(ev, 0, sizeof(*ev));
@@ -1692,7 +1692,7 @@ try_again:
 	} else if (input.type == EV_SYN) {
 	    if(EV_SYN_KEY) {
 	        EV_SYN_KEY = false;
-	        return 0;
+	        goto try_again;
 	    }
 	    
 		memset(ev, 0, sizeof(*ev));
