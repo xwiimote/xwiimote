@@ -345,6 +345,8 @@ int xwii_iface_new(struct xwii_iface **dev, const char *syspath)
 	d->ref = 1;
 	d->rumble_id = -1;
 	d->rumble_fd = -1;
+	for (int i = 0; i < 4; ++i)
+		d->ir_cache[i] = (struct xwii_event_abs){.x = 1023, .y = 1023};
 
 	for (i = 0; i < XWII_IF_NUM; ++i)
 		d->ifs[i].fd = -1;
