@@ -10,7 +10,7 @@ Nintendo Wii Balance Board, Nintendo Wii U Pro Controller, and more) on your
 linux system, the xwiimote software stack provides everything you need.
 
 This distribution is hosted at:
-  http://dvdhrm.github.io/xwiimote
+  http://xwiimote.github.io/xwiimote
 Use this website to contact the maintainers or developers or to file bug
 reports.
 
@@ -64,7 +64,7 @@ Usage
 =====
 
 Please see the website for help:
-  http://dvdhrm.github.io/xwiimote
+  http://xwiimote.github.io/xwiimote
 
 Documentation
 =============
@@ -112,7 +112,7 @@ Contact
 =======
 
 Website:
-  http://dvdhrm.github.io/xwiimote
+  http://xwiimote.github.io/xwiimote
 
 For email contact please see ./COPYING for a list of contributors or
 write an email to the current maintainer at:
